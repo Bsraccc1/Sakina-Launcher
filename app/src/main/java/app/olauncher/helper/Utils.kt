@@ -503,6 +503,7 @@ fun openAlarmApp(context: Context) {
     }
 }
 
+@SuppressLint("UnsafeImplicitIntentLaunch")
 fun openCalendar(context: Context) {
     try {
         val calendarUri = CalendarContract.CONTENT_URI

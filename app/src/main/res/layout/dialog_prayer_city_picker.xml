@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        style="@style/TextLarge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/prayer_region"
+        android:textSize="24sp" />
+
+    <EditText
+        android:id="@+id/searchInput"
+        style="@style/TextMedium"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/rounded_rect_shade_color"
+        android:hint="@string/search"
+        android:imeOptions="actionSearch"
+        android:inputType="textCapWords"
+        android:maxLines="1"
+        android:padding="16dp"
+        android:textColor="?attr/primaryColor"
+        android:textColorHint="?attr/primaryColorTrans50" />
+
+    <ListView
+        android:id="@+id/cityList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="8dp"
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        tools:listitem="@layout/adapter_prayer_location" />
+
+    <TextView
+        android:id="@+id/emptyView"
+        style="@style/TextSmallLight"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:alpha="0.62"
+        android:gravity="center"
+        android:text="@string/no_results"
+        android:visibility="gone" />
+
+</LinearLayout>

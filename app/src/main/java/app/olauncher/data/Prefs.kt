@@ -27,6 +27,13 @@ class Prefs(context: Context) {
     private val DATE_TIME_VISIBILITY = "DATE_TIME_VISIBILITY"
     private val SWIPE_LEFT_ENABLED = "SWIPE_LEFT_ENABLED"
     private val SWIPE_RIGHT_ENABLED = "SWIPE_RIGHT_ENABLED"
+    private val SWIPE_LEFT_TARGET = "SWIPE_LEFT_TARGET"
+    private val SWIPE_RIGHT_TARGET = "SWIPE_RIGHT_TARGET"
+    private val POMODORO_FOCUS_MINUTES = "POMODORO_FOCUS_MINUTES"
+    private val POMODORO_FOCUS_SECONDS = "POMODORO_FOCUS_SECONDS"
+    private val POMODORO_TIMER_TOTAL_MILLIS = "POMODORO_TIMER_TOTAL_MILLIS"
+    private val POMODORO_TIMER_END_ELAPSED_REALTIME = "POMODORO_TIMER_END_ELAPSED_REALTIME"
+    private val POMODORO_TIMER_REMAINING_MILLIS = "POMODORO_TIMER_REMAINING_MILLIS"
     private val HIDDEN_APPS = "HIDDEN_APPS"
     private val HIDDEN_APPS_UPDATED = "HIDDEN_APPS_UPDATED"
     private val SHOW_HINT_COUNTER = "SHOW_HINT_COUNTER"
@@ -190,6 +197,66 @@ class Prefs(context: Context) {
     var swipeRightEnabled: Boolean
         get() = prefs.getBoolean(SWIPE_RIGHT_ENABLED, true)
         set(value) = prefs.edit { putBoolean(SWIPE_RIGHT_ENABLED, value).apply() }
+
+    var swipeLeftTarget: Int
+        get() = if (swipeLeftEnabled) {
+            prefs.getInt(SWIPE_LEFT_TARGET, defaultSwipeLeftTarget())
+        } else {
+            Constants.SwipeTarget.OFF
+        }
+        set(value) = prefs.edit {
+            putInt(SWIPE_LEFT_TARGET, value)
+            putBoolean(SWIPE_LEFT_ENABLED, value != Constants.SwipeTarget.OFF)
+            apply()
+        }
+
+    var swipeRightTarget: Int
+        get() = if (swipeRightEnabled) {
+            prefs.getInt(SWIPE_RIGHT_TARGET, defaultSwipeRightTarget())
+        } else {
+            Constants.SwipeTarget.OFF
+        }
+        set(value) = prefs.edit {
+            putInt(SWIPE_RIGHT_TARGET, value)
+            putBoolean(SWIPE_RIGHT_ENABLED, value != Constants.SwipeTarget.OFF)
+            apply()
+        }
+
+    var pomodoroFocusMinutes: Int
+        get() = prefs.getInt(POMODORO_FOCUS_MINUTES, 25)
+        set(value) = prefs.edit { putInt(POMODORO_FOCUS_MINUTES, value.coerceIn(0, 999)).apply() }
+
+    var pomodoroFocusSeconds: Int
+        get() = prefs.getInt(POMODORO_FOCUS_SECONDS, 0)
+        set(value) = prefs.edit { putInt(POMODORO_FOCUS_SECONDS, value.coerceIn(0, 59)).apply() }
+
+    val pomodoroFocusMillis: Long
+        get() {
+            val totalSeconds = pomodoroFocusMinutes * 60L + pomodoroFocusSeconds
+            return totalSeconds.coerceAtLeast(1L) * 1000L
+        }
+
+    private fun defaultSwipeLeftTarget(): Int {
+        val hasLegacyApp = prefs.getString(APP_PACKAGE_SWIPE_LEFT, "").orEmpty().isNotBlank()
+        return if (hasLegacyApp) Constants.SwipeTarget.APP else Constants.SwipeTarget.PRODUCTIVE
+    }
+
+    private fun defaultSwipeRightTarget(): Int {
+        val hasLegacyApp = prefs.getString(APP_PACKAGE_SWIPE_RIGHT, "").orEmpty().isNotBlank()
+        return if (hasLegacyApp) Constants.SwipeTarget.APP else Constants.SwipeTarget.MUSLIM_CENTER
+    }
+
+    var pomodoroTimerTotalMillis: Long
+        get() = prefs.getLong(POMODORO_TIMER_TOTAL_MILLIS, pomodoroFocusMillis)
+        set(value) = prefs.edit { putLong(POMODORO_TIMER_TOTAL_MILLIS, value.coerceAtLeast(1000L)).apply() }
+
+    var pomodoroTimerEndElapsedRealtime: Long
+        get() = prefs.getLong(POMODORO_TIMER_END_ELAPSED_REALTIME, 0L)
+        set(value) = prefs.edit { putLong(POMODORO_TIMER_END_ELAPSED_REALTIME, value.coerceAtLeast(0L)).apply() }
+
+    var pomodoroTimerRemainingMillis: Long
+        get() = prefs.getLong(POMODORO_TIMER_REMAINING_MILLIS, pomodoroFocusMillis)
+        set(value) = prefs.edit { putLong(POMODORO_TIMER_REMAINING_MILLIS, value.coerceAtLeast(0L)).apply() }
 
     var appTheme: Int
         get() = prefs.getInt(APP_THEME, AppCompatDelegate.MODE_NIGHT_YES)
@@ -642,4 +709,7 @@ class Prefs(context: Context) {
     fun getAppRenameLabel(appPackage: String): String = prefs.getString(appPackage, "").toString()
 
     fun setAppRenameLabel(appPackage: String, renameLabel: String) = prefs.edit { putString(appPackage, renameLabel) }
+    fun getInt(key: String, default: Int): Int = prefs.getInt(key, default)
+
+    fun putInt(key: String, value: Int) = prefs.edit { putInt(key, value) }
 }

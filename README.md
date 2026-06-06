@@ -1,34 +1,273 @@
-![Olauncher](https://repository-images.githubusercontent.com/278638069/db0acb80-661b-11eb-803e-926cae5dccb4)
+# Sakina Launcher
 
+A minimal Android launcher with integrated Islamic features for mindful productivity.
 
-# Olauncher | Minimal AF Launcher
-AF stands for Ad-Free
+![Sakina Launcher](Assets/screenshots/home.png)
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-    alt="Get it on F-Droid"
-    height="80">](https://f-droid.org/packages/app.olauncher)
-[<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
-    alt="Get it on Play Store"
-    height="80">](https://play.google.com/store/apps/details?id=app.olauncher)
+---
 
-### Install using [F-Droid](https://f-droid.org/packages/app.olauncher), [Play Store](https://play.google.com/store/apps/details?id=app.olauncher) or the [latest APK](https://github.com/tanujnotes/Olauncher/releases/).
+## Table of Contents
 
-- To maintain the simplicity of the launcher, a few niche features are available but hidden.
+- [Introduction](#introduction)
+- [Features](#features)
+  - [Muslim Center](#muslim-center)
+  - [Dhikr & Remembrance](#dhikr--remembrance)
+  - [Productivity Tools](#productivity-tools)
+  - [Launcher Features](#launcher-features)
+- [Screenshots](#screenshots)
+- [Installation](#installation)
+- [Build Instructions](#build-instructions)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
+- [Credits](#credits)
+- [License](#license)
 
-- Please check out the **[About](https://tanujnotes.substack.com/p/olauncher-minimal-af-launcher?utm_source=github)** page in the Olauncher settings for a complete list of features and **FAQs**.
+---
 
-##
+## Introduction
 
-License: [GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)
+Sakina Launcher is a minimal, distraction-free Android launcher designed for Muslims who want to maintain their spiritual practice while managing digital life mindfully. Built on the foundation of Olauncher, it integrates prayer times, dhikr reminders, and productivity tools into a clean, gesture-based interface.
 
-Dev: [X/twitter](https://x.com/tanujnotes) • [Bluesky](https://bsky.app/profile/tanujnotes.bsky.social)
+**Key Philosophy:**
+- Minimal distractions, maximum focus
+- Islamic features integrated naturally
+- Privacy-first: no data collection, no ads
+- Open source and always free
 
-##
+---
 
-### My other apps:
+## Features
 
-- [Pro Launcher](https://play.google.com/store/apps/details?id=app.prolauncher) - Pro version of Olauncher with extra features like widgets, weather, folders, etc.
+### Muslim Center
 
-- [Note to Self](https://play.google.com/store/apps/details?id=com.makenotetoself) - Free and [open source](https://github.com/jeerovan/ntsapp) notes app with chat like interface and end-to-end encryption.
+**Prayer Times**
+- 5 daily prayer times (Fajr, Dhuhr, Asr, Maghrib, Isha)
+- Next prayer indicator
+- Location-based scheduling
+- Multiple sources: Kemenag/MyQuran (Indonesia) and Aladhan Global
+- Auto-detect location or manual city selection
+- Cached schedules for offline access
 
-- [Pentastic](https://play.google.com/store/apps/details?id=app.pentastic) - Minimal todo lists. Free and [open source](https://github.com/tanujnotes/Pentastic).
+### Dhikr & Remembrance
+
+**Morning & Evening Dhikr**
+- Authentic dhikr collections from almanhaj.or.id
+- **Swipeable cards** - swipe left/right to navigate between dhikr
+- Arabic text with transliteration and translation
+- Built-in tasbih counter for each dhikr
+- Progress tracking per reading
+- Auto-advance after completing repetitions
+
+### Productivity Tools
+
+**Timer**
+- Simple countdown timer
+- Custom duration (minutes and seconds)
+- Start, pause, resume, and reset controls
+
+**Notes**
+- Quick note-taking
+- Pin important notes
+- Move notes to todo list
+- Clean, distraction-free interface
+
+**Todo List**
+- Simple task management
+- Check off completed items
+- Edit and delete tasks
+
+### Launcher Features
+
+**Minimal Home Screen**
+- Up to 8 favorite apps
+- Swipe gestures (left, right, up, down) to open apps
+- Date and time display
+- Battery percentage
+- Screen time tracking
+- Customizable text alignment and size
+
+**App Drawer**
+- Full app list with search
+- Type to auto-launch apps
+- Hide unwanted apps
+- Rename apps
+- Uninstall directly
+
+**Customization**
+- Theme modes (Light, Dark, System)
+- Text color (Black/White)
+- Text size adjustment
+- App alignment (Left, Center, Right)
+- Status bar visibility
+
+**Gestures**
+- Swipe up: App drawer
+- Swipe left/right/down: Configurable app shortcuts
+- Double tap: Lock screen (requires accessibility permission)
+- Home button: Recent apps (requires accessibility permission)
+- Long press: Settings
+
+**Privacy & Wellbeing**
+- No ads, no tracking, no data collection
+- Screen time display (optional)
+- Daily wallpaper updates
+- Hidden apps support
+- Private space support (Android 15+)
+
+---
+
+## Screenshots
+
+### Home Screen
+![Home Screen](Assets/screenshots/home.png)
+
+### Muslim Center
+![Muslim Center](Assets/screenshots/muslim_center_latest.png)
+
+### Dhikr Cards (Swipeable)
+![Dhikr Cards](Assets/screenshots/muslim_center_after_swipe.png)
+
+### Productive Panel
+![Productive Panel](Assets/screenshots/productive_panel.png)
+
+### Timer
+![Timer](Assets/screenshots/timer_panel_latest.png)
+
+---
+
+## Installation
+
+### Install from APK
+
+1. Download the latest APK from [Releases](https://github.com/YOUR_USERNAME/Sakina-Launcher/releases)
+2. Enable "Install from Unknown Sources" in your device settings
+3. Open the APK and install
+4. Set Sakina Launcher as your default launcher
+
+### Build from Source
+
+See [Build Instructions](#build-instructions) below.
+
+---
+
+## Build Instructions
+
+**Requirements:**
+- Android Studio (latest version recommended)
+- JDK 17
+- Android SDK 24-35
+
+**Steps:**
+
+1. Clone the repository:
+```bash
+git clone https://github.com/YOUR_USERNAME/Sakina-Launcher.git
+cd Sakina-Launcher
+```
+
+2. Open the project in Android Studio
+
+3. Build debug APK:
+```bash
+./gradlew assembleDebug
+```
+
+4. Build release APK:
+```bash
+./gradlew assembleRelease
+```
+
+5. Install debug to device:
+```bash
+./gradlew installDebug
+```
+
+6. Clean build:
+```bash
+./gradlew clean
+```
+
+**On Windows, use `gradlew.bat` instead of `./gradlew`**
+
+---
+
+## Project Structure
+
+### Architecture Pattern
+Single Activity (MainActivity) + Fragments via Navigation Component:
+- `HomeFragment` - Main launcher screen with favorite apps and gestures
+- `AppDrawerFragment` - Full app list with search
+- `SettingsFragment` - Configuration
+- `MuslimCenterFragment` - Prayer times and dhikr
+- `DhikrPagerFragment` - Swipeable dhikr cards
+- `NotePanelFragment` - Notes and todos with timer
+
+### Key Components
+
+**Data Layer** (`data/`)
+- `Prefs.kt` - SharedPreferences wrapper
+- `Constants.kt` - App-wide constants
+- `AppModel.kt` - App metadata model
+- `muslim/` - Prayer times and dhikr data models
+
+**ViewModel**
+- `MainViewModel.kt` - Shared state management, app list, usage stats
+
+**Helpers** (`helper/`)
+- `Utils.kt` - Launcher operations
+- `Extensions.kt` - Kotlin extensions
+- `AppUsageStats.kt` - Screen time tracking
+- `WallpaperWorker.kt` - Daily wallpaper updates
+- `PrayerLocationHelper.kt` - Location and prayer time management
+
+**UI** (`ui/`)
+- Fragment implementations
+- Adapters for RecyclerViews
+- Custom views (CircularTimerView)
+
+---
+
+## Tech Stack
+
+**Language:** Kotlin
+
+**Architecture:** MVVM with Single Activity + Navigation Component
+
+**Key Libraries:**
+- AndroidX Core, AppCompat, RecyclerView
+- Lifecycle (ViewModel, LiveData)
+- Navigation Component
+- WorkManager (background tasks)
+- Retrofit + OkHttp (API calls for prayer times)
+- Gson (JSON parsing)
+- Material Design Components
+
+**Build:**
+- Gradle with Java 17
+- Min SDK: 24 (Android 7.0)
+- Target SDK: 35 (Android 15)
+- ViewBinding enabled
+
+---
+
+## Credits
+
+**Based on [Olauncher](https://github.com/tanujnotes/Olauncher)** by [@tanujnotes](https://github.com/tanujnotes)
+
+Sakina Launcher builds upon the excellent foundation of Olauncher, adding Islamic features and productivity tools while maintaining its minimal philosophy.
+
+**Islamic Content Sources:**
+- Dhikr content: [almanhaj.or.id](https://almanhaj.or.id)
+- Prayer times API: Kemenag RI (Indonesia) and Aladhan Global
+
+---
+
+## License
+
+GNU General Public License v3.0
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+**Made with ❤️ for Muslims seeking digital minimalism and mindful productivity**

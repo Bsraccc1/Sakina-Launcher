@@ -36,7 +36,7 @@
                 android:layout_marginEnd="12dp"
                 android:background="@drawable/rounded_rect_shade_color"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -100,11 +100,125 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="12dp"
                 android:layout_marginTop="12dp"
+                android:animateLayoutChanges="true"
+                android:background="@drawable/rounded_rect_shade_color"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    style="@style/TextLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="@string/muslim_center"
+                    android:textColor="?attr/primaryColor" />
+
+                <LinearLayout
+                    android:id="@+id/prayerProvider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:lines="1"
+                        android:paddingVertical="8dp"
+                        android:text="@string/prayer_source_setting"
+                        android:textColor="?attr/primaryColor" />
+
+                    <TextView
+                        android:id="@+id/prayerProviderValue"
+                        style="@style/TextSmallBold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|bottom"
+                        android:layout_marginEnd="8dp"
+                        android:ellipsize="end"
+                        android:maxWidth="156dp"
+                        android:lines="1"
+                        android:padding="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/prayerRegion"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:lines="1"
+                        android:paddingVertical="8dp"
+                        android:text="@string/prayer_region"
+                        android:textColor="?attr/primaryColor" />
+
+                    <TextView
+                        android:id="@+id/prayerRegionValue"
+                        style="@style/TextSmallBold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|bottom"
+                        android:layout_marginEnd="8dp"
+                        android:lines="1"
+                        android:padding="8dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/prayerAutoDetect"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:lines="1"
+                        android:paddingVertical="8dp"
+                        android:text="@string/auto_detect_region"
+                        android:textColor="?attr/primaryColor" />
+
+                    <TextView
+                        android:id="@+id/prayerAutoDetectValue"
+                        style="@style/TextSmallBold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|bottom"
+                        android:layout_marginEnd="8dp"
+                        android:lines="1"
+                        android:padding="8dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
+                android:layout_marginTop="12dp"
                 android:background="@drawable/rounded_rect_shade_color"
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="vertical"
-                android:padding="12dp"
+                android:padding="16dp"
                 tools:visibility="visible">
 
                 <TextView
@@ -252,6 +366,32 @@
 
                     </LinearLayout>
 
+                </FrameLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:animateLayoutChanges="true">
+
+                    <TextView
+                        style="@style/TextSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:paddingVertical="8dp"
+                        android:text="@string/language"
+                        android:textColor="?attr/primaryColor" />
+
+                    <TextView
+                        android:id="@+id/languageText"
+                        style="@style/TextSmallBold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="end|bottom"
+                        android:layout_marginEnd="4dp"
+                        android:padding="8dp"
+                        tools:text="English" />
                 </FrameLayout>
 
                 <FrameLayout
@@ -482,7 +622,7 @@
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="vertical"
-                android:padding="12dp"
+                android:padding="16dp"
                 tools:visibility="visible">
 
                 <TextView
@@ -744,7 +884,7 @@
                 android:animateLayoutChanges="true"
                 android:background="@drawable/rounded_rect_shade_color"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="16dp">
 
                 <TextView
                     android:id="@+id/tvGestures"
@@ -768,11 +908,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:lines="1"
                         android:paddingVertical="8dp"
-                        android:text="@string/swipe_left_app"
+                        android:text="@string/swipe_left_for"
                         android:textColor="?attr/primaryColor" />
 
                     <TextView
@@ -781,7 +921,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="end|bottom"
-                        android:layout_marginEnd="4dp"
+                        android:layout_marginEnd="8dp"
                         android:lines="1"
                         android:padding="8dp" />
                 </LinearLayout>
@@ -797,11 +937,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_marginEnd="8dp"
                         android:layout_weight="1"
                         android:lines="1"
                         android:paddingVertical="8dp"
-                        android:text="@string/swipe_right_app"
+                        android:text="@string/swipe_right_for"
                         android:textColor="?attr/primaryColor" />
 
                     <TextView
@@ -810,7 +950,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="end|bottom"
-                        android:layout_marginEnd="4dp"
+                        android:layout_marginEnd="8dp"
                         android:lines="1"
                         android:padding="8dp" />
                 </LinearLayout>
@@ -829,7 +969,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
-                        android:layout_marginEnd="24dp"
+                        android:layout_marginEnd="8dp"
                         android:lines="1"
                         android:paddingVertical="8dp"
                         android:text="@string/swipe_down_for"
@@ -841,7 +981,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="end|bottom"
-                        android:layout_marginEnd="4dp"
+                        android:layout_marginEnd="8dp"
                         android:lines="1"
                         android:padding="8dp"
                         tools:text="@string/search" />

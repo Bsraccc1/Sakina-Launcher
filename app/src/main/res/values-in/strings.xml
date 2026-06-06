@@ -141,4 +141,80 @@
     <string name="new_year_wish_1">Tidak peduli bagaimana bulan Januari berlalu. Anda masih punya sisa tahun untuk melakukan yang lebih baik dari sebelumnya.</string>
     <string name="cheers">Bersulang!</string>
     <string name="notification_bar">Bilah pemberitahuan</string>
+    <string name="notes">Catatan</string>
+    <string name="todo">Tugas</string>
+    <string name="timer">Timer</string>
+    <string name="productive">Produktif</string>
+    <string name="write_note">Tambah catatan...</string>
+    <string name="write_todo">Tambah tugas...</string>
+    <string name="send">Kirim</string>
+    <string name="add">Tambah</string>
+    <string name="save">Simpan</string>
+    <string name="edit">Ubah</string>
+    <string name="edit_note">Ubah catatan</string>
+    <string name="edit_todo">Ubah tugas</string>
+    <string name="delete_note">Hapus catatan</string>
+    <string name="delete_todo">Hapus tugas</string>
+    <string name="move_to_todo">Pindah ke Tugas</string>
+    <string name="pin_note">Sematkan</string>
+    <string name="unpin_note">Lepas sematan</string>
+    <string name="moved_to_todo">Dipindah ke Tugas</string>
+    <string name="undo">Urungkan</string>
+    <string name="open_todo">Buka Tugas</string>
+    <string name="open_notes">Buka Catatan</string>
+    <string name="no_notes_yet">Belum ada catatan</string>
+    <string name="no_todos_yet">Belum ada tugas</string>
+    <string name="note_empty_message">Catatan tidak boleh kosong</string>
+    <string name="todo_empty_message">Tugas tidak boleh kosong</string>
+    <string name="start">Mulai</string>
+    <string name="pause">Jeda</string>
+    <string name="resume">Lanjutkan</string>
+    <string name="reset">Reset</string>
+    <string name="duration">Durasi</string>
+    <string name="minutes">Menit</string>
+    <string name="seconds">Detik</string>
+    <string name="tap_timer_to_set_duration">Ketuk waktu untuk mengatur menit dan detik</string>
+    <string name="timer_duration_empty">Timer minimal satu detik</string>
+    <string name="muslim_center">Pusat Muslim</string>
+    <string name="prayer_times">Waktu shalat</string>
+    <string name="next_prayer">Shalat berikutnya</string>
+    <string name="set_location_placeholder">Ketuk untuk mengubah lokasi</string>
+    <string name="city">Kota</string>
+    <string name="prayer_region">Lokasi shalat</string>
+    <string name="prayer_source_setting">Sumber waktu shalat</string>
+    <string name="prayer_provider_kemenag">Kemenag/MyQuran</string>
+    <string name="prayer_provider_global">Aladhan Global</string>
+    <string name="auto_detect_region">Deteksi lokasi otomatis</string>
+    <string name="location_not_found">Lokasi tidak ditemukan</string>
+    <string name="location_permission_denied">Izin lokasi ditolak</string>
+    <string name="city_empty_message">Kota tidak boleh kosong</string>
+    <string name="no_results">Tidak ada hasil</string>
+    <string name="loading_locations">Memuat lokasi...</string>
+    <string name="search_city_country">Cari kota atau negara</string>
+    <string name="loading_prayer_times">Memuat waktu shalat...</string>
+    <string name="unable_to_load_prayer_times">Tidak dapat memuat waktu shalat</string>
+    <string name="cached_schedule">Cache</string>
+    <string name="next_prayer_value" formatted="false">Shalat berikutnya: %1$s %2$s</string>
+    <string name="prayer_chip_value" formatted="false">%1$s\n%2$s</string>
+    <string name="prayer_source">Sumber: penyedia waktu shalat</string>
+    <string name="prayer_source_live" formatted="false">Sumber: %1$s - diperbarui %2$s</string>
+    <string name="prayer_source_cached" formatted="false">Sumber: %1$s - %2$s - diperbarui %3$s</string>
+    <string name="prayer_fajr">Subuh</string>
+    <string name="prayer_dhuhr">Dzuhur</string>
+    <string name="prayer_asr">Ashar</string>
+    <string name="prayer_maghrib">Maghrib</string>
+    <string name="prayer_isha">Isya</string>
+    <string name="dzikir_pagi">Dzikir pagi</string>
+    <string name="dzikir_petang">Dzikir petang</string>
+    <string name="dhikr_counter" formatted="false">%1$d / %2$d</string>
+    <string name="dhikr_repetition" formatted="false">Baca %1$d kali</string>
+    <string name="dzikir_source">Sumber: almanhaj.or.id</string>
+    <string name="dzikir_morning_summary" formatted="false">%1$d bacaan. Ketuk untuk membuka kartu dzikir.</string>
+    <string name="dzikir_evening_summary" formatted="false">%1$d bacaan. Ketuk untuk membuka kartu dzikir.</string>
+    <string name="open_source">Buka sumber</string>
+    <string name="swipe_target">Target geser</string>
+    <string name="muslim">Muslim</string>
+    <string name="language">Bahasa</string>
+    <string name="language_english">Inggris</string>
+    <string name="language_indonesian">Indonesia</string>
 </resources><!-- Indonesian -->

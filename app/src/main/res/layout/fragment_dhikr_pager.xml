@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_note_panel_scrim"
+    android:orientation="vertical"
+    android:paddingHorizontal="28dp"
+    android:paddingTop="56dp"
+    android:paddingBottom="32dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/TextLarge"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:textSize="24sp"
+            tools:text="Dzikir pagi" />
+
+        <TextView
+            android:id="@+id/counter"
+            style="@style/TextSmallBold"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_note_composer"
+            android:gravity="center"
+            android:minWidth="72dp"
+            android:paddingHorizontal="16dp"
+            android:textSize="16sp"
+            tools:text="1 / 4" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="20dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:overScrollMode="never">
+
+        <LinearLayout
+            android:id="@+id/contentCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_rect_shade_color"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="32dp">
+
+            <TextView
+                android:id="@+id/cardTitle"
+                style="@style/TextMedium"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:lineSpacingExtra="4dp"
+                tools:text="Ayat Kursi" />
+
+            <TextView
+                android:id="@+id/repetition"
+                style="@style/TextSmallLight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:alpha="0.72"
+                android:gravity="center"
+                tools:text="Read 1 time" />
+
+            <TextView
+                android:id="@+id/arabic"
+                style="@style/TextLarge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:gravity="center"
+                android:lineSpacingExtra="12dp"
+                android:textDirection="rtl"
+                android:textSize="28sp"
+                tools:text="بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ" />
+            <TextView
+                android:id="@+id/tasbihCounter"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_prayer_time_chip"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:minWidth="160dp"
+                android:paddingHorizontal="32dp"
+                android:paddingVertical="20dp"
+                android:textSize="36sp"
+                android:textStyle="bold"
+                tools:text="0 / 3" />
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:layout_marginTop="16dp"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/colorAccent"
+                android:progressBackgroundTint="#33FFFFFF" />
+
+
+
+            <TextView
+                android:id="@+id/latin"
+                style="@style/TextSmallBold"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:lineSpacingExtra="6dp"
+                tools:text="Bismillah..." />
+
+            <TextView
+                android:id="@+id/meaning"
+                style="@style/TextSmallLight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:alpha="0.68"
+                android:gravity="center"
+                android:lineSpacingExtra="6dp"
+                tools:text="Dengan nama Allah..." />
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

@@ -28,4 +28,7 @@
     <color name="blackInverseTrans80">#CCFFFFFF</color>
     <color name="blackInverseTrans90">#E6FFFFFF</color>
 
+    <!--Launcher Icon V4-->
+    <color name="ic_launcher_background">#004A54</color>
+
 </resources>

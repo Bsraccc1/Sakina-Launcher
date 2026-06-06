@@ -29,6 +29,7 @@ import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
+import app.olauncher.data.NotePanelMode
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.appUsagePermissionGranted
@@ -39,10 +40,9 @@ import app.olauncher.helper.getUserHandleFromString
 import app.olauncher.helper.isPackageInstalled
 import app.olauncher.helper.openAlarmApp
 import app.olauncher.helper.openCalendar
-import app.olauncher.helper.openCameraApp
-import app.olauncher.helper.openDialerApp
 import app.olauncher.helper.openSearch
 import app.olauncher.helper.setPlainWallpaperByTheme
+import app.olauncher.helper.launchSwipeApp
 import app.olauncher.helper.showToast
 import app.olauncher.listener.OnSwipeTouchListener
 import app.olauncher.listener.ViewSwipeTouchListener
@@ -373,6 +373,10 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
         // If it's a shortcut, verify it still exists
         if (isShortcut) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+                textView.text = ""
+                return false
+            }
             val launcherApps = requireContext().getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
 
             // Query for the specific shortcut
@@ -489,29 +493,58 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     }
 
     private fun openSwipeRightApp() {
-        if (!prefs.swipeRightEnabled) return
-        launchAppOrShortcut(
-            appName = prefs.appNameSwipeRight,
-            packageName = prefs.appPackageSwipeRight,
-            activityClassName = prefs.appActivityClassNameRight,
-            shortcutId = prefs.shortcutIdSwipeRight,
-            isShortcut = prefs.isShortcutSwipeRight,
-            userString = prefs.appUserSwipeRight,
-            fallback = { openDialerApp(requireContext()) }
+        launchSwipeApp(requireContext(), viewModel, prefs, isLeft = false)
+    }
+
+    private fun openSwipeTarget(isLeft: Boolean) {
+        when (if (isLeft) prefs.swipeLeftTarget else prefs.swipeRightTarget) {
+            Constants.SwipeTarget.OFF -> return
+            Constants.SwipeTarget.APP -> if (isLeft) openSwipeLeftApp() else openSwipeRightApp()
+            Constants.SwipeTarget.PRODUCTIVE -> openNotePanel(NotePanelMode.NOTES, isLeft)
+            Constants.SwipeTarget.NOTES -> openNotePanel(NotePanelMode.NOTES, isLeft)
+            Constants.SwipeTarget.TODO -> openNotePanel(NotePanelMode.TODO, isLeft)
+            Constants.SwipeTarget.TIMER -> openNotePanel(NotePanelMode.TIMER, isLeft)
+            Constants.SwipeTarget.MUSLIM_CENTER -> openMuslimCenter(isLeft)
+        }
+    }
+
+    private fun openNotePanel(mode: NotePanelMode, isLeft: Boolean) {
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.notePanelFragment) return
+        val direction = if (isLeft) Constants.SwipeDirection.LEFT else Constants.SwipeDirection.RIGHT
+        val args = bundleOf(
+            Constants.Key.NOTE_PANEL_MODE to mode.name,
+            Constants.Key.SWIPE_DIRECTION to direction
         )
+        try {
+            navController.navigate(R.id.action_mainFragment_to_notePanelFragment, args)
+        } catch (e: Exception) {
+            try {
+                navController.navigate(R.id.notePanelFragment, args)
+            } catch (fallbackException: Exception) {
+                fallbackException.printStackTrace()
+            }
+        }
+    }
+
+    private fun openMuslimCenter(isLeft: Boolean) {
+        val navController = findNavController()
+        if (navController.currentDestination?.id == R.id.muslimCenterFragment) return
+        val direction = if (isLeft) Constants.SwipeDirection.LEFT else Constants.SwipeDirection.RIGHT
+        val args = bundleOf(Constants.Key.SWIPE_DIRECTION to direction)
+        try {
+            navController.navigate(R.id.action_mainFragment_to_muslimCenterFragment, args)
+        } catch (e: Exception) {
+            try {
+                navController.navigate(R.id.muslimCenterFragment, args)
+            } catch (fallbackException: Exception) {
+                fallbackException.printStackTrace()
+            }
+        }
     }
 
     private fun openSwipeLeftApp() {
-        if (!prefs.swipeLeftEnabled) return
-        launchAppOrShortcut(
-            appName = prefs.appNameSwipeLeft,
-            packageName = prefs.appPackageSwipeLeft,
-            activityClassName = prefs.appActivityClassNameSwipeLeft,
-            shortcutId = prefs.shortcutIdSwipeLeft,
-            isShortcut = prefs.isShortcutSwipeLeft,
-            userString = prefs.appUserSwipeLeft,
-            fallback = { openCameraApp(requireContext()) }
-        )
+        launchSwipeApp(requireContext(), viewModel, prefs, isLeft = true)
     }
 
     private fun showAppList(flag: Int, rename: Boolean = false, includeHiddenApps: Boolean = false) {
@@ -630,12 +663,12 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         return object : OnSwipeTouchListener(context) {
             override fun onSwipeLeft() {
                 super.onSwipeLeft()
-                openSwipeLeftApp()
+                openSwipeTarget(isLeft = true)
             }
 
             override fun onSwipeRight() {
                 super.onSwipeRight()
-                openSwipeRightApp()
+                openSwipeTarget(isLeft = false)
             }
 
             override fun onSwipeUp() {
@@ -678,12 +711,12 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         return object : ViewSwipeTouchListener(context, view) {
             override fun onSwipeLeft() {
                 super.onSwipeLeft()
-                openSwipeLeftApp()
+                openSwipeTarget(isLeft = true)
             }
 
             override fun onSwipeRight() {
                 super.onSwipeRight()
-                openSwipeRightApp()
+                openSwipeTarget(isLeft = false)
             }
 
             override fun onSwipeUp() {

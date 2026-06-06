@@ -101,6 +101,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun launchShortcut(appModel: AppModel.PinnedShortcut) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) {
+            appContext.showToast(appContext.getString(R.string.unable_to_open_app))
+            return
+        }
         val launcher = appContext.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
         val query = LauncherApps.ShortcutQuery().apply {
             setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
@@ -274,6 +278,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             is AppModel.PrivateSpaceHeader -> return
             is AppModel.App -> {
                 if (isLeft) {
+                    if (prefs.swipeLeftTarget == Constants.SwipeTarget.OFF) prefs.swipeLeftTarget = Constants.SwipeTarget.APP
                     prefs.appNameSwipeLeft = appModel.appLabel
                     prefs.appPackageSwipeLeft = appModel.appPackage
                     prefs.appUserSwipeLeft = appModel.user.toString()
@@ -281,6 +286,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     prefs.isShortcutSwipeLeft = false
                     prefs.shortcutIdSwipeLeft = ""
                 } else {
+                    if (prefs.swipeRightTarget == Constants.SwipeTarget.OFF) prefs.swipeRightTarget = Constants.SwipeTarget.APP
                     prefs.appNameSwipeRight = appModel.appLabel
                     prefs.appPackageSwipeRight = appModel.appPackage
                     prefs.appUserSwipeRight = appModel.user.toString()
@@ -292,6 +298,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             is AppModel.PinnedShortcut -> {
                 if (isLeft) {
+                    if (prefs.swipeLeftTarget == Constants.SwipeTarget.OFF) prefs.swipeLeftTarget = Constants.SwipeTarget.APP
                     prefs.appNameSwipeLeft = appModel.appLabel
                     prefs.appPackageSwipeLeft = appModel.appPackage
                     prefs.appUserSwipeLeft = appModel.user.toString()
@@ -299,6 +306,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     prefs.isShortcutSwipeLeft = true
                     prefs.shortcutIdSwipeLeft = appModel.shortcutId
                 } else {
+                    if (prefs.swipeRightTarget == Constants.SwipeTarget.OFF) prefs.swipeRightTarget = Constants.SwipeTarget.APP
                     prefs.appNameSwipeRight = appModel.appLabel
                     prefs.appPackageSwipeRight = appModel.appPackage
                     prefs.appUserSwipeRight = appModel.user.toString()

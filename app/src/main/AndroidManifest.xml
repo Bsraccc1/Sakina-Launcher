@@ -8,13 +8,15 @@
         android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
-    <!--Used only for downloading wallpapers-->
+    <!--Used for downloading wallpapers and prayer times-->
     <uses-permission android:name="android.permission.INTERNET" />
     <!--Used only for opening alarm app-->
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!--Used for Private Space support on Android 15+-->
     <uses-permission android:name="android.permission.ACCESS_HIDDEN_PROFILES" />
 

@@ -5,6 +5,9 @@ object Constants {
     object Key {
         const val FLAG = "flag"
         const val RENAME = "rename"
+        const val NOTE_PANEL_MODE = "note_panel_mode"
+        const val SWIPE_DIRECTION = "swipe_direction"
+        const val DHIKR_PERIOD = "dhikr_period"
     }
 
     object Dialog {
@@ -44,6 +47,21 @@ object Constants {
     object SwipeDownAction {
         const val SEARCH = 1
         const val NOTIFICATIONS = 2
+    }
+
+    object SwipeTarget {
+        const val OFF = 0
+        const val APP = 1
+        const val NOTES = 2
+        const val TODO = 3
+        const val TIMER = 4
+        const val MUSLIM_CENTER = 5
+        const val PRODUCTIVE = 6
+    }
+
+    object SwipeDirection {
+        const val LEFT = "left"
+        const val RIGHT = "right"
     }
 
     object CharacterIndicator {
@@ -110,6 +128,7 @@ object Constants {
     const val URL_DEFAULT_LIGHT_WALLPAPER = "https://images.unsplash.com/photo-1515549832467-8783363e19b6"
     const val URL_DUCK_SEARCH = "https://duck.co/?q="
     const val URL_DIGITAL_WELLBEING_LEARN_MORE = "https://tanujnotes.substack.com/p/digital-wellbeing-app-on-android?utm_source=olauncher"
+    const val URL_DZIKIR_ALMANHAJ = "https://almanhaj.or.id/11518-dzikir-pagi-dan-petang.html#_ftn21"
 
     const val DIGITAL_WELLBEING_PACKAGE_NAME = "com.google.android.apps.wellbeing"
     const val DIGITAL_WELLBEING_ACTIVITY = "com.google.android.apps.wellbeing.settings.TopLevelSettingsActivity"

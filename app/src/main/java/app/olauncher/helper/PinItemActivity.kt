@@ -1,7 +1,9 @@
 package app.olauncher.helper
 
 import android.content.pm.LauncherApps
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 
 class PinItemActivity : AppCompatActivity() {
@@ -11,6 +13,12 @@ class PinItemActivity : AppCompatActivity() {
         
         // Set window to be transparent
         window.setBackgroundDrawable(null)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            showToast("Pin shortcuts are not supported")
+            finish()
+            return
+        }
 
         val launcherApps = getSystemService(LauncherApps::class.java)
         val pinItemRequest = launcherApps.getPinItemRequest(intent)
@@ -23,6 +31,7 @@ class PinItemActivity : AppCompatActivity() {
         finish()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleRequestType(pinItemRequest: LauncherApps.PinItemRequest) {
         when (pinItemRequest.requestType) {
             LauncherApps.PinItemRequest.REQUEST_TYPE_SHORTCUT ->
@@ -35,6 +44,7 @@ class PinItemActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun handleShortcutRequest(pinItemRequest: LauncherApps.PinItemRequest) {
         val shortcutInfo = pinItemRequest.shortcutInfo
         if (shortcutInfo != null) {

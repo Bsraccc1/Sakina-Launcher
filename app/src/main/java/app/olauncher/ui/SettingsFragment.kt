@@ -1,9 +1,11 @@
 package app.olauncher.ui
 
+import android.Manifest
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
@@ -14,10 +16,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
+import androidx.core.os.LocaleListCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import app.olauncher.BuildConfig
@@ -25,6 +30,12 @@ import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
+import app.olauncher.data.muslim.GlobalPrayerLocation
+import app.olauncher.data.muslim.PrayerApiClient
+import app.olauncher.data.muslim.PrayerCity
+import app.olauncher.data.muslim.PrayerProvider
+import app.olauncher.data.muslim.PrayerTimeRepository
+import app.olauncher.data.muslim.PrayerTimeStore
 import app.olauncher.databinding.FragmentSettingsBinding
 import app.olauncher.helper.animateAlpha
 import app.olauncher.helper.appUsagePermissionGranted
@@ -36,15 +47,20 @@ import app.olauncher.helper.isOlauncherDefault
 import app.olauncher.helper.isTablet
 import app.olauncher.helper.openAppInfo
 import app.olauncher.helper.openUrl
+import app.olauncher.helper.PrayerLocationHelper
 import app.olauncher.helper.rateApp
 import app.olauncher.helper.setPlainWallpaper
 import app.olauncher.helper.shareApp
 import app.olauncher.helper.showToast
 import app.olauncher.listener.DeviceAdmin
+import kotlinx.coroutines.launch
+import java.util.Locale
 
 class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListener {
 
     private lateinit var prefs: Prefs
+    private lateinit var prayerStore: PrayerTimeStore
+    private lateinit var prayerRepository: PrayerTimeRepository
     private lateinit var viewModel: MainViewModel
     private lateinit var deviceManager: DevicePolicyManager
     private lateinit var componentName: ComponentName
@@ -61,6 +77,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
+        prayerStore = PrayerTimeStore(requireContext())
+        prayerRepository = PrayerTimeRepository(PrayerApiClient.api, PrayerApiClient.aladhanApi, prayerStore)
         viewModel = activity?.run {
             ViewModelProvider(this)[MainViewModel::class.java]
         } ?: throw Exception("Invalid Activity")
@@ -78,11 +96,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateHomeButtonRecents()
         populateWallpaperText()
         populateAppThemeText()
+        populateLanguage()
         populateTextSize()
         populateAlignment()
         populateStatusBar()
         populateDateTime()
         populateSwipeApps()
+        populatePrayerRegion()
         populateSwipeDownAction()
         populateActionHints()
         initClickListeners()
@@ -152,11 +172,15 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.textSizeMinus -> adjustTextSizePreview(-0.1f)
             R.id.textSizePlus -> adjustTextSizePreview(0.1f)
 
-            R.id.swipeLeftApp -> showAppListIfEnabled(Constants.FLAG_SET_SWIPE_LEFT_APP)
-            R.id.swipeRightApp -> showAppListIfEnabled(Constants.FLAG_SET_SWIPE_RIGHT_APP)
+            R.id.swipeLeftApp -> showSwipeTargetPicker(isLeft = true)
+            R.id.swipeRightApp -> showSwipeTargetPicker(isLeft = false)
             R.id.swipeDownAction -> binding.swipeDownSelectLayout.visibility = View.VISIBLE
             R.id.notifications -> updateSwipeDownAction(Constants.SwipeDownAction.NOTIFICATIONS)
             R.id.search -> updateSwipeDownAction(Constants.SwipeDownAction.SEARCH)
+            R.id.prayerRegion -> showPrayerRegionPicker()
+            R.id.prayerProvider -> showPrayerProviderPicker()
+            R.id.prayerAutoDetect -> autoDetectPrayerRegion()
+            R.id.languageText -> showLanguagePicker()
 
             R.id.aboutOlauncher -> {
                 prefs.aboutClicked = true
@@ -194,8 +218,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 binding.themeSystem.visibility = View.VISIBLE
             }
 
-            R.id.swipeLeftApp -> toggleSwipeLeft()
-            R.id.swipeRightApp -> toggleSwipeRight()
+            R.id.swipeLeftApp -> showSwipeAppList(isLeft = true)
+            R.id.swipeRightApp -> showSwipeAppList(isLeft = false)
             R.id.toggleLock -> startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
         return true
@@ -227,10 +251,14 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.dateOnly.setOnClickListener(this)
         binding.swipeLeftApp.setOnClickListener(this)
         binding.swipeRightApp.setOnClickListener(this)
+        binding.prayerRegion.setOnClickListener(this)
+        binding.prayerProvider.setOnClickListener(this)
+        binding.prayerAutoDetect.setOnClickListener(this)
         binding.swipeDownAction.setOnClickListener(this)
         binding.search.setOnClickListener(this)
         binding.notifications.setOnClickListener(this)
         binding.appThemeText.setOnClickListener(this)
+        binding.languageText.setOnClickListener(this)
         binding.themeLight.setOnClickListener(this)
         binding.themeDark.setOnClickListener(this)
         binding.themeSystem.setOnClickListener(this)
@@ -287,25 +315,21 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun toggleSwipeLeft() {
-        prefs.swipeLeftEnabled = !prefs.swipeLeftEnabled
-        if (prefs.swipeLeftEnabled) {
-            binding.swipeLeftApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColor))
-            requireContext().showToast(getString(R.string.swipe_left_app_enabled))
+        prefs.swipeLeftTarget = if (prefs.swipeLeftTarget == Constants.SwipeTarget.OFF) {
+            Constants.SwipeTarget.PRODUCTIVE
         } else {
-            binding.swipeLeftApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
-            requireContext().showToast(getString(R.string.swipe_left_app_disabled))
+            Constants.SwipeTarget.OFF
         }
+        populateSwipeApps()
     }
 
     private fun toggleSwipeRight() {
-        prefs.swipeRightEnabled = !prefs.swipeRightEnabled
-        if (prefs.swipeRightEnabled) {
-            binding.swipeRightApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColor))
-            requireContext().showToast(getString(R.string.swipe_right_app_enabled))
+        prefs.swipeRightTarget = if (prefs.swipeRightTarget == Constants.SwipeTarget.OFF) {
+            Constants.SwipeTarget.MUSLIM_CENTER
         } else {
-            binding.swipeRightApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
-            requireContext().showToast(getString(R.string.swipe_right_app_disabled))
+            Constants.SwipeTarget.OFF
         }
+        populateSwipeApps()
     }
 
     private fun toggleStatusBar() {
@@ -540,6 +564,28 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         }
     }
 
+    private fun populateLanguage() {
+        val tag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        binding.languageText.text = if (tag.startsWith("in") || tag.startsWith("id")) {
+            getString(R.string.language_indonesian)
+        } else {
+            getString(R.string.language_english)
+        }
+    }
+
+    private fun showLanguagePicker() {
+        val tags = arrayOf("en", "in")
+        val labels = arrayOf(getString(R.string.language_english), getString(R.string.language_indonesian))
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.language)
+            .setItems(labels) { _, which ->
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags[which]))
+                populateLanguage()
+                requireActivity().recreate()
+            }
+            .show()
+    }
+
     private fun populateTextSize() {
         val formatted = String.format("%.1f", prefs.textSizeScale)
         binding.textSizeValue.text = formatted
@@ -628,12 +674,341 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun populateSwipeApps() {
-        binding.swipeLeftApp.text = prefs.appNameSwipeLeft
-        binding.swipeRightApp.text = prefs.appNameSwipeRight
-        if (!prefs.swipeLeftEnabled)
-            binding.swipeLeftApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
-        if (!prefs.swipeRightEnabled)
-            binding.swipeRightApp.setTextColor(requireContext().getColorFromAttr(R.attr.primaryColorTrans50))
+        binding.swipeLeftApp.text = swipeTargetSummary(isLeft = true)
+        binding.swipeRightApp.text = swipeTargetSummary(isLeft = false)
+        binding.swipeLeftApp.setTextColor(
+            requireContext().getColorFromAttr(
+                if (prefs.swipeLeftTarget == Constants.SwipeTarget.OFF) R.attr.primaryColorTrans50
+                else R.attr.primaryColor
+            )
+        )
+        binding.swipeRightApp.setTextColor(
+            requireContext().getColorFromAttr(
+                if (prefs.swipeRightTarget == Constants.SwipeTarget.OFF) R.attr.primaryColorTrans50
+                else R.attr.primaryColor
+            )
+        )
+    }
+
+    private fun showSwipeTargetPicker(isLeft: Boolean) {
+        val targetValues = intArrayOf(
+            Constants.SwipeTarget.PRODUCTIVE,
+            Constants.SwipeTarget.TODO,
+            Constants.SwipeTarget.TIMER,
+            Constants.SwipeTarget.MUSLIM_CENTER,
+            Constants.SwipeTarget.APP,
+            Constants.SwipeTarget.OFF,
+        )
+        val labels = targetValues.map { swipeTargetLabel(it) }.toTypedArray()
+        AlertDialog.Builder(requireContext())
+            .setTitle(if (isLeft) R.string.swipe_left_for else R.string.swipe_right_for)
+            .setItems(labels) { _, which ->
+                if (isLeft) {
+                    prefs.swipeLeftTarget = targetValues[which]
+                } else {
+                    prefs.swipeRightTarget = targetValues[which]
+                }
+                populateSwipeApps()
+            }
+            .show()
+    }
+
+    private fun swipeTargetSummary(isLeft: Boolean): String {
+        val target = if (isLeft) prefs.swipeLeftTarget else prefs.swipeRightTarget
+        val appName = if (isLeft) prefs.appNameSwipeLeft else prefs.appNameSwipeRight
+        if (target == Constants.SwipeTarget.APP) {
+            return appName.ifBlank { swipeTargetLabel(target) }
+        }
+        if (target == Constants.SwipeTarget.OFF) {
+            return swipeTargetLabel(target)
+        }
+        return "${swipeTargetLabel(target)} / ${appName.ifBlank { swipeTargetLabel(Constants.SwipeTarget.APP) }}"
+    }
+
+    private fun swipeTargetLabel(target: Int): String {
+        return getString(
+            when (target) {
+                Constants.SwipeTarget.APP -> R.string.app
+                Constants.SwipeTarget.PRODUCTIVE -> R.string.productive
+                Constants.SwipeTarget.NOTES -> R.string.notes
+                Constants.SwipeTarget.TODO -> R.string.todo
+                Constants.SwipeTarget.TIMER -> R.string.timer
+                Constants.SwipeTarget.MUSLIM_CENTER -> R.string.muslim
+                else -> R.string.off
+            }
+        )
+    }
+
+    private fun populatePrayerRegion() {
+        binding.prayerProviderValue.text = getString(
+            when (prayerStore.provider) {
+                PrayerProvider.KEMENAG -> R.string.prayer_provider_kemenag
+                PrayerProvider.GLOBAL -> R.string.prayer_provider_global
+            }
+        )
+        binding.prayerRegionValue.text = when (prayerStore.provider) {
+            PrayerProvider.KEMENAG -> {
+                val fallbackCity = prayerStore.cityQuery.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+                }
+                prayerStore.cityLabel.ifBlank { fallbackCity }
+            }
+            PrayerProvider.GLOBAL -> listOf(prayerStore.globalLocationLabel, prayerStore.globalCountry)
+                .filter { it.isNotBlank() }
+                .joinToString(", ")
+        }
+        binding.prayerAutoDetectValue.text = getString(
+            if (prayerStore.autoDetectLocation) R.string.on else R.string.off
+        )
+    }
+
+    private fun showPrayerProviderPicker() {
+        val providers = arrayOf(PrayerProvider.KEMENAG, PrayerProvider.GLOBAL)
+        val labels = arrayOf(getString(R.string.prayer_provider_kemenag), getString(R.string.prayer_provider_global))
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.prayer_source_setting)
+            .setItems(labels) { _, which ->
+                prayerStore.provider = providers[which]
+                prayerStore.autoDetectLocation = false
+                populatePrayerRegion()
+                refreshSelectedPrayerProvider()
+            }
+            .show()
+    }
+
+    private fun refreshSelectedPrayerProvider() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            when (prayerStore.provider) {
+                PrayerProvider.KEMENAG -> prayerRepository.refreshToday()
+                PrayerProvider.GLOBAL -> prayerRepository.selectGlobalLocation(
+                    GlobalPrayerLocation(
+                        label = prayerStore.globalLocationLabel,
+                        country = prayerStore.globalCountry,
+                        latitude = prayerStore.globalLatitude,
+                        longitude = prayerStore.globalLongitude,
+                        timeZoneId = prayerStore.globalTimeZoneId,
+                        method = prayerStore.globalMethod,
+                    )
+                )
+            }
+        }
+    }
+
+    private fun showPrayerRegionPicker() {
+        when (prayerStore.provider) {
+            PrayerProvider.KEMENAG -> showKemenagRegionPicker()
+            PrayerProvider.GLOBAL -> showGlobalRegionPicker()
+        }
+    }
+
+    private fun showKemenagRegionPicker() {
+        val presetQueries = arrayOf("jakarta", "bandung", "surabaya", "yogyakarta", "medan", "makassar")
+        viewLifecycleOwner.lifecycleScope.launch {
+            requireContext().showToast(getString(R.string.loading_locations))
+            val fallbackCities = presetQueries.mapNotNull { query ->
+                prayerRepository.searchCities(query).firstOrNull()
+            }.distinctBy { it.id }
+            val cities = prayerRepository.allCities().ifEmpty { fallbackCities }
+            if (cities.isEmpty()) {
+                requireContext().showToast(getString(R.string.unable_to_load_prayer_times))
+                return@launch
+            }
+
+            val dialogView = layoutInflater.inflate(R.layout.dialog_prayer_city_picker, null)
+            val searchInput = dialogView.findViewById<android.widget.EditText>(R.id.searchInput)
+            val cityList = dialogView.findViewById<android.widget.ListView>(R.id.cityList)
+            val emptyView = dialogView.findViewById<android.widget.TextView>(R.id.emptyView)
+
+            val adapter = android.widget.ArrayAdapter(
+                requireContext(),
+                R.layout.adapter_prayer_location,
+                cities.map { it.label }.toMutableList()
+            )
+            cityList.adapter = adapter
+
+            val dialog = AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create()
+
+            searchInput.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    val query = s?.toString()?.lowercase() ?: ""
+                    val filtered = if (query.isEmpty()) {
+                        cities
+                    } else {
+                        cities.filter {
+                            it.label.lowercase().contains(query)
+                        }
+                    }
+
+                    if (filtered.isEmpty()) {
+                        cityList.visibility = View.GONE
+                        emptyView.visibility = View.VISIBLE
+                    } else {
+                        cityList.visibility = View.VISIBLE
+                        emptyView.visibility = View.GONE
+                        adapter.clear()
+                        adapter.addAll(filtered.map { it.label })
+                        adapter.notifyDataSetChanged()
+                    }
+                }
+            })
+
+            cityList.setOnItemClickListener { _, _, position, _ ->
+                val query = searchInput.text.toString().lowercase()
+                val filtered = if (query.isEmpty()) {
+                    cities
+                } else {
+                    cities.filter {
+                        it.label.lowercase().contains(query)
+                    }
+                }
+                if (position < filtered.size) {
+                    selectPrayerCity(filtered[position], autoDetected = false)
+                    dialog.dismiss()
+                }
+            }
+
+            dialog.show()
+            searchInput.requestFocus()
+        }
+    }
+
+    private fun showGlobalRegionPicker() {
+        val locations = PrayerTimeRepository.globalPresetLocations
+        val dialogView = layoutInflater.inflate(R.layout.dialog_prayer_city_picker, null)
+        val searchInput = dialogView.findViewById<android.widget.EditText>(R.id.searchInput)
+        val cityList = dialogView.findViewById<android.widget.ListView>(R.id.cityList)
+        val emptyView = dialogView.findViewById<android.widget.TextView>(R.id.emptyView)
+        val adapter = android.widget.ArrayAdapter(
+            requireContext(),
+            R.layout.adapter_prayer_location,
+            locations.map { "${it.label}, ${it.country}" }.toMutableList()
+        )
+        cityList.adapter = adapter
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+        fun filteredLocations(): List<GlobalPrayerLocation> {
+            val query = searchInput.text.toString().lowercase()
+            return if (query.isBlank()) locations else locations.filter {
+                "${it.label} ${it.country}".lowercase().contains(query)
+            }
+        }
+        searchInput.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val filtered = filteredLocations()
+                cityList.visibility = if (filtered.isEmpty()) View.GONE else View.VISIBLE
+                emptyView.visibility = if (filtered.isEmpty()) View.VISIBLE else View.GONE
+                adapter.clear()
+                adapter.addAll(filtered.map { "${it.label}, ${it.country}" })
+                adapter.notifyDataSetChanged()
+            }
+        })
+        cityList.setOnItemClickListener { _, _, position, _ ->
+            val filtered = filteredLocations()
+            if (position < filtered.size) {
+                selectGlobalPrayerLocation(filtered[position], autoDetected = false)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
+        searchInput.hint = getString(R.string.search_city_country)
+        searchInput.requestFocus()
+    }
+
+    private fun autoDetectPrayerRegion() {
+        if (!PrayerLocationHelper.hasLocationPermission(requireContext())) {
+            requestPermissions(
+                arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_LOCATION_PERMISSION
+            )
+            return
+        }
+        if (prayerStore.provider == PrayerProvider.GLOBAL) {
+            detectGlobalPrayerRegionFromLocation()
+        } else {
+            detectPrayerRegionFromLocation()
+        }
+    }
+
+    private fun detectPrayerRegionFromLocation() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val cityQuery = PrayerLocationHelper.detectCityQuery(requireContext())
+            if (cityQuery.isNullOrBlank()) {
+                requireContext().showToast(getString(R.string.location_not_found))
+                return@launch
+            }
+            val city = prayerRepository.searchCities(cityQuery).firstOrNull()
+            if (city == null) {
+                requireContext().showToast(getString(R.string.location_not_found))
+                return@launch
+            }
+            selectPrayerCity(city, autoDetected = true)
+        }
+    }
+
+    private fun detectGlobalPrayerRegionFromLocation() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val detected = PrayerLocationHelper.detectLocation(requireContext())
+            if (detected == null) {
+                requireContext().showToast(getString(R.string.location_not_found))
+                return@launch
+            }
+            selectGlobalPrayerLocation(
+                GlobalPrayerLocation(
+                    label = detected.cityQuery,
+                    country = detected.country,
+                    latitude = detected.latitude,
+                    longitude = detected.longitude,
+                    timeZoneId = detected.timeZoneId,
+                    method = 3,
+                ),
+                autoDetected = true,
+            )
+        }
+    }
+
+    private fun selectPrayerCity(city: PrayerCity, autoDetected: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            prayerStore.autoDetectLocation = autoDetected
+            prayerRepository.selectCity(city)
+            populatePrayerRegion()
+            requireContext().showToast(city.label)
+        }
+    }
+
+    private fun selectGlobalPrayerLocation(location: GlobalPrayerLocation, autoDetected: Boolean) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            prayerStore.autoDetectLocation = autoDetected
+            prayerRepository.selectGlobalLocation(location)
+            populatePrayerRegion()
+            requireContext().showToast("${location.label}, ${location.country}")
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQUEST_LOCATION_PERMISSION) return
+        if (grantResults.any { it == PackageManager.PERMISSION_GRANTED }) {
+            if (prayerStore.provider == PrayerProvider.GLOBAL) {
+                detectGlobalPrayerRegionFromLocation()
+            } else {
+                detectPrayerRegionFromLocation()
+            }
+        } else {
+            prayerStore.autoDetectLocation = false
+            populatePrayerRegion()
+            requireContext().showToast(getString(R.string.location_permission_denied))
+        }
     }
 
 //    private fun populateDigitalWellbeing() {
@@ -642,15 +1017,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 //                && prefs.hideDigitalWellbeing.not()
 //    }
 
-    private fun showAppListIfEnabled(flag: Int) {
-        if ((flag == Constants.FLAG_SET_SWIPE_LEFT_APP) and !prefs.swipeLeftEnabled) {
-            requireContext().showToast(getString(R.string.long_press_to_enable))
-            return
-        }
-        if ((flag == Constants.FLAG_SET_SWIPE_RIGHT_APP) and !prefs.swipeRightEnabled) {
-            requireContext().showToast(getString(R.string.long_press_to_enable))
-            return
-        }
+    private fun showSwipeAppList(isLeft: Boolean) {
+        val flag = if (isLeft) Constants.FLAG_SET_SWIPE_LEFT_APP else Constants.FLAG_SET_SWIPE_RIGHT_APP
         viewModel.getAppList(true)
         findNavController().navigate(
             R.id.action_settingsFragment_to_appListFragment,
@@ -681,5 +1049,9 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     override fun onDestroy() {
         viewModel.checkForMessages.call()
         super.onDestroy()
+    }
+
+    companion object {
+        private const val REQUEST_LOCATION_PERMISSION = 901
     }
 }
