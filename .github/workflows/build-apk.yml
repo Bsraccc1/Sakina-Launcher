@@ -36,10 +36,14 @@ jobs:
           echo "code=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "Version: $VERSION_NAME (code: $VERSION_CODE)"
       
-      - name: Rename APK
+      - name: Rename and prepare APK
         run: |
           cd app/build/outputs/apk/release
-          mv app-release-unsigned.apk Sakina-Launcher-${{ steps.version.outputs.name }}.apk
+          ls -lh
+          APK_FILE=$(ls *.apk | head -1)
+          echo "Found APK: $APK_FILE"
+          cp "$APK_FILE" Sakina-Launcher-${{ steps.version.outputs.name }}.apk
+          ls -lh Sakina-Launcher-*.apk
       
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -61,10 +65,10 @@ jobs:
             
             ### 📥 Download & Install
             
-            **APK**: `Sakina-Launcher-${{ steps.version.outputs.name }}.apk` (unsigned)
+            **Download**: `Sakina-Launcher-${{ steps.version.outputs.name }}.apk`
             
-            **Installation steps:**
-            1. Download APK di bawah
+            **Installation:**
+            1. Download APK di bawah (Assets section)
             2. Buka Settings → Security → Enable "Install unknown apps"
             3. Install APK
             4. Set sebagai default launcher
@@ -78,14 +82,14 @@ jobs:
             ### 🙏 Credits
             Forked from [Olauncher](https://github.com/tanujnotes/Olauncher) by @tanujnotes
             
-            Islamic content from:
+            Islamic content:
             - Prayer times: Kemenag API & Aladhan API
-            - Dhikr: almanhaj.or.id
+            - Dhikr content: almanhaj.or.id
             
             ### 📊 Build Info
-            - Version Code: ${{ steps.version.outputs.code }}
-            - Built with: GitHub Actions
-            - JDK: 17 (Temurin)
+            - Version: ${{ steps.version.outputs.name }} (code: ${{ steps.version.outputs.code }})
+            - Built: ${{ github.event.head_commit.timestamp }}
+            - Commit: ${{ github.sha }}
           draft: false
           prerelease: false
           files: |
