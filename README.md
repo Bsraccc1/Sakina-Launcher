@@ -1,5 +1,9 @@
 # Sakina Launcher
 
+<p align="center">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Sakina Launcher Icon" width="120" height="120">
+</p>
+
 A minimal Android launcher with integrated Islamic features for mindful productivity.
 
 ![Sakina Launcher](Assets/screenshots/home.png)
@@ -252,14 +256,22 @@ Single Activity (MainActivity) + Fragments via Navigation Component:
 
 ## Credits
 
+### Original Project
+
 **Based on [Olauncher](https://github.com/tanujnotes/Olauncher)** by [@tanujnotes](https://github.com/tanujnotes)
 
-Sakina Launcher builds upon the excellent foundation of Olauncher, adding Islamic features and productivity tools while maintaining its minimal philosophy.
+Sakina Launcher builds upon the excellent foundation of Olauncher, adding Islamic features and productivity tools while maintaining its minimal, distraction-free philosophy. All core launcher functionality, gesture controls, and privacy-first design principles are inherited from Olauncher.
 
-**Islamic Content Sources:**
-- Dhikr content: [almanhaj.or.id](https://almanhaj.or.id)
-- Prayer times API: Kemenag RI (Indonesia) and Aladhan Global
+### Islamic Content Sources
 
+- **Dhikr content**: [almanhaj.or.id](https://almanhaj.or.id) - Morning and Evening remembrance
+- **Prayer times API**: 
+  - Kemenag RI / MyQuran API (Indonesia)
+  - Aladhan Global API (worldwide)
+
+### App Icon
+
+Icon designed specifically for Sakina Launcher - featuring Arabic calligraphy "سكينة" (tranquility) on teal background.
 ---
 
 ## License

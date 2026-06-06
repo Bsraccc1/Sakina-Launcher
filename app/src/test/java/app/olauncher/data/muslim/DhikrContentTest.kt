@@ -1,4 +1,4 @@
-package app.olauncher.data.muslim
+package app.sakinalauncher.data.muslim
 
 import org.junit.Assert.assertTrue
 import org.junit.Test

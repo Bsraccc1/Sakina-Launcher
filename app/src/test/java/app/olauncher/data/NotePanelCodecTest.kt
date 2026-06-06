@@ -1,4 +1,4 @@
-package app.olauncher.data
+package app.sakinalauncher.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

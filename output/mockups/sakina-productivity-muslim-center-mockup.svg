@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#edf6fb"/>
+      <stop offset="1" stop-color="#f8fbfd"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#071018"/>
+      <stop offset="0.55" stop-color="#17242b"/>
+      <stop offset="1" stop-color="#05080b"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#24323a" flood-opacity="0.22"/>
+    </filter>
+    <style>
+      .phone { fill:#050607; stroke:#2b2f32; stroke-width:6; }
+      .screen { fill:url(#wall); }
+      .status { fill:#fff; font: 22px Arial, sans-serif; opacity:.95; }
+      .title { fill:#fff; font: 44px Arial, sans-serif; font-weight:300; }
+      .h2 { fill:#fff; font: 28px Arial, sans-serif; font-weight:300; opacity:.96; }
+      .text { fill:#fff; font: 24px Arial, sans-serif; font-weight:300; opacity:.95; }
+      .small { fill:#fff; font: 17px Arial, sans-serif; opacity:.75; }
+      .card { fill:rgba(255,255,255,.07); stroke:rgba(255,255,255,.24); stroke-width:1.2; }
+      .pill { fill:rgba(255,255,255,.11); stroke:rgba(255,255,255,.20); stroke-width:1; }
+      .sel { fill:rgba(255,255,255,.18); }
+      .muted { opacity:.55; }
+      .accent { fill:#9dc6b0; }
+    </style>
+  </defs>
+  <rect width="1800" height="1080" fill="url(#bg)"/>
+
+  <!-- phone 1 -->
+  <g transform="translate(120,80)" filter="url(#shadow)">
+    <rect class="phone" x="0" y="0" width="470" height="920" rx="52"/>
+    <rect class="screen" x="22" y="22" width="426" height="876" rx="36"/>
+    <circle cx="235" cy="36" r="10" fill="#030405" stroke="#1c2226"/>
+    <text class="status" x="58" y="72">10:30</text>
+    <text class="status" x="374" y="72">◢ ▰</text>
+    <text class="title" x="62" y="142">Sakina</text>
+    <circle cx="392" cy="122" r="19" fill="none" stroke="#fff" stroke-width="3" opacity=".9"/>
+    <text class="small" x="386" y="129">i</text>
+    <rect class="card" x="48" y="178" width="374" height="156" rx="22"/>
+    <text class="text" x="72" y="224">Set as default launcher</text>
+    <text class="text" x="72" y="266">About and FAQs</text>
+    <text class="text" x="72" y="308">More features...</text>
+    <rect class="card" x="48" y="360" width="374" height="214" rx="22"/>
+    <text class="small" x="72" y="405">Home screen</text>
+    <text class="text" x="72" y="449">Apps on home screen</text>
+    <text class="text" x="368" y="449">8</text>
+    <text class="text" x="72" y="497">Show date time</text>
+    <text class="text" x="345" y="497">On</text>
+    <text class="text" x="72" y="545">App alignment</text>
+    <text class="text" x="330" y="545">Left</text>
+    <rect class="card" x="48" y="600" width="374" height="190" rx="22"/>
+    <text class="small" x="72" y="646">Appearance</text>
+    <text class="text" x="72" y="694">Auto show keyboard</text>
+    <text class="text" x="345" y="694">On</text>
+    <text class="text" x="72" y="742">Daily new wallpaper</text>
+    <text class="text" x="340" y="742">Off</text>
+    <text class="text" x="72" y="790">Theme mode</text>
+    <text class="text" x="332" y="790">Dark</text>
+    <rect class="card" x="48" y="818" width="374" height="68" rx="22"/>
+    <text class="small" x="72" y="848">Gestures</text>
+    <text class="text" x="72" y="874">Swipe left app</text>
+    <rect x="180" y="875" width="110" height="6" rx="3" fill="#fff"/>
+  </g>
+
+  <!-- phone 2 -->
+  <g transform="translate(665,80)" filter="url(#shadow)">
+    <rect class="phone" x="0" y="0" width="470" height="920" rx="52"/>
+    <rect class="screen" x="22" y="22" width="426" height="876" rx="36"/>
+    <circle cx="235" cy="36" r="10" fill="#030405" stroke="#1c2226"/>
+    <text class="status" x="58" y="72">10:30</text>
+    <text class="status" x="374" y="72">◢ ▰</text>
+    <text class="title" x="62" y="142">Focus</text>
+    <rect class="pill" x="54" y="178" width="362" height="50" rx="16"/>
+    <rect class="sel" x="290" y="184" width="112" height="38" rx="13"/>
+    <text class="small muted" x="91" y="209">Notes</text>
+    <text class="small muted" x="203" y="209">Todo</text>
+    <text class="small" x="316" y="209">Timer</text>
+    <rect class="card" x="54" y="260" width="362" height="384" rx="24"/>
+    <text class="h2" x="86" y="312">Pomodoro</text>
+    <circle cx="235" cy="448" r="104" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="14"/>
+    <path d="M 235 344 A 104 104 0 1 1 152 510" fill="none" stroke="#9dc6b0" stroke-width="14" stroke-linecap="round"/>
+    <text class="title" x="143" y="434">25:00</text>
+    <rect class="pill" x="178" y="468" width="114" height="42" rx="18" fill="#9dc6b0"/>
+    <text class="small" x="214" y="495">Start</text>
+    <text class="small" x="122" y="590">Tap time to edit</text>
+    <text class="small" x="266" y="590">Pause · Reset</text>
+    <rect class="card" x="54" y="680" width="362" height="160" rx="24"/>
+    <text class="h2" x="86" y="728">Timer settings</text>
+    <text class="text" x="86" y="780">Focus</text>
+    <text class="text" x="304" y="780">25m 00s</text>
+    <text class="text" x="86" y="824">Break</text>
+    <text class="text" x="304" y="824">05m 00s</text>
+    <rect x="180" y="875" width="110" height="6" rx="3" fill="#fff"/>
+  </g>
+
+  <!-- phone 3 -->
+  <g transform="translate(1210,80)" filter="url(#shadow)">
+    <rect class="phone" x="0" y="0" width="470" height="920" rx="52"/>
+    <rect class="screen" x="22" y="22" width="426" height="876" rx="36"/>
+    <circle cx="235" cy="36" r="10" fill="#030405" stroke="#1c2226"/>
+    <text class="status" x="58" y="72">10:30</text>
+    <text class="status" x="374" y="72">◢ ▰</text>
+    <text class="title" x="62" y="142">Muslim Center</text>
+    <rect class="card" x="54" y="178" width="362" height="236" rx="24"/>
+    <text class="small" x="86" y="218">Next prayer</text>
+    <text class="title" x="86" y="282">Maghrib</text>
+    <text class="h2" x="86" y="330">17:49</text>
+    <text class="small" x="260" y="330">Jakarta</text>
+    <text class="small" x="86" y="374">Fajr 04:34  Dhuhr 11:52</text>
+    <rect class="card" x="54" y="450" width="362" height="150" rx="24"/>
+    <text class="h2" x="86" y="502">Dzikir pagi</text>
+    <text class="small" x="86" y="542">Curated source + count</text>
+    <text class="small" x="86" y="570">Open detail for full text</text>
+    <rect class="card" x="54" y="626" width="362" height="150" rx="24"/>
+    <text class="h2" x="86" y="678">Dzikir petang</text>
+    <text class="small" x="86" y="718">Local, offline after pack exists</text>
+    <text class="small" x="86" y="746">Source attribution required</text>
+    <rect x="180" y="875" width="110" height="6" rx="3" fill="#fff"/>
+  </g>
+
+  <text x="120" y="1040" fill="#1f2b32" font="28px Arial, sans-serif">Concept: Sakina Launcher - brandkit, swipe routes, productivity panel, Muslim Center</text>
+</svg>

@@ -110,7 +110,7 @@
                 android:layout_width="248dp"
                 android:layout_height="248dp">
 
-                <app.olauncher.ui.view.CircularTimerView
+                <app.sakinalauncher.ui.view.CircularTimerView
                     android:id="@+id/timerProgress"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
