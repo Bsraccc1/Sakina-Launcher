@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <set xmlns:android="http://schemas.android.com/apk/res/android">
     <translate
-        android:duration="@android:integer/config_shortAnimTime"
+        android:duration="170"
         android:fromYDelta="0%"
-        android:toYDelta="-1%" />
+        android:interpolator="@interpolator/sakina_smooth"
+        android:toYDelta="-4%" />
     <alpha
-        android:duration="150"
+        android:duration="170"
         android:fromAlpha="1.0"
+        android:interpolator="@interpolator/sakina_smooth"
         android:toAlpha="0.0" />
 </set>

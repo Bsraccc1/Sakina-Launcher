@@ -25,7 +25,6 @@ import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentMuslimCenterBinding
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.openUrl
-import app.sakinalauncher.listener.OnSwipeTouchListener
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -221,15 +220,12 @@ class MuslimCenterFragment : Fragment() {
     }
 
     private fun initSwipe() {
-        binding.rootLayout.setOnTouchListener(object : OnSwipeTouchListener(requireContext()) {
-            override fun onSwipeLeft() {
-                handleHorizontalSwipe(Constants.SwipeDirection.LEFT)
-            }
-
-            override fun onSwipeRight() {
-                handleHorizontalSwipe(Constants.SwipeDirection.RIGHT)
-            }
-        })
+        binding.scrollView.onHorizontalSwipeLeft = {
+            handleHorizontalSwipe(Constants.SwipeDirection.LEFT)
+        }
+        binding.scrollView.onHorizontalSwipeRight = {
+            handleHorizontalSwipe(Constants.SwipeDirection.RIGHT)
+        }
     }
 
     private fun handleHorizontalSwipe(direction: String) {

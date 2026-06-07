@@ -11,6 +11,7 @@ data class NoteMessage(
     val createdAtMillis: Long,
     val updatedAtMillis: Long? = null,
     val isPinned: Boolean = false,
+    val isDone: Boolean = false,
 )
 
 data class TodoItem(

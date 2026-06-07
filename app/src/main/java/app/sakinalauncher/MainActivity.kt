@@ -55,10 +55,6 @@ class MainActivity : AppCompatActivity() {
     private var isResumed = false
     private var profileReceiver: BroadcastReceiver? = null
 
-//    override fun onBackPressed() {
-//        if (navController.currentDestination?.id != R.id.mainFragment)
-//            super.onBackPressed()
-//    }
 
     override fun attachBaseContext(context: Context) {
         val newConfig = Configuration(context.resources.configuration)

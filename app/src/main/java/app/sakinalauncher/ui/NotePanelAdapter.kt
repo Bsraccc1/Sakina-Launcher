@@ -16,12 +16,14 @@ import app.sakinalauncher.databinding.AdapterNoteMessageBinding
 import app.sakinalauncher.databinding.AdapterTodoItemBinding
 
 class NotePanelAdapter(
+    private val onNoteClick: (NoteMessage) -> Unit,
     private val onNoteLongClick: (NoteMessage, View) -> Unit,
     private val onTodoClick: (TodoItem) -> Unit,
     private val onTodoLongClick: (TodoItem, View) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var rows: List<NotePanelRow> = emptyList()
+    private var selectedNoteId: String? = null
 
     override fun getItemCount(): Int = rows.size
 
@@ -48,13 +50,19 @@ class NotePanelAdapter(
         when (val row = rows[position]) {
             is NotePanelRow.DaySeparator -> (holder as SeparatorViewHolder).bind(row.label)
             is NotePanelRow.SectionSeparator -> (holder as SeparatorViewHolder).bind(row.label)
-            is NotePanelRow.Message -> (holder as NoteViewHolder).bind(row, onNoteLongClick)
+            is NotePanelRow.Message -> (holder as NoteViewHolder).bind(
+                row = row,
+                isSelected = row.note.id == selectedNoteId,
+                clickListener = onNoteClick,
+                longClickListener = onNoteLongClick,
+            )
             is NotePanelRow.Todo -> (holder as TodoViewHolder).bind(row.item, onTodoClick, onTodoLongClick)
         }
     }
 
-    fun setRows(rows: List<NotePanelRow>) {
+    fun setRows(rows: List<NotePanelRow>, selectedNoteId: String? = null) {
         this.rows = rows
+        this.selectedNoteId = selectedNoteId
         notifyDataSetChanged()
     }
 
@@ -69,13 +77,26 @@ class NotePanelAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             row: NotePanelRow.Message,
+            isSelected: Boolean,
+            clickListener: (NoteMessage) -> Unit,
             longClickListener: (NoteMessage, View) -> Unit,
         ) = with(binding) {
             val note = row.note
             messageText.text = note.text
             messageTime.text = NotePanelRows.timeLabel(note.createdAtMillis)
+            messageText.paintFlags = if (note.isDone) {
+                messageText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                messageText.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            }
+            messageText.alpha = if (note.isDone) 0.58f else 1.0f
+            messageTime.alpha = if (note.isDone) 0.58f else 1.0f
+            messageBubble.setBackgroundResource(
+                if (isSelected) R.drawable.bg_note_bubble_selected else R.drawable.bg_note_bubble
+            )
             repeatHint.isVisible = row.repeatLabel != null
             repeatHint.text = row.repeatLabel
+            root.setOnClickListener { clickListener(note) }
             root.setOnLongClickListener {
                 longClickListener(note, it)
                 true

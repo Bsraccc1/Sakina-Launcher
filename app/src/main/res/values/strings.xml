@@ -180,6 +180,9 @@
     <string name="edit_todo" translatable="false">Edit todo</string>
     <string name="delete_note" translatable="false">Delete note</string>
     <string name="delete_todo" translatable="false">Delete todo</string>
+    <string name="note_delete_action" translatable="false">Delete</string>
+    <string name="note_done" translatable="false">Done</string>
+    <string name="note_tools" translatable="false">Note tools</string>
     <string name="move_to_todo" translatable="false">Move to Todo</string>
     <string name="pin_note" translatable="false">Pin</string>
     <string name="unpin_note" translatable="false">Unpin</string>

@@ -9,7 +9,14 @@ class NotePanelCodecTest {
     @Test
     fun notesRoundTripInChronologicalOrder() {
         val notes = listOf(
-            NoteMessage(id = "second", text = "abcd", createdAtMillis = 2000L, updatedAtMillis = 2500L, isPinned = true),
+            NoteMessage(
+                id = "second",
+                text = "abcd",
+                createdAtMillis = 2000L,
+                updatedAtMillis = 2500L,
+                isPinned = true,
+                isDone = true,
+            ),
             NoteMessage(id = "first", text = "hello", createdAtMillis = 1000L),
         )
 
@@ -19,6 +26,7 @@ class NotePanelCodecTest {
         assertEquals("abcd", decoded[1].text)
         assertEquals(2500L, decoded[1].updatedAtMillis)
         assertTrue(decoded[1].isPinned)
+        assertTrue(decoded[1].isDone)
     }
 
     @Test

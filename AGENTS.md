@@ -6,7 +6,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 Olauncher is a minimal Android launcher app. "AF" = Ad-Free. Single-activity app with fragment navigation.
 
-**Package**: `app.olauncher`
+**Package**: `app.sakinalauncher`
 **Min SDK**: 24 (Android 7.0)
 **Target SDK**: 35 (Android 15)
 **Language**: Kotlin

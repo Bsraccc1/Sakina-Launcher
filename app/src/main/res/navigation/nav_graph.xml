@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="app.olauncher.ui.HomeFragment"
+        android:name="app.sakinalauncher.ui.HomeFragment"
         android:label="main_fragment"
         tools:layout="@layout/fragment_home">
         <action
@@ -42,7 +42,7 @@
 
     <fragment
         android:id="@+id/appListFragment"
-        android:name="app.olauncher.ui.AppDrawerFragment"
+        android:name="app.sakinalauncher.ui.AppDrawerFragment"
         android:label="app_list_fragment"
         tools:layout="@layout/fragment_app_drawer">
         <action
@@ -57,7 +57,7 @@
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="app.olauncher.ui.SettingsFragment"
+        android:name="app.sakinalauncher.ui.SettingsFragment"
         android:label="SettingsFragment"
         android:layout="@layout/fragment_settings">
         <action
@@ -71,13 +71,13 @@
 
     <fragment
         android:id="@+id/notePanelFragment"
-        android:name="app.olauncher.ui.NotePanelFragment"
+        android:name="app.sakinalauncher.ui.NotePanelFragment"
         android:label="note_panel_fragment"
         tools:layout="@layout/fragment_note_panel" />
 
     <fragment
         android:id="@+id/muslimCenterFragment"
-        android:name="app.olauncher.ui.MuslimCenterFragment"
+        android:name="app.sakinalauncher.ui.MuslimCenterFragment"
         android:label="muslim_center_fragment"
         tools:layout="@layout/fragment_muslim_center">
         <action
@@ -91,7 +91,7 @@
 
     <fragment
         android:id="@+id/dhikrPagerFragment"
-        android:name="app.olauncher.ui.DhikrPagerFragment"
+        android:name="app.sakinalauncher.ui.DhikrPagerFragment"
         android:label="dhikr_pager_fragment"
         tools:layout="@layout/fragment_dhikr_pager" />
 

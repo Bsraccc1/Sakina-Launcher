@@ -117,9 +117,6 @@ class DhikrPagerFragment : Fragment() {
         prefs.putInt(key, count)
     }
 
-
-
-
     private fun render() {
         val cards = DhikrContent.cardsFor(period)
         if (cards.isEmpty()) return
@@ -141,6 +138,7 @@ class DhikrPagerFragment : Fragment() {
         val progress = (currentCount.toFloat() / card.repetitionCount.toFloat() * 100).toInt()
         binding.progressBar.progress = progress
     }
+
     private fun animateCounter() {
         binding.tasbihCounter.animate()
             .scaleX(1.2f)
@@ -155,7 +153,6 @@ class DhikrPagerFragment : Fragment() {
             }
             .start()
     }
-
 
     private fun showNext() {
         val cards = DhikrContent.cardsFor(period)

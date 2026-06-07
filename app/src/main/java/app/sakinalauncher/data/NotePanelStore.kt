@@ -67,6 +67,21 @@ class NotePanelStore(context: Context) {
         return updated
     }
 
+    fun toggleNoteDone(id: String, nowMillis: Long = System.currentTimeMillis()): Boolean {
+        val notes = getNotes()
+        var updated = false
+        val nextNotes = notes.map { note ->
+            if (note.id == id) {
+                updated = true
+                note.copy(isDone = note.isDone.not(), updatedAtMillis = nowMillis)
+            } else {
+                note
+            }
+        }
+        if (updated) saveNotes(nextNotes)
+        return updated
+    }
+
     fun moveNoteToTodo(id: String, nowMillis: Long = System.currentTimeMillis()): MovedNote? {
         val note = getNotes().firstOrNull { it.id == id } ?: return null
         val todo = TodoItem(
@@ -166,6 +181,7 @@ object NotePanelCodec {
                     .put("createdAtMillis", note.createdAtMillis)
                     .put("updatedAtMillis", note.updatedAtMillis ?: JSONObject.NULL)
                     .put("isPinned", note.isPinned)
+                    .put("isDone", note.isDone)
             )
         }
         return array.toString()
@@ -188,6 +204,7 @@ object NotePanelCodec {
                             createdAtMillis = createdAtMillis,
                             updatedAtMillis = item.optNullableLong("updatedAtMillis"),
                             isPinned = item.optBoolean("isPinned", false),
+                            isDone = item.optBoolean("isDone", false),
                         )
                     )
                 }
