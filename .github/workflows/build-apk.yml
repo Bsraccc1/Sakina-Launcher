@@ -12,6 +12,15 @@ on:
       - master
       - main
   workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Create or update a GitHub Release with the APK'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 permissions:
   contents: write
@@ -45,8 +54,14 @@ jobs:
         run: |
           VERSION_NAME=$(grep "versionName" app/build.gradle | awk '{print $2}' | tr -d '"')
           VERSION_CODE=$(grep "versionCode" app/build.gradle | awk '{print $2}')
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            RELEASE_TAG="${GITHUB_REF_NAME}"
+          else
+            RELEASE_TAG="${VERSION_NAME}"
+          fi
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Prepare APK
         id: apk
@@ -66,9 +81,11 @@ jobs:
           retention-days: 90
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release == 'true')
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.release_tag }}
+          target_commitish: ${{ github.sha }}
           name: Sakina Launcher ${{ steps.version.outputs.name }}
           body: |
             ## Sakina Launcher ${{ steps.version.outputs.name }}
@@ -94,3 +111,12 @@ jobs:
           draft: false
           prerelease: false
           files: ${{ steps.apk.outputs.path }}
+
+      - name: Release summary
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.create_release == 'true')
+        run: |
+          echo "### APK release ready" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Release tag: ${{ steps.version.outputs.release_tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- APK: Sakina-Launcher-${{ steps.version.outputs.name }}.apk" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Install from the GitHub Release assets." >> "$GITHUB_STEP_SUMMARY"

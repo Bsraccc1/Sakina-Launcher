@@ -8,6 +8,7 @@ This repository builds Android APKs with GitHub Actions.
 - Builds a release APK with `./gradlew assembleRelease`.
 - Uploads the APK as a workflow artifact on pushes and pull requests.
 - Creates a GitHub Release when a tag starting with `v` is pushed.
+- Can also create or update a GitHub Release from manual dispatch.
 - Uploads the APK to the release so users can install it directly.
 
 Workflow file:
@@ -46,11 +47,14 @@ GitHub Actions will create a release with:
 Sakina-Launcher-v6.5.0.apk
 ```
 
-## Manual Build
+## Manual Build and Release
 
 Open the Actions tab and run **Build and Release APK** with `workflow_dispatch`.
 
-Manual runs upload the APK as an artifact. Release creation happens only for `v*` tags.
+Use input `create_release`:
+
+- `true`: build APK and upload it to a GitHub Release using `versionName` as the tag.
+- `false`: build APK and keep it as a workflow artifact only.
 
 ## Signing Note
 
