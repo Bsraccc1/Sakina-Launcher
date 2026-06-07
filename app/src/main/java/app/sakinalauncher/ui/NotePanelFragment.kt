@@ -3,15 +3,11 @@ package app.sakinalauncher.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.SystemClock
 import android.text.InputType
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -19,14 +15,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.PathInterpolator
-import android.widget.ImageView
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
-import android.widget.PopupMenu
-import android.widget.PopupWindow
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -49,7 +40,6 @@ import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.showKeyboard
 import app.sakinalauncher.helper.showToast
 import app.sakinalauncher.listener.OnSwipeTouchListener
-import app.sakinalauncher.ui.view.CircularTimerView
 import java.util.Locale
 import kotlin.math.abs
 
@@ -67,7 +57,7 @@ class NotePanelFragment : Fragment() {
     private var timerTotalMillis: Long = 0L
     private var timerRemainingMillis: Long = 0L
     private var timerRunning: Boolean = false
-    private var selectedNoteId: String? = null
+    private var selectedNoteIds: MutableSet<String> = mutableSetOf()
     private val smoothInterpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
 
     private var _binding: FragmentNotePanelBinding? = null
@@ -120,12 +110,10 @@ class NotePanelFragment : Fragment() {
     private fun initAdapter() {
         adapter = NotePanelAdapter(
             onNoteClick = ::selectNote,
-            onNoteLongClick = ::showNoteActions,
             onTodoClick = {
                 store.toggleTodo(it.id)
                 render()
             },
-            onTodoLongClick = ::showTodoActions,
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
@@ -142,21 +130,32 @@ class NotePanelFragment : Fragment() {
         binding.timerReset.setOnClickListener { resetTimer() }
         binding.send.setOnClickListener { submitInput() }
         binding.noteActionDelete.setOnClickListener {
-            selectedNote()?.let(::deleteNote)
+            if (selectedNoteIds.size == 1) {
+                deleteSingleSelected()
+            } else {
+                deleteSelectedNotes()
+            }
         }
         binding.noteActionEdit.setOnClickListener {
-            selectedNote()?.let { showEditNote(it, clearSelectionAfterSave = true) }
+            if (selectedNoteIds.size == 1) {
+                showEditNoteById(selectedNoteIds.first())
+            }
         }
         binding.noteActionCopy.setOnClickListener {
-            selectedNote()?.let(::copyNote)
+            if (selectedNoteIds.size == 1) {
+                copySingleSelected()
+            }
         }
         binding.noteActionDone.setOnClickListener {
-            selectedNote()?.let {
-                store.toggleNoteDone(it.id)
+            if (selectedNoteIds.size == 1) {
+                store.toggleNoteDone(selectedNoteIds.first())
                 render()
+            } else {
+                doneSelectedNotes()
             }
         }
         binding.noteActionClose.setOnClickListener { clearNoteSelection() }
+        binding.noteActionSelectAll.setOnClickListener { selectAllNotes() }
         binding.input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 submitInput()
@@ -260,15 +259,15 @@ class NotePanelFragment : Fragment() {
     private fun render(scrollToBottom: Boolean = false) {
         val notes = if (mode == NotePanelMode.NOTES) store.getNotes() else emptyList()
         val todos = if (mode == NotePanelMode.TODO) store.getTodos() else emptyList()
-        if (mode != NotePanelMode.NOTES || notes.none { it.id == selectedNoteId }) {
-            selectedNoteId = null
+        if (mode != NotePanelMode.NOTES && selectedNoteIds.isNotEmpty()) {
+            selectedNoteIds.clear()
         }
         val rows = when (mode) {
             NotePanelMode.NOTES -> NotePanelRows.noteRows(notes)
             NotePanelMode.TODO -> NotePanelRows.todoRows(todos)
             NotePanelMode.TIMER -> emptyList()
         }
-        val hasNoteSelection = selectedNoteId != null
+        val hasSelection = selectedNoteIds.isNotEmpty()
 
         binding.title.text = getString(
             when (mode) {
@@ -292,14 +291,14 @@ class NotePanelFragment : Fragment() {
         binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
         binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
         binding.recyclerView.isVisible = mode != NotePanelMode.TIMER
-        binding.composer.isVisible = mode != NotePanelMode.TIMER && hasNoteSelection.not()
-        binding.noteSelectionCount.text = "1"
-        renderNoteActionBar(hasNoteSelection)
+        binding.composer.isVisible = mode != NotePanelMode.TIMER && !hasSelection
+        binding.noteSelectionCount.text = selectedNoteIds.size.toString()
+        renderNoteActionBar(hasSelection, selectedNoteIds.size > 1)
         binding.timerLayout.isVisible = mode == NotePanelMode.TIMER
         binding.emptyState.text =
             getString(if (mode == NotePanelMode.NOTES) R.string.no_notes_yet else R.string.no_todos_yet)
         binding.emptyState.isVisible = rows.isEmpty() && mode != NotePanelMode.TIMER
-        adapter.setRows(rows, selectedNoteId)
+        adapter.setRows(rows, selectedNoteIds)
         renderTimer()
 
         if (scrollToBottom && rows.isNotEmpty()) {
@@ -307,8 +306,12 @@ class NotePanelFragment : Fragment() {
         }
     }
 
-    private fun renderNoteActionBar(isSelected: Boolean) {
+    private fun renderNoteActionBar(isSelected: Boolean, isMultiSelect: Boolean) {
         if (isSelected) {
+            binding.noteActionDelete.isVisible = !isMultiSelect
+            binding.noteActionEdit.isVisible = !isMultiSelect
+            binding.noteActionCopy.isVisible = !isMultiSelect
+            binding.noteActionDone.isVisible = true
             if (binding.noteActionBar.isVisible.not()) {
                 binding.noteActionBar.alpha = 0f
                 binding.noteActionBar.translationY = dp(18).toFloat()
@@ -333,151 +336,53 @@ class NotePanelFragment : Fragment() {
                 .setDuration(150L)
                 .setInterpolator(smoothInterpolator)
                 .withEndAction {
-                    if (selectedNoteId == null) binding.noteActionBar.isVisible = false
+                    if (selectedNoteIds.isEmpty()) binding.noteActionBar.isVisible = false
                 }
                 .start()
         }
     }
 
     private fun selectNote(note: NoteMessage) {
-        selectedNoteId = note.id
+        if (note.id in selectedNoteIds) {
+            selectedNoteIds.remove(note.id)
+        } else {
+            selectedNoteIds.add(note.id)
+        }
         binding.input.hideKeyboard()
         render()
     }
 
     private fun clearNoteSelection() {
-        selectedNoteId = null
+        selectedNoteIds.clear()
         render()
     }
 
-    private fun selectedNote(): NoteMessage? {
-        val id = selectedNoteId ?: return null
-        return store.getNotes().firstOrNull { it.id == id }
+    private fun deleteSingleSelected() {
+        val id = selectedNoteIds.first()
+        store.deleteNote(id)
+        selectedNoteIds.remove(id)
+        render()
     }
 
-    private fun showNoteActions(note: NoteMessage, anchor: View) {
-        val popupWidth = dp(256)
-        val popupHeight = dp(196)
-        val popup = PopupWindow(requireContext()).apply {
-            width = popupWidth
-            height = ViewGroup.LayoutParams.WRAP_CONTENT
-            isFocusable = true
-            isOutsideTouchable = true
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            elevation = dp(10).toFloat()
-        }
-        val content = LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.VERTICAL
-            background = AppCompatResources.getDrawable(requireContext(), R.drawable.bg_note_action_popup)
-            setPadding(dp(12), dp(10), dp(12), dp(12))
-            addView(TextView(context).apply {
-                text = getString(R.string.note_tools)
-                textSize = 13f
-                alpha = 0.72f
-                setTextColor(themeColor(R.attr.primaryColor))
-                setPadding(dp(6), 0, 0, dp(8))
-            })
-            addView(createNotePopupRow(
-                createNotePopupTile(R.drawable.ic_check, getString(R.string.note_done)) {
-                    store.toggleNoteDone(note.id)
-                    popup.dismiss()
-                    render()
-                },
-                createNotePopupTile(R.drawable.ic_copy, getString(R.string.copy)) {
-                    copyNote(note)
-                    popup.dismiss()
-                },
-            ))
-            addView(createNotePopupRow(
-                createNotePopupTile(R.drawable.ic_rename, getString(R.string.edit)) {
-                    popup.dismiss()
-                    showEditNote(note, clearSelectionAfterSave = false)
-                },
-                createNotePopupTile(
-                    iconRes = R.drawable.ic_delete,
-                    label = getString(R.string.note_delete_action),
-                    iconTint = Color.rgb(242, 43, 58),
-                    labelTint = Color.rgb(242, 43, 58),
-                ) {
-                    popup.dismiss()
-                    deleteNote(note)
-                },
-            ))
-        }
-        popup.contentView = content
-
-        val anchorLocation = IntArray(2)
-        anchor.getLocationOnScreen(anchorLocation)
-        val screenWidth = resources.displayMetrics.widthPixels
-        val x = (anchorLocation[0] + anchor.width / 2 - popupWidth / 2)
-            .coerceIn(dp(12), screenWidth - popupWidth - dp(12))
-        val y = (anchorLocation[1] + anchor.height / 2 - popupHeight / 2).coerceAtLeast(dp(24))
-        content.alpha = 0f
-        content.scaleX = 0.94f
-        content.scaleY = 0.94f
-        popup.showAtLocation(binding.root, Gravity.NO_GRAVITY, x, y)
-        content.animate()
-            .alpha(1f)
-            .scaleX(1f)
-            .scaleY(1f)
-            .setDuration(170L)
-            .setInterpolator(smoothInterpolator)
-            .start()
-    }
-
-    private fun createNotePopupRow(first: View, second: View): View {
-        return LinearLayout(requireContext()).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(68),
-            )
-            addView(first)
-            addView(second)
+    private fun showEditNoteById(id: String) {
+        val note = store.getNotes().firstOrNull { it.id == id } ?: return
+        showEditDialog(
+            title = getString(R.string.edit_note),
+            initialText = note.text,
+            emptyMessage = getString(R.string.note_empty_message),
+        ) { text ->
+            store.updateNote(id, text)
+            selectedNoteIds.remove(id)
+            render()
         }
     }
 
-    private fun createNotePopupTile(
-        iconRes: Int,
-        label: String,
-        iconTint: Int = themeColor(R.attr.primaryColor),
-        labelTint: Int = themeColor(R.attr.primaryColor),
-        onClick: () -> Unit,
-    ): View {
-        val context = requireContext()
-        val selectableItem = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.selectableItemBackground, selectableItem, true)
-        return LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            background = AppCompatResources.getDrawable(context, R.drawable.bg_note_popup_tile)
-            foreground = AppCompatResources.getDrawable(context, selectableItem.resourceId)
-            layoutParams = LinearLayout.LayoutParams(
-                0,
-                dp(58),
-                1f,
-            ).apply {
-                setMargins(dp(4), dp(4), dp(4), dp(4))
-            }
-            setOnClickListener { onClick() }
-            addView(ImageView(context).apply {
-                setImageResource(iconRes)
-                imageTintList = ColorStateList.valueOf(iconTint)
-                layoutParams = LinearLayout.LayoutParams(dp(23), dp(23))
-            })
-            addView(TextView(context).apply {
-                text = label
-                textSize = 13f
-                setTextColor(labelTint)
-                gravity = Gravity.CENTER
-                setPadding(0, dp(5), 0, 0)
-                layoutParams = LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                )
-            })
-        }
+    private fun copySingleSelected() {
+        val id = selectedNoteIds.first()
+        val note = store.getNotes().firstOrNull { it.id == id } ?: return
+        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.notes), note.text))
+        requireContext().showToast(getString(R.string.copied))
     }
 
     private fun copyNote(note: NoteMessage) {
@@ -488,7 +393,7 @@ class NotePanelFragment : Fragment() {
 
     private fun deleteNote(note: NoteMessage) {
         store.deleteNote(note.id)
-        selectedNoteId = null
+        selectedNoteIds.remove(note.id)
         render()
     }
 
@@ -499,9 +404,33 @@ class NotePanelFragment : Fragment() {
             emptyMessage = getString(R.string.note_empty_message),
         ) { text ->
             store.updateNote(note.id, text)
-            if (clearSelectionAfterSave) selectedNoteId = null
+            if (clearSelectionAfterSave) selectedNoteIds.remove(note.id)
             render()
         }
+    }
+
+    private fun selectAllNotes() {
+        val allIds = if (mode == NotePanelMode.NOTES) {
+            store.getNotes().sortedByDescending { it.createdAtMillis }.map { it.id }
+        } else {
+            store.getTodos().sortedByDescending { it.createdAtMillis }.map { it.id }
+        }
+        selectedNoteIds.clear()
+        selectedNoteIds.addAll(allIds)
+        binding.input.hideKeyboard()
+        render()
+    }
+
+    private fun deleteSelectedNotes() {
+        selectedNoteIds.toList().forEach { store.deleteNote(it) }
+        selectedNoteIds.clear()
+        render()
+    }
+
+    private fun doneSelectedNotes() {
+        selectedNoteIds.toList().forEach { store.toggleNoteDone(it) }
+        selectedNoteIds.clear()
+        render()
     }
 
     private fun switchMode(nextMode: NotePanelMode) {
@@ -696,32 +625,6 @@ class NotePanelFragment : Fragment() {
         }
         if (timerTotalMillis <= 0L) timerTotalMillis = prefs.pomodoroFocusMillis
         if (timerRemainingMillis < 0L) timerRemainingMillis = timerTotalMillis
-    }
-
-    private fun showTodoActions(todo: TodoItem, anchor: View) {
-        PopupMenu(requireContext(), anchor).apply {
-            menu.add(R.string.edit)
-            menu.add(R.string.delete_todo)
-            setOnMenuItemClickListener {
-                when (it.title.toString()) {
-                    getString(R.string.edit) -> showEditDialog(
-                        title = getString(R.string.edit_todo),
-                        initialText = todo.text,
-                        emptyMessage = getString(R.string.todo_empty_message),
-                    ) { text ->
-                        store.updateTodo(todo.id, text)
-                        render()
-                    }
-
-                    getString(R.string.delete_todo) -> {
-                        store.deleteTodo(todo.id)
-                        render()
-                    }
-                }
-                true
-            }
-            show()
-        }
     }
 
     private fun showEditDialog(

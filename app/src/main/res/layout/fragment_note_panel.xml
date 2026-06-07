@@ -258,6 +258,18 @@
             app:tint="#F22B3A" />
 
         <TextView
+            android:id="@+id/noteActionSelectAll"
+            style="@style/TextSmallBold"
+            android:layout_width="wrap_content"
+            android:layout_height="28dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_note_count_pill"
+            android:gravity="center"
+            android:paddingHorizontal="8dp"
+            android:text="All"
+            android:textColor="?attr/primaryColor" />
+
+        <TextView
             android:id="@+id/noteSelectionCount"
             style="@style/TextSmallBold"
             android:layout_width="34dp"
