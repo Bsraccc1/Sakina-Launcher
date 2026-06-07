@@ -1,10 +1,13 @@
 package app.sakinalauncher.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -25,6 +28,7 @@ import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentMuslimCenterBinding
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.openUrl
+import app.sakinalauncher.helper.PrayerLocationHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -101,13 +105,15 @@ class MuslimCenterFragment : Fragment() {
     private fun refreshPrayerTimes() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
+                if (prayerStore.autoDetectLocation && hasLocationPermission()) {
+                    tryAutoDetectLocation()
+                }
                 when (val result = repository.refreshToday()) {
                     is PrayerScheduleResult.Fresh -> renderSchedule(result.schedule)
                     is PrayerScheduleResult.Cached -> renderSchedule(
                         result.schedule,
                         getString(R.string.cached_schedule)
                     )
-
                     is PrayerScheduleResult.Error -> renderPrayerError(result.message)
                 }
             } catch (error: CancellationException) {
@@ -116,6 +122,23 @@ class MuslimCenterFragment : Fragment() {
                 renderPrayerError(error.message ?: getString(R.string.unable_to_load_prayer_times))
             }
         }
+    }
+
+    private suspend fun tryAutoDetectLocation() {
+        val cityQuery = PrayerLocationHelper.detectCityQuery(requireContext())
+        if (!cityQuery.isNullOrBlank()) {
+            val city = repository.searchCities(cityQuery).firstOrNull()
+            if (city != null) {
+                repository.selectCity(city)
+            }
+        }
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
     }
 
     private fun renderSchedule(schedule: PrayerSchedule, badge: String? = null) {

@@ -2,7 +2,6 @@ package app.sakinalauncher.ui
 
 import android.graphics.Paint
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -17,13 +16,11 @@ import app.sakinalauncher.databinding.AdapterTodoItemBinding
 
 class NotePanelAdapter(
     private val onNoteClick: (NoteMessage) -> Unit,
-    private val onNoteLongClick: (NoteMessage, View) -> Unit,
     private val onTodoClick: (TodoItem) -> Unit,
-    private val onTodoLongClick: (TodoItem, View) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private var rows: List<NotePanelRow> = emptyList()
-    private var selectedNoteId: String? = null
+    private var selectedNoteIds: Set<String> = emptySet()
 
     override fun getItemCount(): Int = rows.size
 
@@ -31,7 +28,6 @@ class NotePanelAdapter(
         return when (rows[position]) {
             is NotePanelRow.DaySeparator,
             is NotePanelRow.SectionSeparator -> VIEW_TYPE_SEPARATOR
-
             is NotePanelRow.Message -> VIEW_TYPE_NOTE
             is NotePanelRow.Todo -> VIEW_TYPE_TODO
         }
@@ -52,17 +48,16 @@ class NotePanelAdapter(
             is NotePanelRow.SectionSeparator -> (holder as SeparatorViewHolder).bind(row.label)
             is NotePanelRow.Message -> (holder as NoteViewHolder).bind(
                 row = row,
-                isSelected = row.note.id == selectedNoteId,
+                isSelected = row.note.id in selectedNoteIds,
                 clickListener = onNoteClick,
-                longClickListener = onNoteLongClick,
             )
-            is NotePanelRow.Todo -> (holder as TodoViewHolder).bind(row.item, onTodoClick, onTodoLongClick)
+            is NotePanelRow.Todo -> (holder as TodoViewHolder).bind(row.item, onTodoClick)
         }
     }
 
-    fun setRows(rows: List<NotePanelRow>, selectedNoteId: String? = null) {
+    fun setRows(rows: List<NotePanelRow>, selectedNoteIds: Set<String> = emptySet()) {
         this.rows = rows
-        this.selectedNoteId = selectedNoteId
+        this.selectedNoteIds = selectedNoteIds
         notifyDataSetChanged()
     }
 
@@ -79,7 +74,6 @@ class NotePanelAdapter(
             row: NotePanelRow.Message,
             isSelected: Boolean,
             clickListener: (NoteMessage) -> Unit,
-            longClickListener: (NoteMessage, View) -> Unit,
         ) = with(binding) {
             val note = row.note
             messageText.text = note.text
@@ -97,10 +91,6 @@ class NotePanelAdapter(
             repeatHint.isVisible = row.repeatLabel != null
             repeatHint.text = row.repeatLabel
             root.setOnClickListener { clickListener(note) }
-            root.setOnLongClickListener {
-                longClickListener(note, it)
-                true
-            }
         }
     }
 
@@ -109,7 +99,6 @@ class NotePanelAdapter(
         fun bind(
             todo: TodoItem,
             clickListener: (TodoItem) -> Unit,
-            longClickListener: (TodoItem, View) -> Unit,
         ) = with(binding) {
             todoText.text = todo.text
             todoText.paintFlags = if (todo.isDone) {
@@ -124,10 +113,6 @@ class NotePanelAdapter(
             )
             todoCheckIcon.isVisible = todo.isDone
             root.setOnClickListener { clickListener(todo) }
-            root.setOnLongClickListener {
-                longClickListener(todo, it)
-                true
-            }
         }
     }
 

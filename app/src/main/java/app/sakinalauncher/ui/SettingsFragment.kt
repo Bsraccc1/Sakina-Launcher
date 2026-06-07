@@ -709,6 +709,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                     prefs.swipeRightTarget = targetValues[which]
                 }
                 populateSwipeApps()
+                when (targetValues[which]) {
+                    Constants.SwipeTarget.OFF -> { /* nothing */ }
+                    else -> showSwipeAppList(isLeft)
+                }
             }
             .show()
     }
