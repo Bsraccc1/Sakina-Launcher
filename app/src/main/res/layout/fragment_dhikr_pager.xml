@@ -6,9 +6,9 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_note_panel_scrim"
     android:orientation="vertical"
-    android:paddingHorizontal="28dp"
-    android:paddingTop="56dp"
-    android:paddingBottom="32dp">
+    android:paddingHorizontal="24dp"
+    android:paddingTop="48dp"
+    android:paddingBottom="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -53,7 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/rounded_rect_shade_color"
-            android:gravity="center"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
             android:paddingVertical="32dp">
@@ -70,11 +70,12 @@
             <TextView
                 android:id="@+id/repetition"
                 style="@style/TextSmallLight"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="6dp"
                 android:alpha="0.72"
                 android:gravity="center"
+                android:textSize="13sp"
                 tools:text="Read 1 time" />
 
             <TextView
@@ -114,8 +115,6 @@
                 android:progress="0"
                 android:progressTint="@color/colorAccent"
                 android:progressBackgroundTint="#33FFFFFF" />
-
-
 
             <TextView
                 android:id="@+id/latin"
