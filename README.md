@@ -1,285 +1,237 @@
 # Sakina Launcher
 
+Minimal Android launcher with Muslim Center, notes, todos, and a calmer home screen. Same Olauncher spirit, more daily utility.
+
 <p align="center">
-  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Sakina Launcher Icon" width="120" height="120">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Sakina Launcher icon" width="116" height="116">
 </p>
 
-A minimal Android launcher with integrated Islamic features for mindful productivity.
-
-![Sakina Launcher](Assets/screenshots/home.png)
+![Sakina Launcher overview](Assets/screenshots/home.png)
 
 ---
 
 ## Table of Contents
 
+- [Before You Start](#before-you-start)
 - [Introduction](#introduction)
-- [Features](#features)
-  - [Muslim Center](#muslim-center)
-  - [Dhikr & Remembrance](#dhikr--remembrance)
-  - [Productivity Tools](#productivity-tools)
-  - [Launcher Features](#launcher-features)
-- [Screenshots](#screenshots)
-- [Installation](#installation)
-- [Build Instructions](#build-instructions)
+- [Preview](#preview)
+- [What You Get](#what-you-get)
+- [Install](#install)
+- [Build From Source](#build-from-source)
+- [Release APKs](#release-apks)
 - [Project Structure](#project-structure)
-- [Tech Stack](#tech-stack)
+- [Troubleshooting](#troubleshooting)
 - [Credits](#credits)
 - [License](#license)
 
 ---
 
+## Before You Start
+
+- Android 7.0 or newer is required.
+- Set Sakina Launcher as the default launcher after installing.
+- Usage Stats permission is optional, only needed for screen time.
+- Location permission is optional, only needed for automatic prayer location.
+- Release APKs are built by GitHub Actions when a `v*` tag is pushed.
+
+> [!TIP]
+> If Android blocks installation, enable **Install unknown apps** for the browser or file manager you use to open the APK.
+
+---
+
 ## Introduction
 
-Sakina Launcher is a minimal, distraction-free Android launcher designed for Muslims who want to maintain their spiritual practice while managing digital life mindfully. Built on the foundation of Olauncher, it integrates prayer times, dhikr reminders, and productivity tools into a clean, gesture-based interface.
+Sakina Launcher is a fork-based Android launcher for people who want fewer distractions without losing useful daily tools. The home screen stays quiet. Notes, todos, focus timer, prayer times, and dhikr stay one gesture away.
 
-**Key Philosophy:**
-- Minimal distractions, maximum focus
-- Islamic features integrated naturally
-- Privacy-first: no data collection, no ads
-- Open source and always free
+The app is based on [Olauncher](https://github.com/tanujnotes/Olauncher) by [@tanujnotes](https://github.com/tanujnotes). Sakina keeps the privacy-first launcher foundation and adds Muslim Center plus productivity surfaces.
+
+The README structure is inspired by [khushie09/fedorix](https://github.com/khushie09/fedorix): clear sections, preview-first documentation, setup notes, and credits in one place.
 
 ---
 
-## Features
+## Preview
 
-### Muslim Center
-
-**Prayer Times**
-- 5 daily prayer times (Fajr, Dhuhr, Asr, Maghrib, Isha)
-- Next prayer indicator
-- Location-based scheduling
-- Multiple sources: Kemenag/MyQuran (Indonesia) and Aladhan Global
-- Auto-detect location or manual city selection
-- Cached schedules for offline access
-
-### Dhikr & Remembrance
-
-**Morning & Evening Dhikr**
-- Authentic dhikr collections from almanhaj.or.id
-- **Swipeable cards** - swipe left/right to navigate between dhikr
-- Arabic text with transliteration and translation
-- Built-in tasbih counter for each dhikr
-- Progress tracking per reading
-- Auto-advance after completing repetitions
-
-### Productivity Tools
-
-**Timer**
-- Simple countdown timer
-- Custom duration (minutes and seconds)
-- Start, pause, resume, and reset controls
-
-**Notes**
-- Quick note-taking
-- Pin important notes
-- Move notes to todo list
-- Clean, distraction-free interface
-
-**Todo List**
-- Simple task management
-- Check off completed items
-- Edit and delete tasks
-
-### Launcher Features
-
-**Minimal Home Screen**
-- Up to 8 favorite apps
-- Swipe gestures (left, right, up, down) to open apps
-- Date and time display
-- Battery percentage
-- Screen time tracking
-- Customizable text alignment and size
-
-**App Drawer**
-- Full app list with search
-- Type to auto-launch apps
-- Hide unwanted apps
-- Rename apps
-- Uninstall directly
-
-**Customization**
-- Theme modes (Light, Dark, System)
-- Text color (Black/White)
-- Text size adjustment
-- App alignment (Left, Center, Right)
-- Status bar visibility
-
-**Gestures**
-- Swipe up: App drawer
-- Swipe left/right/down: Configurable app shortcuts
-- Double tap: Lock screen (requires accessibility permission)
-- Home button: Recent apps (requires accessibility permission)
-- Long press: Settings
-
-**Privacy & Wellbeing**
-- No ads, no tracking, no data collection
-- Screen time display (optional)
-- Daily wallpaper updates
-- Hidden apps support
-- Private space support (Android 15+)
-
----
-
-## Screenshots
-
-### Home Screen
-![Home Screen](Assets/screenshots/home.png)
-
-### Muslim Center
+![Home](Assets/screenshots/home.png)
+![Productive panel](Assets/screenshots/productive_panel.png)
+![Note tap actions](Assets/screenshots/note_actions_tap.png)
+![Note hold actions](Assets/screenshots/note_actions_hold.png)
 ![Muslim Center](Assets/screenshots/muslim_center_latest.png)
-
-### Dhikr Cards (Swipeable)
-![Dhikr Cards](Assets/screenshots/muslim_center_after_swipe.png)
-
-### Productive Panel
-![Productive Panel](Assets/screenshots/productive_panel.png)
-
-### Timer
+![Dhikr pager](Assets/screenshots/muslim_center_after_swipe.png)
 ![Timer](Assets/screenshots/timer_panel_latest.png)
 
 ---
 
-## Installation
+## What You Get
 
-### Install from APK
+### Quiet Launcher
 
-1. Download the latest APK from [Releases](https://github.com/YOUR_USERNAME/Sakina-Launcher/releases)
-2. Enable "Install from Unknown Sources" in your device settings
-3. Open the APK and install
-4. Set Sakina Launcher as your default launcher
+- Minimal home screen with favorite apps.
+- Swipe gestures for app drawer, notes, todos, timer, and Muslim Center.
+- Optional screen time display.
+- Hidden apps and app rename support.
+- Light, dark, and system theme modes.
 
-### Build from Source
+### Productive Panel
 
-See [Build Instructions](#build-instructions) below.
+- Chat-style notes.
+- Floating tap actions for delete, edit, copy, done, and close.
+- Floating hold menu with a modern quick-action grid.
+- Todo list with done state.
+- Focus timer with circular progress.
+- Smooth panel, list, and action transitions.
+
+### Muslim Center
+
+- Prayer times with Kemenag/MyQuran and Aladhan support.
+- Manual city search or automatic location.
+- Cached prayer schedule for offline use.
+- Morning and evening dhikr cards.
+- Built-in repetition counter.
+
+### Privacy
+
+- No ads.
+- No analytics.
+- No account.
+- Data stays on device.
 
 ---
 
-## Build Instructions
+## Install
 
-**Requirements:**
-- Android Studio (latest version recommended)
+1. Open the latest [GitHub Release](https://github.com/Bsraccc1/Sakina-Launcher/releases).
+2. Download `Sakina-Launcher-<version>.apk`.
+3. Install the APK on your Android device.
+4. Press Home and choose Sakina Launcher as default.
+
+> [!NOTE]
+> Debug builds use the package suffix `.debug`, so they can be installed next to release builds.
+
+---
+
+## Build From Source
+
+Requirements:
+
 - JDK 17
-- Android SDK 24-35
+- Android SDK with compile SDK 35
+- Gradle wrapper from this repository
 
-**Steps:**
+Clone and build:
 
-1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/Sakina-Launcher.git
+git clone https://github.com/Bsraccc1/Sakina-Launcher.git
 cd Sakina-Launcher
-```
-
-2. Open the project in Android Studio
-
-3. Build debug APK:
-```bash
 ./gradlew assembleDebug
 ```
 
-4. Build release APK:
+Windows:
+
+```powershell
+.\gradlew.bat assembleDebug
+```
+
+Useful commands:
+
 ```bash
+./gradlew testDebugUnitTest
+./gradlew assembleDebug
 ./gradlew assembleRelease
-```
-
-5. Install debug to device:
-```bash
-./gradlew installDebug
-```
-
-6. Clean build:
-```bash
 ./gradlew clean
 ```
 
-**On Windows, use `gradlew.bat` instead of `./gradlew`**
+---
+
+## Release APKs
+
+This repo includes a GitHub Actions release workflow:
+
+- Pull requests and pushes build/test the app.
+- Pushing a tag like `v6.5.0` builds a release APK.
+- The workflow creates a GitHub Release and uploads the APK.
+- Manual release builds are available from the Actions tab.
+
+Create a release:
+
+```bash
+git tag v6.5.0
+git push origin v6.5.0
+```
+
+The APK will appear in the release assets after the workflow finishes.
 
 ---
 
 ## Project Structure
 
-### Architecture Pattern
-Single Activity (MainActivity) + Fragments via Navigation Component:
-- `HomeFragment` - Main launcher screen with favorite apps and gestures
-- `AppDrawerFragment` - Full app list with search
-- `SettingsFragment` - Configuration
-- `MuslimCenterFragment` - Prayer times and dhikr
-- `DhikrPagerFragment` - Swipeable dhikr cards
-- `NotePanelFragment` - Notes and todos with timer
+```text
+.
+├── app/
+│   ├── src/main/java/app/sakinalauncher/
+│   │   ├── data/          # prefs, note store, models, prayer data
+│   │   ├── helper/        # launcher, usage stats, wallpaper, location helpers
+│   │   ├── listener/      # gestures and device admin
+│   │   └── ui/            # fragments, adapters, custom views
+│   └── src/main/res/      # layouts, drawables, strings, navigation, animations
+├── Assets/screenshots/    # README screenshots
+├── .github/workflows/     # CI and release APK workflow
+└── README.md
+```
 
-### Key Components
-
-**Data Layer** (`data/`)
-- `Prefs.kt` - SharedPreferences wrapper
-- `Constants.kt` - App-wide constants
-- `AppModel.kt` - App metadata model
-- `muslim/` - Prayer times and dhikr data models
-
-**ViewModel**
-- `MainViewModel.kt` - Shared state management, app list, usage stats
-
-**Helpers** (`helper/`)
-- `Utils.kt` - Launcher operations
-- `Extensions.kt` - Kotlin extensions
-- `AppUsageStats.kt` - Screen time tracking
-- `WallpaperWorker.kt` - Daily wallpaper updates
-- `PrayerLocationHelper.kt` - Location and prayer time management
-
-**UI** (`ui/`)
-- Fragment implementations
-- Adapters for RecyclerViews
-- Custom views (CircularTimerView)
+| Area | Purpose |
+| --- | --- |
+| `HomeFragment` | Main launcher screen and gesture routing |
+| `NotePanelFragment` | Notes, todos, timer, and chat actions |
+| `MuslimCenterFragment` | Prayer schedule overview |
+| `DhikrPagerFragment` | Swipeable dhikr cards |
+| `SettingsFragment` | App settings and personalization |
+| `NotePanelStore` | Local note and todo persistence |
 
 ---
 
-## Tech Stack
+## Troubleshooting
 
-**Language:** Kotlin
+> [!NOTE]
+> Start here before opening an issue.
 
-**Architecture:** MVVM with Single Activity + Navigation Component
+**APK will not install**
 
-**Key Libraries:**
-- AndroidX Core, AppCompat, RecyclerView
-- Lifecycle (ViewModel, LiveData)
-- Navigation Component
-- WorkManager (background tasks)
-- Retrofit + OkHttp (API calls for prayer times)
-- Gson (JSON parsing)
-- Material Design Components
+Enable install permission for the app opening the APK, then try again.
 
-**Build:**
-- Gradle with Java 17
-- Min SDK: 24 (Android 7.0)
-- Target SDK: 35 (Android 15)
-- ViewBinding enabled
+**Launcher chooser does not appear**
+
+Open Android Settings, search for **Default apps**, then choose Sakina Launcher under Home app.
+
+**Prayer times do not load**
+
+Check internet access, then set the city manually from Muslim Center.
+
+**Screen time is empty**
+
+Allow Usage Stats permission for Sakina Launcher in Android settings.
+
+**Release workflow did not create an APK**
+
+Make sure the pushed tag starts with `v`, for example `v6.5.0`.
 
 ---
 
 ## Credits
 
-### Original Project
+| Project or Source | Credit |
+| --- | --- |
+| [Olauncher](https://github.com/tanujnotes/Olauncher) | Original launcher foundation by [@tanujnotes](https://github.com/tanujnotes) |
+| [Fedorix](https://github.com/khushie09/fedorix) | README format inspiration |
+| [almanhaj.or.id](https://almanhaj.or.id) | Morning and evening dhikr content |
+| Kemenag/MyQuran | Indonesia prayer time source |
+| [Aladhan](https://aladhan.com/prayer-times-api) | Global prayer time source |
 
-**Based on [Olauncher](https://github.com/tanujnotes/Olauncher)** by [@tanujnotes](https://github.com/tanujnotes)
-
-Sakina Launcher builds upon the excellent foundation of Olauncher, adding Islamic features and productivity tools while maintaining its minimal, distraction-free philosophy. All core launcher functionality, gesture controls, and privacy-first design principles are inherited from Olauncher.
-
-### Islamic Content Sources
-
-- **Dhikr content**: [almanhaj.or.id](https://almanhaj.or.id) - Morning and Evening remembrance
-- **Prayer times API**: 
-  - Kemenag RI / MyQuran API (Indonesia)
-  - Aladhan Global API (worldwide)
-
-### App Icon
-
-Icon designed specifically for Sakina Launcher - featuring Arabic calligraphy "سكينة" (tranquility) on teal background.
 ---
 
 ## License
 
-GNU General Public License v3.0
-
-See [LICENSE](LICENSE) for details.
+GNU General Public License v3.0. See [LICENSE](LICENSE).
 
 ---
 
-**Made with ❤️ for Muslims seeking digital minimalism and mindful productivity**
+Built for a quieter phone, useful gestures, and daily remembrance.
