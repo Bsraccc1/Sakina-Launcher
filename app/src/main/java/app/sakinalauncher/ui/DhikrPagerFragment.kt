@@ -10,6 +10,7 @@ import app.sakinalauncher.data.Constants
 import app.sakinalauncher.data.muslim.DhikrContent
 import app.sakinalauncher.data.muslim.DhikrPeriod
 import app.sakinalauncher.databinding.FragmentDhikrPagerBinding
+import app.sakinalauncher.helper.addPressScale
 import app.sakinalauncher.listener.OnSwipeTouchListener
 
 class DhikrPagerFragment : Fragment() {
@@ -43,7 +44,10 @@ class DhikrPagerFragment : Fragment() {
         loadCountProgress()
         initSwipe()
         initTasbihCounter()
+        initNavButtons()
+        binding.tasbihCounter.addPressScale(0.94f)
         render()
+        app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -70,6 +74,13 @@ class DhikrPagerFragment : Fragment() {
         binding.tasbihCounter.setOnClickListener {
             incrementCounter()
         }
+    }
+
+    private fun initNavButtons() {
+        binding.btnPrev.setOnClickListener { showPrevious() }
+        binding.btnNext.setOnClickListener { showNext() }
+        binding.btnPrev.addPressScale(0.9f)
+        binding.btnNext.addPressScale(0.9f)
     }
     private fun incrementCounter() {
         val cards = DhikrContent.cardsFor(period)
@@ -125,7 +136,7 @@ class DhikrPagerFragment : Fragment() {
         binding.title.text = getString(
             if (period == DhikrPeriod.MORNING) R.string.dzikir_pagi else R.string.dzikir_petang
         )
-        binding.counter.text = getString(R.string.dhikr_counter, index + 1, cards.size)
+        binding.counter.text = getString(R.string.dhikr_position, index + 1, cards.size)
         binding.cardTitle.text = card.title()
         binding.arabic.text = card.arabic
         binding.latin.text = card.latin

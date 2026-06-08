@@ -208,6 +208,14 @@
     <string name="dzikir_petang">Dzikir petang</string>
     <string name="dhikr_counter" formatted="false">%1$d / %2$d</string>
     <string name="dhikr_repetition" formatted="false">Baca %1$d kali</string>
+    <string name="dhikr_position" formatted="false">%1$d dari %2$d</string>
+    <string name="dhikr_tap_to_count">Ketuk untuk menghitung</string>
+    <string name="dhikr_tap_hint">Ketuk lingkaran untuk menghitung · geser untuk pindah</string>
+    <string name="dhikr_section_translit">Transliterasi</string>
+    <string name="dhikr_section_meaning">Arti</string>
+    <string name="dhikr_done">Selesai</string>
+    <string name="previous">Sebelumnya</string>
+    <string name="next">Berikutnya</string>
     <string name="dzikir_source">Sumber: almanhaj.or.id</string>
     <string name="dzikir_morning_summary" formatted="false">%1$d bacaan. Ketuk untuk membuka kartu dzikir.</string>
     <string name="dzikir_evening_summary" formatted="false">%1$d bacaan. Ketuk untuk membuka kartu dzikir.</string>

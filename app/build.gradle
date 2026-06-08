@@ -51,6 +51,12 @@ android {
         viewBinding = true
         buildConfig = true
     }
+    lint {
+        // New Sakina-specific feature strings (prayer times, dzikir, muslim center)
+        // are intentionally shipped untranslated; missing community translations are
+        // not code defects and should not break the build.
+        disable 'MissingTranslation'
+    }
     namespace 'app.sakinalauncher'
 }
 

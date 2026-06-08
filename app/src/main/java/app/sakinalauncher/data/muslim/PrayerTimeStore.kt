@@ -72,6 +72,11 @@ class PrayerTimeStore(context: Context) {
             ?.takeIf { it.provider == provider && it.cacheKey == activeCacheKey && it.isFetchedToday() }
     }
 
+    fun getStaleCachedSchedule(): PrayerSchedule? {
+        return decodeSchedule(prefs.getString(KEY_LAST_SCHEDULE, null))
+            ?.takeIf { it.provider == provider && it.cacheKey == activeCacheKey }
+    }
+
     fun saveSchedule(schedule: PrayerSchedule) {
         prefs.edit { putString(KEY_LAST_SCHEDULE, encodeSchedule(schedule)) }
     }

@@ -1,0 +1,92 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Optional release version/tag name (e.g. v6.5.0). Defaults to the app versionName.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -keypass android \
+              -alias androiddebugkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Resolve version info
+        id: version
+        run: |
+          VERSION_NAME=$(grep "versionName" app/build.gradle | awk '{print $2}' | tr -d '"')
+          VERSION_CODE=$(grep "versionCode" app/build.gradle | awk '{print $2}')
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+          if [ -n "$INPUT_VERSION" ]; then
+            RELEASE_TAG="$INPUT_VERSION"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            RELEASE_TAG="${{ github.ref_name }}"
+          else
+            RELEASE_TAG="$VERSION_NAME"
+          fi
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "Built version: $VERSION_NAME (code: $VERSION_CODE), release tag: $RELEASE_TAG"
+
+      - name: Rename APK
+        run: |
+          cd app/build/outputs/apk/release
+          ls -lh
+          APK_FILE=$(ls *.apk | head -1)
+          echo "Found: $APK_FILE"
+          cp "$APK_FILE" "Sakina-Launcher-${{ steps.version.outputs.name }}.apk"
+          ls -lh Sakina-Launcher-*.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Sakina Launcher ${{ steps.version.outputs.tag }}
+          body: |
+            Automated release of Sakina Launcher ${{ steps.version.outputs.tag }}
+            (versionName: ${{ steps.version.outputs.name }}, versionCode: ${{ steps.version.outputs.code }}).
+          draft: false
+          prerelease: false
+          files: app/build/outputs/apk/release/Sakina-Launcher-${{ steps.version.outputs.name }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

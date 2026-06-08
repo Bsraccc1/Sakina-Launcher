@@ -3,6 +3,7 @@ package app.sakinalauncher.data.muslim
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,53 +65,67 @@ class PrayerTimeRepository(
     fun cachedSchedule(): PrayerSchedule? = store.getCachedSchedule()
 
     private suspend fun refreshKemenag(): PrayerScheduleResult {
-        try {
-            val cityId = store.cityId.ifBlank {
-                val city = kemenagApi.searchCities(store.cityQuery).data?.firstOrNull()
-                    ?: return fallback("City not found")
-                store.cityId = city.id
-                store.cityLabel = city.location
-                city.id
+        var lastError: String = "Unable to load prayer schedule"
+        repeat(MAX_FETCH_ATTEMPTS) { attempt ->
+            try {
+                val cityId = store.cityId.ifBlank {
+                    val city = kemenagApi.searchCities(store.cityQuery).data?.firstOrNull()
+                        ?: return fallback("City not found")
+                    store.cityId = city.id
+                    store.cityLabel = city.location
+                    city.id
+                }
+                val timeZoneId = inferKemenagTimeZone(store.cityLabel.ifBlank { store.cityQuery })
+                val schedule = kemenagApi.todaySchedule(cityId, timeZoneId).toDomain(timeZoneId, store.activeCacheKey)
+                    ?: return fallback("Prayer schedule not found")
+                store.saveSchedule(schedule)
+                return PrayerScheduleResult.Fresh(schedule)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                lastError = error.message ?: lastError
+                if (attempt < MAX_FETCH_ATTEMPTS - 1) {
+                    delay(BACKOFF_BASE_MS * (attempt + 1))
+                }
             }
-            val timeZoneId = inferKemenagTimeZone(store.cityLabel.ifBlank { store.cityQuery })
-            val schedule = kemenagApi.todaySchedule(cityId, timeZoneId).toDomain(timeZoneId, store.activeCacheKey)
-                ?: return fallback("Prayer schedule not found")
-            store.saveSchedule(schedule)
-            return PrayerScheduleResult.Fresh(schedule)
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            return fallback(error.message ?: "Unable to load prayer schedule")
         }
+        return fallback(lastError)
     }
 
     private suspend fun refreshGlobal(): PrayerScheduleResult {
-        try {
-            val timeZoneId = store.globalTimeZoneId.ifBlank { TimeZone.getDefault().id }
-            val date = apiDate(timeZoneId)
-            val schedule = aladhanApi.timings(
-                date = date,
-                latitude = store.globalLatitude,
-                longitude = store.globalLongitude,
-                method = store.globalMethod,
-                timeZoneId = timeZoneId,
-            ).toDomain(
-                label = store.globalLocationLabel,
-                country = store.globalCountry,
-                timeZoneId = timeZoneId,
-                cacheKey = store.activeCacheKey,
-            ) ?: return fallback("Prayer schedule not found")
-            store.saveSchedule(schedule)
-            return PrayerScheduleResult.Fresh(schedule)
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            return fallback(error.message ?: "Unable to load prayer schedule")
+        var lastError: String = "Unable to load prayer schedule"
+        repeat(MAX_FETCH_ATTEMPTS) { attempt ->
+            try {
+                val timeZoneId = store.globalTimeZoneId.ifBlank { TimeZone.getDefault().id }
+                val date = apiDate(timeZoneId)
+                val schedule = aladhanApi.timings(
+                    date = date,
+                    latitude = store.globalLatitude,
+                    longitude = store.globalLongitude,
+                    method = store.globalMethod,
+                    timeZoneId = timeZoneId,
+                ).toDomain(
+                    label = store.globalLocationLabel,
+                    country = store.globalCountry,
+                    timeZoneId = timeZoneId,
+                    cacheKey = store.activeCacheKey,
+                ) ?: return fallback("Prayer schedule not found")
+                store.saveSchedule(schedule)
+                return PrayerScheduleResult.Fresh(schedule)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                lastError = error.message ?: lastError
+                if (attempt < MAX_FETCH_ATTEMPTS - 1) {
+                    delay(BACKOFF_BASE_MS * (attempt + 1))
+                }
+            }
         }
+        return fallback(lastError)
     }
 
     private fun fallback(error: String): PrayerScheduleResult {
-        val cached = store.getCachedSchedule()
+        val cached = store.getCachedSchedule() ?: store.getStaleCachedSchedule()
         return if (cached != null) PrayerScheduleResult.Cached(cached, error)
         else PrayerScheduleResult.Error(error)
     }
@@ -212,6 +227,9 @@ class PrayerTimeRepository(
     }
 
     companion object {
+        private const val MAX_FETCH_ATTEMPTS = 3
+        private const val BACKOFF_BASE_MS = 600L
+
         val globalPresetLocations = listOf(
             GlobalPrayerLocation("Makkah", "Saudi Arabia", 21.4225, 39.8262, "Asia/Riyadh", 4),
             GlobalPrayerLocation("Madinah", "Saudi Arabia", 24.4672, 39.6111, "Asia/Riyadh", 4),

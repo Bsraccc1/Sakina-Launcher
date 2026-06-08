@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -35,6 +34,7 @@ import app.sakinalauncher.data.NotePanelStore
 import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.data.TodoItem
 import app.sakinalauncher.databinding.FragmentNotePanelBinding
+import app.sakinalauncher.helper.AppDialog
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.showKeyboard
@@ -93,6 +93,7 @@ class NotePanelFragment : Fragment() {
         initClickListeners()
         binding.input.setText(draftForMode())
         render()
+        binding.modeSwitch.post { positionSegmentIndicator(animate = false) }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -278,15 +279,8 @@ class NotePanelFragment : Fragment() {
         )
         binding.input.hint = getString(if (mode == NotePanelMode.NOTES) R.string.write_note else R.string.write_todo)
         binding.send.contentDescription = getString(if (mode == NotePanelMode.NOTES) R.string.send else R.string.add)
-        binding.notesTab.setBackgroundResource(
-            if (mode == NotePanelMode.NOTES) R.drawable.bg_note_segment_selected else 0
-        )
-        binding.todoTab.setBackgroundResource(
-            if (mode == NotePanelMode.TODO) R.drawable.bg_note_segment_selected else 0
-        )
-        binding.timerTab.setBackgroundResource(
-            if (mode == NotePanelMode.TIMER) R.drawable.bg_note_segment_selected else 0
-        )
+        // Selection is shown by the sliding pill indicator (segmentIndicator),
+        // so the individual tabs stay transparent and only adjust their alpha.
         binding.notesTab.alpha = if (mode == NotePanelMode.NOTES) 1.0f else 0.62f
         binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
         binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
@@ -440,7 +434,47 @@ class NotePanelFragment : Fragment() {
         if (mode == NotePanelMode.TIMER) binding.input.hideKeyboard()
         binding.input.setText(draftForMode())
         binding.input.setSelection(binding.input.text?.length ?: 0)
-        render()
+        // Slide the selected pill indicator to the new segment.
+        positionSegmentIndicator(animate = true)
+        // Crossfade the content area so the new mode appears smoothly.
+        val content = binding.contentFrame
+        content.animate().cancel()
+        content.animate()
+            .alpha(0f)
+            .setDuration(90L)
+            .setInterpolator(smoothInterpolator)
+            .withEndAction {
+                if (_binding == null) return@withEndAction
+                render()
+                content.alpha = 0f
+                content.animate()
+                    .alpha(1f)
+                    .setDuration(150L)
+                    .setInterpolator(smoothInterpolator)
+                    .start()
+            }
+            .start()
+    }
+
+    private fun positionSegmentIndicator(animate: Boolean) {
+        if (_binding == null) return
+        val index = when (mode) {
+            NotePanelMode.NOTES -> 0
+            NotePanelMode.TODO -> 1
+            NotePanelMode.TIMER -> 2
+        }
+        val tabWidth = binding.notesTab.width.takeIf { it > 0 } ?: dp(66)
+        val target = (index * tabWidth).toFloat()
+        binding.segmentIndicator.animate().cancel()
+        if (animate) {
+            binding.segmentIndicator.animate()
+                .translationX(target)
+                .setDuration(200L)
+                .setInterpolator(smoothInterpolator)
+                .start()
+        } else {
+            binding.segmentIndicator.translationX = target
+        }
     }
 
     private fun storeCurrentDraft() {
@@ -541,49 +575,58 @@ class NotePanelFragment : Fragment() {
             hint = getString(R.string.minutes)
             setText((currentSeconds / 60L).toString())
             setSelectAllOnFocus(true)
+            setBackgroundResource(R.drawable.bg_note_composer)
+            val pad = dp(14)
+            setPadding(pad, pad, pad, pad)
         }
         val secondsInput = AppCompatEditText(context).apply {
             inputType = InputType.TYPE_CLASS_NUMBER
             hint = getString(R.string.seconds)
             setText((currentSeconds % 60L).toString())
             setSelectAllOnFocus(true)
+            setBackgroundResource(R.drawable.bg_note_composer)
+            val pad = dp(14)
+            setPadding(pad, pad, pad, pad)
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+            lp.topMargin = dp(10)
+            layoutParams = lp
         }
-        val padding = (18 * resources.displayMetrics.density).toInt()
-        val container = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(padding, 0, padding, 0)
-            addView(minutesInput)
-            addView(secondsInput)
-        }
-        val dialog = AlertDialog.Builder(context)
-            .setTitle(R.string.duration)
-            .setView(container)
-            .setPositiveButton(R.string.save, null)
-            .setNegativeButton(R.string.close, null)
-            .create()
 
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val minutes = minutesInput.text?.toString()?.toIntOrNull()?.coerceIn(0, 999) ?: 0
-                val seconds = secondsInput.text?.toString()?.toIntOrNull()?.coerceIn(0, 59) ?: 0
-                if (minutes == 0 && seconds == 0) {
-                    context.showToast(getString(R.string.timer_duration_empty))
-                    return@setOnClickListener
-                }
-                prefs.pomodoroFocusMinutes = minutes
-                prefs.pomodoroFocusSeconds = seconds
-                timer?.cancel()
-                timerRunning = false
-                timerTotalMillis = prefs.pomodoroFocusMillis
-                timerRemainingMillis = timerTotalMillis
-                prefs.pomodoroTimerTotalMillis = timerTotalMillis
-                prefs.pomodoroTimerRemainingMillis = timerRemainingMillis
-                prefs.pomodoroTimerEndElapsedRealtime = 0L
-                renderTimer()
-                dialog.dismiss()
+        val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
+        view.findViewById<android.widget.TextView>(R.id.dialogTitle).setText(R.string.duration)
+        val container = view.findViewById<LinearLayout>(R.id.dialogInputContainer)
+        container.addView(minutesInput)
+        container.addView(secondsInput)
+        val positive = view.findViewById<android.widget.TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<android.widget.TextView>(R.id.dialogNegative)
+        positive.setText(R.string.save)
+        negative.setText(R.string.close)
+
+        val dialog = AppDialog.create(context, view)
+        negative.setOnClickListener { dialog.dismiss() }
+        positive.setOnClickListener {
+            val minutes = minutesInput.text?.toString()?.toIntOrNull()?.coerceIn(0, 999) ?: 0
+            val seconds = secondsInput.text?.toString()?.toIntOrNull()?.coerceIn(0, 59) ?: 0
+            if (minutes == 0 && seconds == 0) {
+                context.showToast(getString(R.string.timer_duration_empty))
+                return@setOnClickListener
             }
-            minutesInput.showKeyboard()
+            prefs.pomodoroFocusMinutes = minutes
+            prefs.pomodoroFocusSeconds = seconds
+            timer?.cancel()
+            timerRunning = false
+            timerTotalMillis = prefs.pomodoroFocusMillis
+            timerRemainingMillis = timerTotalMillis
+            prefs.pomodoroTimerTotalMillis = timerTotalMillis
+            prefs.pomodoroTimerRemainingMillis = timerRemainingMillis
+            prefs.pomodoroTimerEndElapsedRealtime = 0L
+            renderTimer()
+            dialog.dismiss()
         }
+        dialog.setOnShowListener { minutesInput.showKeyboard() }
         dialog.show()
     }
 
@@ -637,26 +680,31 @@ class NotePanelFragment : Fragment() {
             setText(initialText)
             setSelectAllOnFocus(true)
             maxLines = 4
+            setBackgroundResource(R.drawable.bg_note_composer)
+            val pad = dp(14)
+            setPadding(pad, pad, pad, pad)
         }
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle(title)
-            .setView(input)
-            .setPositiveButton(R.string.save, null)
-            .setNegativeButton(R.string.close, null)
-            .create()
 
-        dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                val text = input.text?.toString()?.trim().orEmpty()
-                if (text.isBlank()) {
-                    requireContext().showToast(emptyMessage)
-                    return@setOnClickListener
-                }
-                onSave(text)
-                dialog.dismiss()
+        val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
+        view.findViewById<android.widget.TextView>(R.id.dialogTitle).text = title
+        view.findViewById<LinearLayout>(R.id.dialogInputContainer).addView(input)
+        val positive = view.findViewById<android.widget.TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<android.widget.TextView>(R.id.dialogNegative)
+        positive.setText(R.string.save)
+        negative.setText(R.string.close)
+
+        val dialog = AppDialog.create(requireContext(), view)
+        negative.setOnClickListener { dialog.dismiss() }
+        positive.setOnClickListener {
+            val text = input.text?.toString()?.trim().orEmpty()
+            if (text.isBlank()) {
+                requireContext().showToast(emptyMessage)
+                return@setOnClickListener
             }
-            input.showKeyboard()
+            onSave(text)
+            dialog.dismiss()
         }
+        dialog.setOnShowListener { input.showKeyboard() }
         dialog.show()
     }
 

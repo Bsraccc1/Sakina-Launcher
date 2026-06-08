@@ -46,3 +46,9 @@ tasks/
 .agents/
 .taskmaster/
 CLAUDE.md
+.kiro/
+.antigravity/
+.rtk/
+
+# Junk / scratch files
+u.xml

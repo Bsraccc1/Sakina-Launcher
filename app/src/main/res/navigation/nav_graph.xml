@@ -20,24 +20,24 @@
         <action
             android:id="@+id/action_mainFragment_to_settingsFragment"
             app:destination="@id/settingsFragment"
-            app:enterAnim="@anim/fade_enter"
+            app:enterAnim="@anim/scale_in"
             app:exitAnim="@anim/fade_exit"
             app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/fade_exit" />
+            app:popExitAnim="@anim/scale_out" />
         <action
             android:id="@+id/action_mainFragment_to_notePanelFragment"
             app:destination="@id/notePanelFragment"
-            app:enterAnim="@anim/fade_enter"
+            app:enterAnim="@anim/scale_in"
             app:exitAnim="@anim/fade_exit"
             app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/fade_exit" />
+            app:popExitAnim="@anim/scale_out" />
         <action
             android:id="@+id/action_mainFragment_to_muslimCenterFragment"
             app:destination="@id/muslimCenterFragment"
-            app:enterAnim="@anim/fade_enter"
+            app:enterAnim="@anim/scale_in"
             app:exitAnim="@anim/fade_exit"
             app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/fade_exit" />
+            app:popExitAnim="@anim/scale_out" />
     </fragment>
 
     <fragment
@@ -83,10 +83,10 @@
         <action
             android:id="@+id/action_muslimCenterFragment_to_dhikrPagerFragment"
             app:destination="@id/dhikrPagerFragment"
-            app:enterAnim="@anim/fade_enter"
-            app:exitAnim="@anim/fade_exit"
-            app:popEnterAnim="@anim/fade_enter"
-            app:popExitAnim="@anim/fade_exit" />
+            app:enterAnim="@anim/scale_in"
+            app:exitAnim="@anim/scale_out"
+            app:popEnterAnim="@anim/scale_in"
+            app:popExitAnim="@anim/scale_out" />
     </fragment>
 
     <fragment

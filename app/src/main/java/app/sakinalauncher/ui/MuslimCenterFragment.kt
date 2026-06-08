@@ -26,6 +26,7 @@ import app.sakinalauncher.data.muslim.PrayerScheduleResult
 import app.sakinalauncher.data.muslim.PrayerTimeRepository
 import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentMuslimCenterBinding
+import app.sakinalauncher.helper.addPressScale
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.PrayerLocationHelper
@@ -81,6 +82,9 @@ class MuslimCenterFragment : Fragment() {
         binding.prayerCard.setOnClickListener { openSettings() }
         binding.morningDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.MORNING) }
         binding.eveningDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.EVENING) }
+        binding.prayerCard.addPressScale()
+        binding.morningDhikrCard.addPressScale(0.95f)
+        binding.eveningDhikrCard.addPressScale(0.95f)
         startPrayerTicker()
     }
 
