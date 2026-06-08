@@ -300,11 +300,8 @@ fun setPlainWallpaper(context: Context, color: Int) {
         val bitmap = createBitmap(1000, 2000)
         bitmap.eraseColor(context.getColor(color))
         val manager = WallpaperManager.getInstance(context)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            manager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)
-            manager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_LOCK)
-        } else
-            manager.setBitmap(bitmap)
+        manager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_SYSTEM)
+        manager.setBitmap(bitmap, null, false, WallpaperManager.FLAG_LOCK)
         bitmap.recycle()
     } catch (e: Exception) {
         e.printStackTrace()
@@ -608,6 +605,24 @@ fun View.animateAlpha(alpha: Float = 1.0f) {
         duration = 200
         alpha(alpha)
         start()
+    }
+}
+
+@SuppressLint("ClickableViewAccessibility")
+fun View.addPressScale(scale: Float = 0.96f) {
+    setOnTouchListener { view, event ->
+        when (event.actionMasked) {
+            android.view.MotionEvent.ACTION_DOWN -> {
+                view.animate().scaleX(scale).scaleY(scale)
+                    .setDuration(110).start()
+            }
+            android.view.MotionEvent.ACTION_UP,
+            android.view.MotionEvent.ACTION_CANCEL -> {
+                view.animate().scaleX(1f).scaleY(1f)
+                    .setDuration(140).start()
+            }
+        }
+        false
     }
 }
 

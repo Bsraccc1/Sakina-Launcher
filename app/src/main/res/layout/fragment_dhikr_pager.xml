@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_note_panel_scrim"
     android:orientation="vertical"
-    android:paddingHorizontal="24dp"
-    android:paddingTop="48dp"
-    android:paddingBottom="24dp">
+    android:paddingHorizontal="20dp"
+    android:paddingTop="32dp"
+    android:paddingBottom="20dp">
 
+    <!-- Header: period title + card position -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,122 +24,235 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:fontFamily="@font/poppins_semibold"
+            android:letterSpacing="0.01"
             android:maxLines="1"
             android:textSize="24sp"
-            tools:text="Dzikir pagi" />
+            tools:text="Morning dhikr" />
 
         <TextView
             android:id="@+id/counter"
             style="@style/TextSmallBold"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="34dp"
             android:background="@drawable/bg_note_composer"
             android:gravity="center"
-            android:minWidth="72dp"
+            android:letterSpacing="0.04"
+            android:minWidth="78dp"
             android:paddingHorizontal="16dp"
-            android:textSize="16sp"
-            tools:text="1 / 4" />
+            android:textSize="13sp"
+            tools:text="1 of 24" />
 
     </LinearLayout>
 
-    <ScrollView
+    <!-- Content card -->
+    <LinearLayout
+        android:id="@+id/contentCard"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="14dp"
         android:layout_weight="1"
-        android:fillViewport="true"
-        android:overScrollMode="never">
+        android:background="@drawable/bg_unified_card"
+        android:orientation="vertical"
+        android:paddingHorizontal="22dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="18dp">
 
-        <LinearLayout
-            android:id="@+id/contentCard"
+        <TextView
+            android:id="@+id/cardTitle"
+            style="@style/TextLarge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/rounded_rect_shade_color"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingHorizontal="24dp"
-            android:paddingVertical="32dp">
+            android:fontFamily="@font/poppins_semibold"
+            android:gravity="center"
+            android:lineSpacingExtra="1dp"
+            android:maxLines="2"
+            android:textSize="19sp"
+            tools:text="Ayat al-Kursi" />
 
-            <TextView
-                android:id="@+id/cardTitle"
-                style="@style/TextMedium"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:lineSpacingExtra="4dp"
-                tools:text="Ayat Kursi" />
+        <TextView
+            android:id="@+id/repetition"
+            style="@style/TextSmallBold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_dhikr_repeat_chip"
+            android:letterSpacing="0.04"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="5dp"
+            android:shadowColor="@android:color/transparent"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="0"
+            android:textColor="?attr/primaryColor"
+            android:textSize="11sp"
+            tools:text="Read 3 times" />
 
-            <TextView
-                android:id="@+id/repetition"
-                style="@style/TextSmallLight"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:alpha="0.72"
-                android:gravity="center"
-                android:textSize="13sp"
-                tools:text="Read 1 time" />
+        <!-- Arabic: autosize to fit, no scroll, never truncated. Largest share of the card. -->
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/arabic"
+            style="@style/TextArabic"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="14dp"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:lineSpacingExtra="8dp"
+            android:tag="arabic"
+            android:textDirection="rtl"
+            app:autoSizeMaxTextSize="28sp"
+            app:autoSizeMinTextSize="13sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            tools:text="بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ" />
 
-            <TextView
-                android:id="@+id/arabic"
-                style="@style/TextLarge"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
-                android:gravity="center"
-                android:lineSpacingExtra="12dp"
-                android:textDirection="rtl"
-                android:textSize="28sp"
-                tools:text="بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ" />
+        <View
+            android:layout_width="52dp"
+            android:layout_height="2dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:alpha="0.4"
+            android:background="?attr/primaryColor" />
+
+        <!-- Transliteration -->
+        <TextView
+            style="@style/TextSmallBold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="10dp"
+            android:alpha="0.5"
+            android:letterSpacing="0.18"
+            android:text="@string/dhikr_section_translit"
+            android:textAllCaps="true"
+            android:textColor="?attr/primaryColor"
+            android:textSize="10sp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/latin"
+            style="@style/TextSmallLight"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="2"
+            android:lineSpacingExtra="2dp"
+            android:textStyle="italic"
+            app:autoSizeMaxTextSize="14sp"
+            app:autoSizeMinTextSize="9sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            tools:text="Bismillahir-rahmanir-rahim..." />
+
+        <!-- Meaning -->
+        <TextView
+            style="@style/TextSmallBold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="10dp"
+            android:alpha="0.5"
+            android:letterSpacing="0.18"
+            android:text="@string/dhikr_section_meaning"
+            android:textAllCaps="true"
+            android:textColor="?attr/primaryColor"
+            android:textSize="10sp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/meaning"
+            style="@style/TextSmallLight"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="4dp"
+            android:layout_weight="2"
+            android:alpha="0.85"
+            android:lineSpacingExtra="2dp"
+            app:autoSizeMaxTextSize="14sp"
+            app:autoSizeMinTextSize="9sp"
+            app:autoSizeStepGranularity="1sp"
+            app:autoSizeTextType="uniform"
+            tools:text="With the name of Allah..." />
+
+        <!-- Counter progress -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginTop="12dp"
+            android:max="100"
+            android:progress="0"
+            android:progressBackgroundTint="?attr/primaryColorTrans50"
+            android:progressTint="?attr/primaryColor" />
+
+    </LinearLayout>
+
+    <!-- Navigation + tap counter (capsule) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/btnPrev"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_dhikr_nav_button"
+            android:clickable="true"
+            android:contentDescription="@string/previous"
+            android:focusable="true"
+            android:padding="14dp"
+            android:src="@drawable/ic_chevron_left" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
             <TextView
                 android:id="@+id/tasbihCounter"
                 style="@style/TextLarge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/bg_prayer_time_chip"
+                android:layout_width="match_parent"
+                android:layout_height="62dp"
+                android:background="@drawable/bg_tasbih_capsule"
                 android:clickable="true"
                 android:focusable="true"
+                android:fontFamily="@font/poppins_semibold"
                 android:gravity="center"
-                android:minWidth="160dp"
-                android:paddingHorizontal="32dp"
-                android:paddingVertical="20dp"
-                android:textSize="36sp"
-                android:textStyle="bold"
+                android:letterSpacing="0.02"
+                android:textColor="?attr/primaryInverseColor"
+                android:textSize="26sp"
                 tools:text="0 / 3" />
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="16dp"
-                android:max="100"
-                android:progress="0"
-                android:progressTint="@color/colorAccent"
-                android:progressBackgroundTint="#33FFFFFF" />
 
             <TextView
-                android:id="@+id/latin"
-                style="@style/TextSmallBold"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:lineSpacingExtra="6dp"
-                tools:text="Bismillah..." />
+                android:layout_marginTop="7dp"
+                android:alpha="0.6"
+                android:letterSpacing="0.14"
+                android:text="@string/dhikr_tap_to_count"
+                android:textAllCaps="true"
+                android:textColor="?attr/primaryColor"
+                android:textSize="10sp" />
 
-            <TextView
-                android:id="@+id/meaning"
-                style="@style/TextSmallLight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:alpha="0.68"
-                android:gravity="center"
-                android:lineSpacingExtra="6dp"
-                tools:text="Dengan nama Allah..." />
         </LinearLayout>
 
-    </ScrollView>
+        <ImageView
+            android:id="@+id/btnNext"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_dhikr_nav_button"
+            android:clickable="true"
+            android:contentDescription="@string/next"
+            android:focusable="true"
+            android:padding="14dp"
+            android:src="@drawable/ic_chevron_right" />
+
+    </LinearLayout>
 
 </LinearLayout>

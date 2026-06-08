@@ -16,7 +16,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
 import androidx.core.os.LocaleListCompat
@@ -26,6 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import app.sakinalauncher.BuildConfig
+import app.sakinalauncher.MainActivity
 import app.sakinalauncher.MainViewModel
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
@@ -37,20 +37,18 @@ import app.sakinalauncher.data.muslim.PrayerProvider
 import app.sakinalauncher.data.muslim.PrayerTimeRepository
 import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentSettingsBinding
+import app.sakinalauncher.helper.AppDialog
 import app.sakinalauncher.helper.animateAlpha
 import app.sakinalauncher.helper.appUsagePermissionGranted
 import app.sakinalauncher.helper.getColorFromAttr
 import app.sakinalauncher.helper.isAccessServiceEnabled
-import app.sakinalauncher.helper.isDarkThemeOn
 import app.sakinalauncher.helper.isEinkDisplay
 import app.sakinalauncher.helper.isOlauncherDefault
 import app.sakinalauncher.helper.isTablet
 import app.sakinalauncher.helper.openAppInfo
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.PrayerLocationHelper
-import app.sakinalauncher.helper.rateApp
-import app.sakinalauncher.helper.setPlainWallpaper
-import app.sakinalauncher.helper.shareApp
+import app.sakinalauncher.helper.showAppListDialog
 import app.sakinalauncher.helper.showToast
 import app.sakinalauncher.listener.DeviceAdmin
 import kotlinx.coroutines.launch
@@ -67,7 +65,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
-    private val showPentastic = System.currentTimeMillis() % 2 == 0L
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentSettingsBinding.inflate(inflater, container, false)
@@ -95,9 +92,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populateLockSettings()
         populateHomeButtonRecents()
         populateWallpaperText()
+        populateSolidBackground()
         populateAppThemeText()
         populateLanguage()
         populateTextSize()
+        populateFontText()
         populateAlignment()
         populateStatusBar()
         populateDateTime()
@@ -108,8 +107,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         initClickListeners()
         initObservers()
 
-        if (showPentastic)
-            binding.footer.text = getText(R.string.new_app_minimal_todo_lists)
+        app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
     }
 
     override fun onClick(view: View) {
@@ -138,6 +136,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.homeAppsNum -> binding.appsNumSelectLayout.visibility = View.VISIBLE
             R.id.dailyWallpaperUrl -> requireContext().openUrl(prefs.dailyWallpaperUrl)
             R.id.dailyWallpaper -> toggleDailyWallpaperUpdate()
+            R.id.solidBackground -> toggleSolidBackground()
             R.id.alignment -> binding.alignmentSelectLayout.visibility = View.VISIBLE
             R.id.alignmentLeft -> viewModel.updateHomeAlignment(Gravity.START)
             R.id.alignmentCenter -> viewModel.updateHomeAlignment(Gravity.CENTER)
@@ -181,25 +180,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.prayerProvider -> showPrayerProviderPicker()
             R.id.prayerAutoDetect -> autoDetectPrayerRegion()
             R.id.languageText -> showLanguagePicker()
+            R.id.fontText -> showFontPicker()
 
             R.id.aboutOlauncher -> {
                 prefs.aboutClicked = true
                 requireContext().openUrl(Constants.URL_ABOUT_OLAUNCHER)
-            }
-
-            R.id.share -> requireActivity().shareApp()
-            R.id.rate -> {
-                prefs.rateClicked = true
-                requireActivity().rateApp()
-            }
-
-            R.id.twitter -> requireContext().openUrl(Constants.URL_TWITTER_TANUJ)
-            R.id.github -> requireContext().openUrl(Constants.URL_OLAUNCHER_GITHUB)
-            R.id.privacy -> requireContext().openUrl(Constants.URL_OLAUNCHER_PRIVACY)
-            R.id.footer -> {
-                requireContext().openUrl(
-                    if (showPentastic) Constants.URL_PENTASTIC else Constants.URL_NTS
-                )
             }
         }
     }
@@ -239,6 +224,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.screenTimeOnOff.setOnClickListener(this)
         binding.dailyWallpaperUrl.setOnClickListener(this)
         binding.dailyWallpaper.setOnClickListener(this)
+        binding.solidBackground.setOnClickListener(this)
         binding.alignment.setOnClickListener(this)
         binding.alignmentLeft.setOnClickListener(this)
         binding.alignmentCenter.setOnClickListener(this)
@@ -259,6 +245,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.notifications.setOnClickListener(this)
         binding.appThemeText.setOnClickListener(this)
         binding.languageText.setOnClickListener(this)
+        binding.fontText.setOnClickListener(this)
         binding.themeLight.setOnClickListener(this)
         binding.themeDark.setOnClickListener(this)
         binding.themeSystem.setOnClickListener(this)
@@ -266,13 +253,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.actionAccessibility.setOnClickListener(this)
         binding.closeAccessibility.setOnClickListener(this)
         binding.notWorking.setOnClickListener(this)
-
-        binding.share.setOnClickListener(this)
-        binding.rate.setOnClickListener(this)
-        binding.twitter.setOnClickListener(this)
-        binding.github.setOnClickListener(this)
-        binding.privacy.setOnClickListener(this)
-        binding.footer.setOnClickListener(this)
 
         binding.maxApps0.setOnClickListener(this)
         binding.maxApps1.setOnClickListener(this)
@@ -454,13 +434,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun removeWallpaper() {
-        if (requireContext().isEinkDisplay()) {
-            prefs.appTheme = AppCompatDelegate.MODE_NIGHT_NO
-            setPlainWallpaper(requireContext(), android.R.color.white)
-        } else {
-            prefs.appTheme = AppCompatDelegate.MODE_NIGHT_YES
-            setPlainWallpaper(requireContext(), android.R.color.black)
-        }
         if (!prefs.dailyWallpaper) return
         prefs.dailyWallpaper = false
         populateWallpaperText()
@@ -487,6 +460,18 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             requireContext().showToast(getString(R.string.olauncher_is_not_default_launcher), Toast.LENGTH_LONG)
     }
 
+    private fun toggleSolidBackground() {
+        prefs.solidBackground = !prefs.solidBackground
+        populateSolidBackground()
+        (activity as? MainActivity)?.applySolidBackground()
+    }
+
+    private fun populateSolidBackground() {
+        binding.solidBackground.text = getString(
+            if (prefs.solidBackground) R.string.on else R.string.off
+        )
+    }
+
     private fun updateHomeAppsNum(num: Int) {
         binding.homeAppsNum.text = num.toString()
         binding.appsNumSelectLayout.visibility = View.GONE
@@ -503,7 +488,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         val clamped = newScale.coerceIn(0.5f, maxScale)
         if (clamped == current) return
         pendingTextSizeScale = clamped
-        val formatted = String.format("%.1f", clamped)
+        val formatted = String.format(Locale.getDefault(), "%.1f", clamped)
         binding.textSizeValue.text = formatted
         binding.textSizeCurrent.text = formatted
     }
@@ -538,22 +523,9 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     private fun setAppTheme(theme: Int) {
         if (AppCompatDelegate.getDefaultNightMode() == theme) return
         if (prefs.dailyWallpaper) {
-            setPlainWallpaper(theme)
             viewModel.setWallpaperWorker()
         }
         requireActivity().recreate()
-    }
-
-    private fun setPlainWallpaper(appTheme: Int) {
-        when (appTheme) {
-            AppCompatDelegate.MODE_NIGHT_YES -> setPlainWallpaper(requireContext(), android.R.color.black)
-            AppCompatDelegate.MODE_NIGHT_NO -> setPlainWallpaper(requireContext(), android.R.color.white)
-            else -> {
-                if (requireContext().isDarkThemeOn())
-                    setPlainWallpaper(requireContext(), android.R.color.black)
-                else setPlainWallpaper(requireContext(), android.R.color.white)
-            }
-        }
     }
 
     private fun populateAppThemeText(appTheme: Int = prefs.appTheme) {
@@ -575,19 +547,39 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun showLanguagePicker() {
         val tags = arrayOf("en", "in")
-        val labels = arrayOf(getString(R.string.language_english), getString(R.string.language_indonesian))
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.language)
-            .setItems(labels) { _, which ->
-                AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags[which]))
-                populateLanguage()
+        val labels = listOf(getString(R.string.language_english), getString(R.string.language_indonesian))
+        requireContext().showAppListDialog(getString(R.string.language), labels) { which ->
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags[which]))
+            populateLanguage()
+            requireActivity().recreate()
+        }
+    }
+
+    private fun populateFontText() {
+        binding.fontText.text = app.sakinalauncher.helper.FontHelper.labelFor(requireContext(), prefs.fontFamily)
+    }
+
+    private fun showFontPicker() {
+        val values = intArrayOf(
+            Constants.FontFamily.SYSTEM,
+            Constants.FontFamily.POPPINS,
+            Constants.FontFamily.SERIF,
+            Constants.FontFamily.MONOSPACE,
+        )
+        val labels = values.map {
+            app.sakinalauncher.helper.FontHelper.labelFor(requireContext(), it)
+        }
+        requireContext().showAppListDialog(getString(R.string.font), labels) { which ->
+            if (prefs.fontFamily != values[which]) {
+                prefs.fontFamily = values[which]
+                populateFontText()
                 requireActivity().recreate()
             }
-            .show()
+        }
     }
 
     private fun populateTextSize() {
-        val formatted = String.format("%.1f", prefs.textSizeScale)
+        val formatted = String.format(Locale.getDefault(), "%.1f", prefs.textSizeScale)
         binding.textSizeValue.text = formatted
         binding.textSizeCurrent.text = formatted
     }
@@ -699,22 +691,22 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             Constants.SwipeTarget.APP,
             Constants.SwipeTarget.OFF,
         )
-        val labels = targetValues.map { swipeTargetLabel(it) }.toTypedArray()
-        AlertDialog.Builder(requireContext())
-            .setTitle(if (isLeft) R.string.swipe_left_for else R.string.swipe_right_for)
-            .setItems(labels) { _, which ->
-                if (isLeft) {
-                    prefs.swipeLeftTarget = targetValues[which]
-                } else {
-                    prefs.swipeRightTarget = targetValues[which]
-                }
-                populateSwipeApps()
-                when (targetValues[which]) {
-                    Constants.SwipeTarget.OFF -> { /* nothing */ }
-                    else -> showSwipeAppList(isLeft)
-                }
+        val labels = targetValues.map { swipeTargetLabel(it) }
+        requireContext().showAppListDialog(
+            getString(if (isLeft) R.string.swipe_left_for else R.string.swipe_right_for),
+            labels,
+        ) { which ->
+            if (isLeft) {
+                prefs.swipeLeftTarget = targetValues[which]
+            } else {
+                prefs.swipeRightTarget = targetValues[which]
             }
-            .show()
+            populateSwipeApps()
+            when (targetValues[which]) {
+                Constants.SwipeTarget.OFF -> { /* nothing */ }
+                else -> showSwipeAppList(isLeft)
+            }
+        }
     }
 
     private fun swipeTargetSummary(isLeft: Boolean): String {
@@ -768,16 +760,13 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun showPrayerProviderPicker() {
         val providers = arrayOf(PrayerProvider.KEMENAG, PrayerProvider.GLOBAL)
-        val labels = arrayOf(getString(R.string.prayer_provider_kemenag), getString(R.string.prayer_provider_global))
-        AlertDialog.Builder(requireContext())
-            .setTitle(R.string.prayer_source_setting)
-            .setItems(labels) { _, which ->
-                prayerStore.provider = providers[which]
-                prayerStore.autoDetectLocation = false
-                populatePrayerRegion()
-                refreshSelectedPrayerProvider()
-            }
-            .show()
+        val labels = listOf(getString(R.string.prayer_provider_kemenag), getString(R.string.prayer_provider_global))
+        requireContext().showAppListDialog(getString(R.string.prayer_source_setting), labels) { which ->
+            prayerStore.provider = providers[which]
+            prayerStore.autoDetectLocation = false
+            populatePrayerRegion()
+            refreshSelectedPrayerProvider()
+        }
     }
 
     private fun refreshSelectedPrayerProvider() {
@@ -830,9 +819,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             )
             cityList.adapter = adapter
 
-            val dialog = AlertDialog.Builder(requireContext())
-                .setView(dialogView)
-                .create()
+            val dialog = AppDialog.create(requireContext(), dialogView, matchHeight = true)
 
             searchInput.addTextChangedListener(object : android.text.TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -892,9 +879,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             locations.map { "${it.label}, ${it.country}" }.toMutableList()
         )
         cityList.adapter = adapter
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .create()
+        val dialog = AppDialog.create(requireContext(), dialogView, matchHeight = true)
         fun filteredLocations(): List<GlobalPrayerLocation> {
             val query = searchInput.text.toString().lowercase()
             return if (query.isBlank()) locations else locations.filter {
@@ -1028,9 +1013,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     private fun populateActionHints() {
         if (prefs.aboutClicked.not())
             binding.aboutOlauncher.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
-        if (viewModel.isOlauncherDefault.value != true) return
-        if (prefs.rateClicked.not() && prefs.toShowHintCounter > Constants.HINT_RATE_US && prefs.toShowHintCounter < Constants.HINT_RATE_US + 100)
-            binding.rate.setCompoundDrawablesWithIntrinsicBounds(0, android.R.drawable.arrow_down_float, 0, 0)
     }
 
     private fun populateProMessage() {

@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <!--Used to read the user's wallpaper so we can paint it ourselves when not the default launcher (API <= 32)-->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"

@@ -64,6 +64,13 @@ object Constants {
         const val RIGHT = "right"
     }
 
+    object FontFamily {
+        const val SYSTEM = 0
+        const val POPPINS = 1
+        const val SERIF = 2
+        const val MONOSPACE = 3
+    }
+
     object CharacterIndicator {
         const val SHOW = 102
         const val HIDE = 101

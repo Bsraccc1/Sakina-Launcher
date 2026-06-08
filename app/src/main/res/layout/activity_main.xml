@@ -7,6 +7,17 @@
     android:layout_height="match_parent"
     android:animateLayoutChanges="true">
 
+    <!-- Wallpaper layer: painted manually when the app is NOT the default launcher,
+         since the system only composites windowShowWallpaper behind the active home. -->
+    <ImageView
+        android:id="@+id/wallpaperLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        tools:ignore="ContentDescription" />
+
     <fragment
         android:id="@+id/nav_host_fragment"
         android:name="androidx.navigation.fragment.NavHostFragment"
@@ -32,7 +43,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:background="@drawable/rounded_rectangle_dark"
+            android:background="@drawable/bg_unified_dialog"
             android:elevation="8dp"
             android:orientation="vertical"
             android:outlineAmbientShadowColor="@color/colorPrimaryDark"

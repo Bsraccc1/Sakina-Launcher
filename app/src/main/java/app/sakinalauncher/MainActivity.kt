@@ -1,14 +1,21 @@
 package app.sakinalauncher
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.WallpaperManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
@@ -36,7 +43,6 @@ import app.sakinalauncher.helper.isTablet
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.rateApp
 import app.sakinalauncher.helper.resetLauncherViaFakeActivity
-import app.sakinalauncher.helper.setPlainWallpaper
 import app.sakinalauncher.helper.shareApp
 import app.sakinalauncher.helper.showLauncherSelector
 import app.sakinalauncher.helper.showToast
@@ -55,6 +61,14 @@ class MainActivity : AppCompatActivity() {
     private var isResumed = false
     private var profileReceiver: BroadcastReceiver? = null
 
+    // Launcher to request READ_EXTERNAL_STORAGE (needed on API <= 32 to read the
+    // user's wallpaper when we are not the default launcher).
+    private val wallpaperPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) applySolidBackground()
+        }
+    private var wallpaperPermissionRequested = false
+
 
     override fun attachBaseContext(context: Context) {
         val newConfig = Configuration(context.resources.configuration)
@@ -70,6 +84,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        applySolidBackground()
 
         navController = this.findNavController(R.id.nav_host_fragment)
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
@@ -129,6 +144,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         isResumed = true
         viewModel.isPrivateSpaceToggling = false
+        applySolidBackground()
     }
 
     override fun onStop() {
@@ -153,8 +169,8 @@ class MainActivity : AppCompatActivity() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         AppCompatDelegate.setDefaultNightMode(prefs.appTheme)
+        applySolidBackground()
         if (prefs.dailyWallpaper && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
-            setPlainWallpaper()
             viewModel.setWallpaperWorker()
             recreate()
         }
@@ -328,10 +344,82 @@ class MainActivity : AppCompatActivity() {
             navController.popBackStack(R.id.mainFragment, false)
     }
 
-    private fun setPlainWallpaper() {
-        if (this.isDarkThemeOn())
-            setPlainWallpaper(this, android.R.color.black)
-        else setPlainWallpaper(this, android.R.color.white)
+    fun applySolidBackground() {
+        when {
+            // User explicitly wants a solid color background
+            prefs.solidBackground -> {
+                val color = if (isDarkThemeOn()) getColor(android.R.color.black)
+                else getColor(android.R.color.white)
+                binding.wallpaperLayer.visibility = View.GONE
+                binding.wallpaperLayer.setImageDrawable(null)
+                binding.root.background = null
+                binding.root.setBackgroundColor(color)
+            }
+            // Default launcher: the system composites the wallpaper behind our
+            // translucent window, so we hide our manual layer and stay transparent.
+            isOlauncherDefault(this) -> {
+                binding.wallpaperLayer.visibility = View.GONE
+                binding.wallpaperLayer.setImageDrawable(null)
+                binding.root.background = null
+                binding.root.setBackgroundColor(Color.TRANSPARENT)
+            }
+            // Not the default launcher yet: the system will NOT draw the wallpaper
+            // behind us, so fetch the current wallpaper and paint it into our own
+            // full-screen ImageView layer.
+            else -> {
+                binding.root.background = null
+                binding.root.setBackgroundColor(Color.TRANSPARENT)
+                val wallpaper = loadUserWallpaper()
+                if (wallpaper != null) {
+                    binding.wallpaperLayer.setImageDrawable(wallpaper)
+                    binding.wallpaperLayer.visibility = View.VISIBLE
+                } else {
+                    binding.wallpaperLayer.setImageDrawable(null)
+                    binding.wallpaperLayer.visibility = View.GONE
+                }
+            }
+        }
+    }
+
+    /**
+     * Reads the user's current wallpaper. On API <= 32 this requires
+     * READ_EXTERNAL_STORAGE; if the permission is missing we request it once and
+     * return null for now (we re-apply once it's granted). Any failure falls back
+     * to a transparent layer.
+     */
+    @SuppressLint("MissingPermission") // All WallpaperManager reads are wrapped in try/catch and fall back to null.
+    private fun loadUserWallpaper(): Drawable? {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2 &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            if (!wallpaperPermissionRequested) {
+                wallpaperPermissionRequested = true
+                wallpaperPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+            return null
+        }
+        val wm = WallpaperManager.getInstance(this)
+        var result: Drawable? = try {
+            wm.drawable
+        } catch (_: Exception) {
+            null
+        }
+        if (result == null) {
+            result = try {
+                wm.peekDrawable()
+            } catch (_: Exception) {
+                null
+            }
+        }
+        if (result == null) {
+            result = try {
+                wm.fastDrawable
+            } catch (_: Exception) {
+                null
+            }
+        }
+        return result
     }
 
     private fun openLauncherChooser(resetFailed: Boolean) {
