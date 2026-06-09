@@ -1,4 +1,4 @@
-name: Android CI
+name: Android CI/CD
 
 on:
   push:
@@ -9,10 +9,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
       
     - name: Set up JDK 17
       uses: actions/setup-java@v4
@@ -24,22 +28,64 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       
-    - name: Build with Gradle
+    - name: Build Debug APK
       run: ./gradlew assembleDebug
       
     - name: Build Release APK
       run: ./gradlew assembleRelease
       
-    - name: Upload Debug APK
+    - name: Get version name
+      id: version
+      run: |
+        VERSION=$(grep "versionName" app/build.gradle | awk '{print $2}' | tr -d '"' || echo "1.0.0")
+        echo "name=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION-build.${{ github.run_number }}" >> $GITHUB_OUTPUT
+        echo "date=$(date +'%Y%m%d-%H%M')" >> $GITHUB_OUTPUT
+      
+    - name: Rename APK files
+      run: |
+        mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
+        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
+      
+    - name: Upload Debug APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sakina-launcher-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+        name: sakina-launcher-debug-${{ steps.version.outputs.date }}
+        path: app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
         retention-days: 30
         
-    - name: Upload Release APK
+    - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sakina-launcher-release
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
+        name: sakina-launcher-release-${{ steps.version.outputs.date }}
+        path: app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
         retention-days: 90
+    
+    - name: Create GitHub Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.tag }}
+        name: Sakina Launcher ${{ steps.version.outputs.tag }}
+        body: |
+          ## 🚀 Sakina Launcher Build ${{ steps.version.outputs.tag }}
+          
+          **Build Date:** ${{ steps.version.outputs.date }}
+          **Commit:** ${{ github.sha }}
+          
+          ### 📦 Downloads
+          - **Debug APK**: For testing and development
+          - **Release APK**: For production use (unsigned)
+          
+          ### ✨ Recent Changes
+          ${{ github.event.head_commit.message }}
+          
+          ---
+          Built automatically by GitHub Actions
+        files: |
+          app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
+          app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
