@@ -24,6 +24,14 @@ interface PrayerApi {
         @Path("cityId") cityId: String,
         @Query("tz") timeZoneId: String,
     ): PrayerScheduleResponse
+
+    @GET("sholat/jadwal/{cityId}/{year}/{month}")
+    suspend fun getMonthlyKemenagSchedule(
+        @Path("cityId") cityId: String,
+        @Path("year") year: Int,
+        @Path("month") month: Int,
+        @Query("tz") timeZoneId: String,
+    ): PrayerMonthlyResponse
 }
 
 interface AladhanApi {
@@ -35,6 +43,16 @@ interface AladhanApi {
         @Query("method") method: Int,
         @Query("timezonestring") timeZoneId: String,
     ): AladhanTimingsResponse
+
+    @GET("calendar/{year}/{month}")
+    suspend fun getAladhanCalendar(
+        @Path("year") year: Int,
+        @Path("month") month: Int,
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("method") method: Int,
+        @Query("timezonestring") timeZoneId: String,
+    ): AladhanCalendarResponse
 }
 
 object PrayerApiClient {
@@ -128,12 +146,35 @@ data class PrayerTimesDto(
     val ashar: String?,
     val maghrib: String?,
     val isya: String?,
+    val date: String?,
+)
+
+data class PrayerMonthlyResponse(
+    val status: Boolean,
+    val message: String?,
+    val data: PrayerMonthlyDataDto?,
+)
+
+data class PrayerMonthlyDataDto(
+    val id: String?,
+    @SerializedName("kabko")
+    val city: String?,
+    @SerializedName("prov")
+    val province: String?,
+    @SerializedName("jadwal")
+    val schedules: List<PrayerTimesDto>?,
 )
 
 data class AladhanTimingsResponse(
     val code: Int?,
     val status: String?,
     val data: AladhanTimingDataDto?,
+)
+
+data class AladhanCalendarResponse(
+    val code: Int?,
+    val status: String?,
+    val data: List<AladhanTimingDataDto>?,
 )
 
 data class AladhanTimingDataDto(
@@ -157,6 +198,11 @@ data class AladhanTimesDto(
 
 data class AladhanDateDto(
     val readable: String?,
+    val gregorian: AladhanGregorianDto?,
+)
+
+data class AladhanGregorianDto(
+    val date: String?,
 )
 
 data class AladhanMetaDto(

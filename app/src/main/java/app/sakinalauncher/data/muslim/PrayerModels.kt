@@ -56,6 +56,10 @@ data class PrayerCity(
     val label: String,
 )
 
+object PrayerCache {
+    const val CACHE_TTL_MILLIS = 5L * 24 * 60 * 60 * 1000
+}
+
 data class PrayerSchedule(
     val city: String,
     val province: String,
@@ -66,6 +70,7 @@ data class PrayerSchedule(
     val provider: PrayerProvider = PrayerProvider.KEMENAG,
     val timeZoneId: String = "Asia/Jakarta",
     val cacheKey: String = "",
+    val dateYmd: String = "",
 ) {
     fun nextPrayer(now: Calendar = Calendar.getInstance(TimeZone.getTimeZone(timeZoneId))): PrayerTime {
         val nowMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)

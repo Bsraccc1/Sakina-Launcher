@@ -19,6 +19,8 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.RequiresApi
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import app.sakinalauncher.BuildConfig
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
@@ -180,4 +182,36 @@ fun Long.hasBeenMinutes(minutes: Int): Boolean =
 
 fun Int.dpToPx(): Int {
     return (this * Resources.getSystem().displayMetrics.density).toInt()
+}
+
+/**
+ * Adds the system bar insets (status bar at the top, navigation bar at the bottom)
+ * to this view's existing padding. The launcher runs edge-to-edge (FLAG_LAYOUT_NO_LIMITS
+ * + transparent system bars + fitsSystemWindows=false), so on Android 15 (targetSdk 35)
+ * content would otherwise draw behind the status and navigation bars. For scrollable
+ * containers this also makes the content reachable: the extra bottom padding lets the
+ * ScrollView scroll past the navigation bar instead of hiding content behind it.
+ *
+ * The original XML padding is preserved and the insets are added on top of it.
+ */
+fun View.addSystemBarInsetsPadding(
+    applyTop: Boolean = true,
+    applyBottom: Boolean = true,
+) {
+    val initialLeft = paddingLeft
+    val initialTop = paddingTop
+    val initialRight = paddingRight
+    val initialBottom = paddingBottom
+    (this as? android.view.ViewGroup)?.clipToPadding = false
+    ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
+        val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+        v.setPadding(
+            initialLeft + bars.left,
+            initialTop + if (applyTop) bars.top else 0,
+            initialRight + bars.right,
+            initialBottom + if (applyBottom) bars.bottom else 0,
+        )
+        insets
+    }
+    ViewCompat.requestApplyInsets(this)
 }

@@ -27,6 +27,7 @@ import app.sakinalauncher.data.muslim.PrayerTimeRepository
 import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentMuslimCenterBinding
 import app.sakinalauncher.helper.addPressScale
+import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.PrayerLocationHelper
@@ -72,6 +73,7 @@ class MuslimCenterFragment : Fragment() {
         } ?: throw Exception("Invalid Activity")
         sourceDirection = savedInstanceState?.getString(KEY_SOURCE_DIRECTION)
             ?: arguments?.getString(Constants.Key.SWIPE_DIRECTION)
+        binding.scrollView.addSystemBarInsetsPadding()
         bindCachedContent()
         refreshPrayerTimes()
         initSwipe()
@@ -112,7 +114,7 @@ class MuslimCenterFragment : Fragment() {
                 if (prayerStore.autoDetectLocation && hasLocationPermission()) {
                     tryAutoDetectLocation()
                 }
-                when (val result = repository.refreshToday()) {
+                when (val result = repository.getOrFetchToday(forceRefresh = false)) {
                     is PrayerScheduleResult.Fresh -> renderSchedule(result.schedule)
                     is PrayerScheduleResult.Cached -> renderSchedule(
                         result.schedule,
@@ -218,7 +220,12 @@ class MuslimCenterFragment : Fragment() {
                 if (schedule.isFetchedToday()) {
                     renderSchedule(schedule)
                 } else {
-                    refreshPrayerTimes()
+                    val cachedToday = repository.loadCachedToday()
+                    if (cachedToday != null) {
+                        renderSchedule(cachedToday, getString(R.string.cached_schedule))
+                    } else {
+                        refreshPrayerTimes()
+                    }
                 }
             }
         }

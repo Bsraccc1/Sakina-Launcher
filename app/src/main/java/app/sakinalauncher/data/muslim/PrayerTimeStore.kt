@@ -4,6 +4,12 @@ import android.content.Context
 import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
+
+const val CACHE_TTL_MILLIS: Long = 5L * 24L * 60L * 60L * 1000L
 
 class PrayerTimeStore(context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
@@ -68,17 +74,89 @@ class PrayerTimeStore(context: Context) {
         }
 
     fun getCachedSchedule(): PrayerSchedule? {
-        return decodeSchedule(prefs.getString(KEY_LAST_SCHEDULE, null))
-            ?.takeIf { it.provider == provider && it.cacheKey == activeCacheKey && it.isFetchedToday() }
+        val today = todayYmd(currentTimeZoneId())
+        return getCachedScheduleForDate(activeCacheKey, today)
+            ?.takeIf { it.provider == provider && it.isFetchedToday() }
     }
 
     fun getStaleCachedSchedule(): PrayerSchedule? {
-        return decodeSchedule(prefs.getString(KEY_LAST_SCHEDULE, null))
-            ?.takeIf { it.provider == provider && it.cacheKey == activeCacheKey }
+        val today = todayYmd(currentTimeZoneId())
+        return getStaleCachedScheduleForDate(activeCacheKey, today)
+            ?.takeIf { it.provider == provider }
     }
 
     fun saveSchedule(schedule: PrayerSchedule) {
-        prefs.edit { putString(KEY_LAST_SCHEDULE, encodeSchedule(schedule)) }
+        saveSchedules(schedule.cacheKey.ifBlank { activeCacheKey }, listOf(schedule))
+    }
+
+    fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>) {
+        if (schedules.isEmpty()) return
+        purgeOtherCacheKeys(cacheKey)
+        prefs.edit {
+            schedules.forEach { schedule ->
+                val ymd = schedule.dateYmd.ifBlank { dateYmdFor(schedule) }
+                if (ymd.isNotBlank()) {
+                    putString(scheduleKey(cacheKey, ymd), encodeSchedule(schedule.copy(dateYmd = ymd)))
+                }
+            }
+        }
+        prefs.edit { putString(KEY_ACTIVE_CACHE_KEY, cacheKey) }
+        enforceDateCap(cacheKey)
+    }
+
+    fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
+        return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
+    }
+
+    fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
+        return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
+    }
+
+    fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean {
+        val schedule = getStaleCachedScheduleForDate(cacheKey, dateYmd) ?: return false
+        return System.currentTimeMillis() - schedule.fetchedAtMillis <= ttlMillis
+    }
+
+    private fun scheduleKey(cacheKey: String, dateYmd: String): String {
+        return "$KEY_SCHEDULE_PREFIX$cacheKey:$dateYmd"
+    }
+
+    private fun currentTimeZoneId(): String {
+        return when (provider) {
+            PrayerProvider.GLOBAL -> globalTimeZoneId
+            PrayerProvider.KEMENAG -> getStaleCachedScheduleForDate(activeCacheKey, todayYmd("Asia/Jakarta"))
+                ?.timeZoneId ?: "Asia/Jakarta"
+        }
+    }
+
+    private fun todayYmd(timeZoneId: String): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        format.timeZone = runCatching { TimeZone.getTimeZone(timeZoneId) }.getOrDefault(TimeZone.getDefault())
+        return format.format(Calendar.getInstance().time)
+    }
+
+    private fun dateYmdFor(schedule: PrayerSchedule): String {
+        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        format.timeZone = runCatching { TimeZone.getTimeZone(schedule.timeZoneId) }
+            .getOrDefault(TimeZone.getDefault())
+        return format.format(Calendar.getInstance().apply { timeInMillis = schedule.fetchedAtMillis }.time)
+    }
+
+    private fun purgeOtherCacheKeys(cacheKey: String) {
+        val previous = prefs.getString(KEY_ACTIVE_CACHE_KEY, null)
+        if (previous == null || previous == cacheKey) return
+        val stalePrefix = "$KEY_SCHEDULE_PREFIX$previous:"
+        prefs.edit {
+            prefs.all.keys.filter { it.startsWith(stalePrefix) }.forEach { remove(it) }
+        }
+    }
+
+    private fun enforceDateCap(cacheKey: String) {
+        val prefix = "$KEY_SCHEDULE_PREFIX$cacheKey:"
+        val keys = prefs.all.keys.filter { it.startsWith(prefix) }.sorted()
+        if (keys.size <= MAX_CACHED_DATES) return
+        val toRemove = keys.subList(0, keys.size - MAX_CACHED_DATES)
+        prefs.edit { toRemove.forEach { remove(it) } }
     }
 
     private fun encodeSchedule(schedule: PrayerSchedule): String {
@@ -91,6 +169,7 @@ class PrayerTimeStore(context: Context) {
             .put("provider", schedule.provider.id)
             .put("timeZoneId", schedule.timeZoneId)
             .put("cacheKey", schedule.cacheKey)
+            .put("dateYmd", schedule.dateYmd)
             .put(
                 "times",
                 JSONArray().apply {
@@ -125,6 +204,7 @@ class PrayerTimeStore(context: Context) {
                 provider = PrayerProvider.fromId(json.optString("provider", PrayerProvider.KEMENAG.id)),
                 timeZoneId = json.optString("timeZoneId", DEFAULT_GLOBAL_TIME_ZONE_ID),
                 cacheKey = json.optString("cacheKey", ""),
+                dateYmd = json.optString("dateYmd", ""),
                 times = times,
             )
         }.getOrNull()
@@ -143,7 +223,9 @@ class PrayerTimeStore(context: Context) {
         private const val KEY_GLOBAL_LONGITUDE = "MUSLIM_CENTER_GLOBAL_LONGITUDE"
         private const val KEY_GLOBAL_TIME_ZONE_ID = "MUSLIM_CENTER_GLOBAL_TIME_ZONE_ID"
         private const val KEY_GLOBAL_METHOD = "MUSLIM_CENTER_GLOBAL_METHOD"
-        private const val KEY_LAST_SCHEDULE = "MUSLIM_CENTER_LAST_SCHEDULE"
+        private const val KEY_SCHEDULE_PREFIX = "schedule:"
+        private const val KEY_ACTIVE_CACHE_KEY = "MUSLIM_CENTER_ACTIVE_CACHE_KEY"
+        private const val MAX_CACHED_DATES = 14
         private const val DEFAULT_CITY_QUERY = "jakarta"
         private const val DEFAULT_GLOBAL_LOCATION_LABEL = "Mecca"
         private const val DEFAULT_GLOBAL_COUNTRY = "Saudi Arabia"
