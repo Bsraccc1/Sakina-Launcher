@@ -19,6 +19,9 @@ import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.view.isVisible
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -91,9 +94,22 @@ class NotePanelFragment : Fragment() {
         initAdapter()
         initSwipeFlow()
         initClickListeners()
+        initKeyboardInsets()
         binding.input.setText(draftForMode())
         render()
         binding.modeSwitch.post { positionSegmentIndicator(animate = false) }
+    }
+
+    private fun initKeyboardInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val navHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            // Pad the panel by the keyboard height (minus the nav bar already
+            // accounted for) so the composer / action bar lift above the IME
+            // instead of being hidden behind it.
+            view.updatePadding(bottom = (imeHeight - navHeight).coerceAtLeast(0))
+            insets
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -111,10 +127,7 @@ class NotePanelFragment : Fragment() {
     private fun initAdapter() {
         adapter = NotePanelAdapter(
             onNoteClick = ::selectNote,
-            onTodoClick = {
-                store.toggleTodo(it.id)
-                render()
-            },
+            onTodoClick = { toggleSelection(it.id) },
         )
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
@@ -149,14 +162,25 @@ class NotePanelFragment : Fragment() {
         }
         binding.noteActionDone.setOnClickListener {
             if (selectedNoteIds.size == 1) {
-                store.toggleNoteDone(selectedNoteIds.first())
+                if (mode == NotePanelMode.TODO) {
+                    store.toggleTodo(selectedNoteIds.first())
+                } else {
+                    store.toggleNoteDone(selectedNoteIds.first())
+                }
                 render()
             } else {
                 doneSelectedNotes()
             }
         }
         binding.noteActionClose.setOnClickListener { clearNoteSelection() }
-        binding.noteActionSelectAll.setOnClickListener { selectAllNotes() }
+        binding.noteActionSelectAll.setOnClickListener {
+            val total = if (mode == NotePanelMode.NOTES) store.getNotes().size else store.getTodos().size
+            if (total > 0 && selectedNoteIds.size >= total) {
+                clearNoteSelection()
+            } else {
+                selectAllNotes()
+            }
+        }
         binding.input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
                 submitInput()
@@ -260,7 +284,7 @@ class NotePanelFragment : Fragment() {
     private fun render(scrollToBottom: Boolean = false) {
         val notes = if (mode == NotePanelMode.NOTES) store.getNotes() else emptyList()
         val todos = if (mode == NotePanelMode.TODO) store.getTodos() else emptyList()
-        if (mode != NotePanelMode.NOTES && selectedNoteIds.isNotEmpty()) {
+        if (mode == NotePanelMode.TIMER && selectedNoteIds.isNotEmpty()) {
             selectedNoteIds.clear()
         }
         val rows = when (mode) {
@@ -281,12 +305,22 @@ class NotePanelFragment : Fragment() {
         binding.send.contentDescription = getString(if (mode == NotePanelMode.NOTES) R.string.send else R.string.add)
         // Selection is shown by the sliding pill indicator (segmentIndicator),
         // so the individual tabs stay transparent and only adjust their alpha.
+        // The active tab also flips to the inverse color so its label stays
+        // readable on top of the dark (primaryColor) sliding pill.
+        val activeTabColor = themeColor(R.attr.primaryInverseColor)
+        val inactiveTabColor = themeColor(R.attr.primaryColor)
         binding.notesTab.alpha = if (mode == NotePanelMode.NOTES) 1.0f else 0.62f
         binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
         binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
+        binding.notesTab.setTextColor(if (mode == NotePanelMode.NOTES) activeTabColor else inactiveTabColor)
+        binding.todoTab.setTextColor(if (mode == NotePanelMode.TODO) activeTabColor else inactiveTabColor)
+        binding.timerTab.setTextColor(if (mode == NotePanelMode.TIMER) activeTabColor else inactiveTabColor)
         binding.recyclerView.isVisible = mode != NotePanelMode.TIMER
         binding.composer.isVisible = mode != NotePanelMode.TIMER && !hasSelection
         binding.noteSelectionCount.text = selectedNoteIds.size.toString()
+        val total = if (mode == NotePanelMode.NOTES) store.getNotes().size else store.getTodos().size
+        val allSelected = total > 0 && selectedNoteIds.size >= total
+        binding.noteActionSelectAll.alpha = if (allSelected) 1.0f else 0.7f
         renderNoteActionBar(hasSelection, selectedNoteIds.size > 1)
         binding.timerLayout.isVisible = mode == NotePanelMode.TIMER
         binding.emptyState.text =
@@ -302,7 +336,10 @@ class NotePanelFragment : Fragment() {
 
     private fun renderNoteActionBar(isSelected: Boolean, isMultiSelect: Boolean) {
         if (isSelected) {
-            binding.noteActionDelete.isVisible = !isMultiSelect
+            // Delete must stay available in BOTH single and multi-select so the
+            // user can batch-delete selected notes/todos. Edit and copy only make
+            // sense for a single item, so they hide during multi-select.
+            binding.noteActionDelete.isVisible = true
             binding.noteActionEdit.isVisible = !isMultiSelect
             binding.noteActionCopy.isVisible = !isMultiSelect
             binding.noteActionDone.isVisible = true
@@ -336,14 +373,14 @@ class NotePanelFragment : Fragment() {
         }
     }
 
-    private fun selectNote(note: NoteMessage) {
-        if (note.id in selectedNoteIds) {
-            selectedNoteIds.remove(note.id)
-        } else {
-            selectedNoteIds.add(note.id)
-        }
+    private fun toggleSelection(id: String) {
+        if (id in selectedNoteIds) selectedNoteIds.remove(id) else selectedNoteIds.add(id)
         binding.input.hideKeyboard()
         render()
+    }
+
+    private fun selectNote(note: NoteMessage) {
+        toggleSelection(note.id)
     }
 
     private fun clearNoteSelection() {
@@ -353,12 +390,29 @@ class NotePanelFragment : Fragment() {
 
     private fun deleteSingleSelected() {
         val id = selectedNoteIds.first()
-        store.deleteNote(id)
+        if (mode == NotePanelMode.TODO) {
+            store.deleteTodo(id)
+        } else {
+            store.deleteNote(id)
+        }
         selectedNoteIds.remove(id)
         render()
     }
 
     private fun showEditNoteById(id: String) {
+        if (mode == NotePanelMode.TODO) {
+            val todo = store.getTodos().firstOrNull { it.id == id } ?: return
+            showEditDialog(
+                title = getString(R.string.edit_note),
+                initialText = todo.text,
+                emptyMessage = getString(R.string.todo_empty_message),
+            ) { text ->
+                store.updateTodo(id, text)
+                selectedNoteIds.remove(id)
+                render()
+            }
+            return
+        }
         val note = store.getNotes().firstOrNull { it.id == id } ?: return
         showEditDialog(
             title = getString(R.string.edit_note),
@@ -373,9 +427,13 @@ class NotePanelFragment : Fragment() {
 
     private fun copySingleSelected() {
         val id = selectedNoteIds.first()
-        val note = store.getNotes().firstOrNull { it.id == id } ?: return
+        val text = if (mode == NotePanelMode.TODO) {
+            store.getTodos().firstOrNull { it.id == id }?.text
+        } else {
+            store.getNotes().firstOrNull { it.id == id }?.text
+        } ?: return
         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.notes), note.text))
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.notes), text))
         requireContext().showToast(getString(R.string.copied))
     }
 
@@ -416,13 +474,17 @@ class NotePanelFragment : Fragment() {
     }
 
     private fun deleteSelectedNotes() {
-        selectedNoteIds.toList().forEach { store.deleteNote(it) }
+        selectedNoteIds.toList().forEach {
+            if (mode == NotePanelMode.TODO) store.deleteTodo(it) else store.deleteNote(it)
+        }
         selectedNoteIds.clear()
         render()
     }
 
     private fun doneSelectedNotes() {
-        selectedNoteIds.toList().forEach { store.toggleNoteDone(it) }
+        selectedNoteIds.toList().forEach {
+            if (mode == NotePanelMode.TODO) store.toggleTodo(it) else store.toggleNoteDone(it)
+        }
         selectedNoteIds.clear()
         render()
     }

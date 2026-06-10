@@ -277,9 +277,9 @@
             android:layout_marginStart="8dp"
             android:background="@drawable/bg_note_count_pill"
             android:gravity="center"
-            android:paddingHorizontal="8dp"
+            android:paddingHorizontal="10dp"
             android:text="All"
-            android:textColor="?attr/primaryColor" />
+            android:textColor="?attr/primaryInverseColor" />
 
         <TextView
             android:id="@+id/noteSelectionCount"

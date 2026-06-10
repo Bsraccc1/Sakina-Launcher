@@ -2,6 +2,7 @@ package app.sakinalauncher.ui
 
 import android.os.Build
 import android.os.Bundle
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -81,6 +82,13 @@ class AppDrawerFragment : Fragment() {
         try {
             val searchTextView = binding.search.findViewById<TextView>(R.id.search_src_text)
             if (searchTextView != null) searchTextView.gravity = prefs.appLabelAlignment
+            // Strip the SearchView's internal "search_plate" background so the
+            // field has no underline / shape — a clean, borderless input that
+            // blends with the launcher background.
+            val searchPlate = binding.search.findViewById<View>(R.id.search_plate)
+            searchPlate?.setBackgroundColor(Color.TRANSPARENT)
+            val submitArea = binding.search.findViewById<View>(R.id.submit_area)
+            submitArea?.setBackgroundColor(Color.TRANSPARENT)
         } catch (e: Exception) {
             e.printStackTrace()
         }
