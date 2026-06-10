@@ -38,6 +38,9 @@ object AppDialog {
             // focus on the dialog itself.
             addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             setDimAmount(0.6f)
+            // Resize the dialog window when the soft keyboard appears so the
+            // input field is never hidden behind it.
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
             setLayout(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 if (matchHeight) ViewGroup.LayoutParams.MATCH_PARENT

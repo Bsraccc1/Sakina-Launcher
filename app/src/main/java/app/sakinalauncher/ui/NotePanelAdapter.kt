@@ -51,7 +51,11 @@ class NotePanelAdapter(
                 isSelected = row.note.id in selectedNoteIds,
                 clickListener = onNoteClick,
             )
-            is NotePanelRow.Todo -> (holder as TodoViewHolder).bind(row.item, onTodoClick)
+            is NotePanelRow.Todo -> (holder as TodoViewHolder).bind(
+                todo = row.item,
+                isSelected = row.item.id in selectedNoteIds,
+                clickListener = onTodoClick,
+            )
         }
     }
 
@@ -98,8 +102,12 @@ class NotePanelAdapter(
         RecyclerView.ViewHolder(binding.root) {
         fun bind(
             todo: TodoItem,
+            isSelected: Boolean,
             clickListener: (TodoItem) -> Unit,
         ) = with(binding) {
+            todoCard.setBackgroundResource(
+                if (isSelected) R.drawable.bg_note_bubble_selected else R.drawable.bg_note_bubble
+            )
             todoText.text = todo.text
             todoText.paintFlags = if (todo.isDone) {
                 todoText.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
