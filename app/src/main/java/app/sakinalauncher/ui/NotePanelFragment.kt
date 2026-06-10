@@ -305,16 +305,9 @@ class NotePanelFragment : Fragment() {
         binding.send.contentDescription = getString(if (mode == NotePanelMode.NOTES) R.string.send else R.string.add)
         // Selection is shown by the sliding pill indicator (segmentIndicator),
         // so the individual tabs stay transparent and only adjust their alpha.
-        // The active tab also flips to the inverse color so its label stays
-        // readable on top of the dark (primaryColor) sliding pill.
-        val activeTabColor = themeColor(R.attr.primaryInverseColor)
-        val inactiveTabColor = themeColor(R.attr.primaryColor)
         binding.notesTab.alpha = if (mode == NotePanelMode.NOTES) 1.0f else 0.62f
         binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
         binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
-        binding.notesTab.setTextColor(if (mode == NotePanelMode.NOTES) activeTabColor else inactiveTabColor)
-        binding.todoTab.setTextColor(if (mode == NotePanelMode.TODO) activeTabColor else inactiveTabColor)
-        binding.timerTab.setTextColor(if (mode == NotePanelMode.TIMER) activeTabColor else inactiveTabColor)
         binding.recyclerView.isVisible = mode != NotePanelMode.TIMER
         binding.composer.isVisible = mode != NotePanelMode.TIMER && !hasSelection
         binding.noteSelectionCount.text = selectedNoteIds.size.toString()
