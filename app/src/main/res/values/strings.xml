@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name" translatable="false">Sakina Launcher</string>
+    <string name="app_name" translatable="false">Sakinah Launcher</string>
     <string name="lock_layout_description" translatable="false">lock layout description to be used a unique id to lock screen</string>
     <string name="recents_layout_description" translatable="false">recents layout description to be used a unique id to show recent apps</string>
-    <string name="sakina_pro" translatable="false">Sakina Launcher Pro</string>
+    <string name="sakina_pro" translatable="false">Sakinah Launcher Pro</string>
     <string name="day_battery" formatted="false" translatable="false">%s, %d%%</string>
     <string name="tag_1" translatable="false">1</string>
     <string name="tag_2" translatable="false">2</string>
@@ -18,10 +18,10 @@
     <string name="app">App</string>
     <string name="set_as_default_launcher">Set as default launcher</string>
     <string name="set_as_default_launcher_u"><u>Set as default launcher</u></string>
-    <string name="set_as_default_launcher_first">Set Sakina Launcher default first</string>
+    <string name="set_as_default_launcher_first">Set Sakinah Launcher default first</string>
     <string name="double_tap_to_lock_screen">Double tap to lock</string>
     <string name="home_button_show_recents">Home button for recents</string>
-    <string name="admin_permission_message">Sakina Launcher promises to use the accessibility permission responsibly. Sakina Launcher does not collect or share any data.</string>
+    <string name="admin_permission_message">Sakinah Launcher promises to use the accessibility permission responsibly. Sakinah Launcher does not collect or share any data.</string>
     <string name="off">Off</string>
     <string name="on">On</string>
     <string name="change_default_launcher">Change default launcher</string>
@@ -67,32 +67,32 @@
     <string name="welcome_to_sakina_settings">Welcome to the settings!
         \n\nRemember, if you have any questions, our About page has the answer.</string>
     <string name="rate_us_message">Hi, you won\'t see this message again.
-        \n\nIf you\'re finding Sakina Launcher useful, could you please leave a 5-star review? It\'ll mean the world to us. Thank you!</string>
-    <string name="share_message">We need your help! We believe everyone should know about Sakina Launcher and its benefits, but we can\'t do it alone.
-        \n\nCould you please share Sakina Launcher with your friends, family, and followers? Thank you for your support! ❤</string>
+        \n\nIf you\'re finding Sakinah Launcher useful, could you please leave a 5-star review? It\'ll mean the world to us. Thank you!</string>
+    <string name="share_message">We need your help! We believe everyone should know about Sakinah Launcher and its benefits, but we can\'t do it alone.
+        \n\nCould you please share Sakinah Launcher with your friends, family, and followers? Thank you for your support! ❤</string>
     <!--    <string name="share_message">Your monthly reminder - you should use your phone, not the other way round. Stay strong. You\'re doing great!-->
-    <!--         \n\nIf you have a moment to spare, could you please share Sakina Launcher with others? Sakina Launcher needs people. More importantly, people need Sakina Launcher.</string>-->
-    <string name="keyboard_message">Hi, keyboard is the fastest way to find and launch apps in Sakina Launcher. Can we request you to keep this On for a few more days and then decide?
+    <!--         \n\nIf you have a moment to spare, could you please share Sakinah Launcher with others? Sakinah Launcher needs people. More importantly, people need Sakinah Launcher.</string>-->
+    <string name="keyboard_message">Hi, keyboard is the fastest way to find and launch apps in Sakinah Launcher. Can we request you to keep this On for a few more days and then decide?
         \n\nThe choice is always yours.</string>
     <string name="app_usage_message">To show/hide your screen time on the home screen, please allow or disallow the app usage permission.
         \n\nNote: No app usage data is collected. Everything is processed on your device.</string>
-    <string name="pro_message">Sakina Launcher also has a pro version called Pro Launcher. It has extra features like weather, widgets, fonts, folders, AMOLED wallpapers, and so on.
-        \n\nIt\'s also the best way to support the developers of Sakina Launcher. Check it out!</string>
-    <string name="wallpaper_message">Sakina Launcher offers beautiful new wallpapers daily. Give your homescreen a fresh new look every day, for free!
+    <string name="pro_message">Sakinah Launcher also has a pro version called Pro Launcher. It has extra features like weather, widgets, fonts, folders, AMOLED wallpapers, and so on.
+        \n\nIt\'s also the best way to support the developers of Sakinah Launcher. Check it out!</string>
+    <string name="wallpaper_message">Sakinah Launcher offers beautiful new wallpapers daily. Give your homescreen a fresh new look every day, for free!
         \n\nWant to try it?</string>
-    <string name="accessibility_service_description">The accessibility permission is required to enable double tap to lock and home button to show recent apps. Any data acquired by Sakina Launcher via this service will not leave your device.</string>
+    <string name="accessibility_service_description">The accessibility permission is required to enable double tap to lock and home button to show recent apps. Any data acquired by Sakinah Launcher via this service will not leave your device.</string>
     <string name="copy">Copy</string>
     <string name="close">Close</string>
     <string name="date">Date</string>
     <string name="date_only">Date only</string>
     <string name="bottom_on">Bottom: On</string>
     <string name="bottom_off">Bottom: Off</string>
-    <string name="please_set_sakina_as_default_first">Please set Sakina Launcher as default first</string>
-    <string name="hidden_apps_message">Note: Tap on \'Sakina Launcher\' at the top of this Settings page to find your hidden apps.\n\nMore details available in our About page.</string>
+    <string name="please_set_sakina_as_default_first">Please set Sakinah Launcher as default first</string>
+    <string name="hidden_apps_message">Note: Tap on \'Sakinah Launcher\' at the top of this Settings page to find your hidden apps.\n\nMore details available in our About page.</string>
     <string name="swipe_down_for">Swipe down for</string>
     <string name="search">Search</string>
     <string name="notifications">Notifications</string>
-    <string name="accessibility_disclosure">Please turn on Sakina Launcher\'s accessibility service in your device\'s settings to enable Double tap to lock or Home button for recent apps gestures.
+    <string name="accessibility_disclosure">Please turn on Sakinah Launcher\'s accessibility service in your device\'s settings to enable Double tap to lock or Home button for recent apps gestures.
     \n\nPlease note that this service is only used for these gestures. Our accessibility service does not collect or share any data.</string>
     <string name="permission">Permission</string>
     <string name="double_tap_lock">Double tap to lock</string>
@@ -104,7 +104,7 @@
     <string name="text_size">Text size</string>
     <string name="enabled">Enabled</string>
     <string name="please_turn_on_double_tap_to_unlock">Please turn on double tap to lock</string>
-    <string name="launcher_failed_to_lock_device">Sakina Launcher failed to lock device.\nPlease check your app settings.</string>
+    <string name="launcher_failed_to_lock_device">Sakinah Launcher failed to lock device.\nPlease check your app settings.</string>
     <string name="long_press_to_select_app">Long press to select app</string>
     <string name="unable_to_open_app">Unable to open app</string>
     <string name="copied">Copied</string>
@@ -112,19 +112,19 @@
     <string name="type_a_new_app_name_first">Type a new app name first</string>
     <string name="app_not_found">App not found</string>
     <string name="your_wallpaper_will_update_shortly">Your wallpaper will update shortly</string>
-    <string name="sakina_is_not_default_launcher">Sakina Launcher is not default. Wallpaper update will fail.</string>
+    <string name="sakina_is_not_default_launcher">Sakinah Launcher is not default. Wallpaper update will fail.</string>
     <string name="no_hidden_apps">No hidden apps</string>
     <string name="hidden_apps">Hidden apps</string>
     <string name="adapter_show">Show</string>
     <string name="adapter_hide">Hide</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Are you using your phone, or is your phone using you?</string>
     <string name="about_sakina">About and FAQs</string>
-    <string name="about_title">About Sakina Launcher</string>
-    <string name="about_message">Sakina Launcher is a calm, minimal launcher with a built-in Muslim Center — prayer times, morning &amp; evening dhikr, and a tasbih counter.\n\nQuick FAQ:\n• Open Settings: long-press the home screen.\n• Lock the screen: double-tap home (enable the accessibility toggle in Settings first).\n• Notes, To-do &amp; Timer: swipe to open the note panel.\n• Hidden apps: long-press an app name in the app list.\n\nMade for focus, not distraction.</string>
+    <string name="about_title">About Sakinah Launcher</string>
+    <string name="about_message">Sakinah Launcher is a calm, minimal launcher with a built-in Muslim Center — prayer times, morning &amp; evening dhikr, and a tasbih counter.\n\nQuick FAQ:\n• Open Settings: long-press the home screen.\n• Lock the screen: double-tap home (enable the accessibility toggle in Settings first).\n• Notes, To-do &amp; Timer: swipe to open the note panel.\n• Hidden apps: long-press an app name in the app list.\n\nMade for focus, not distraction.</string>
     <string name="screen_time">Screen time</string>
     <string name="did_you_know">Did you know?</string>
     <string name="leave_a_review">Leave a review</string>
-    <string name="review_message">Sakina Launcher is free and always will be. It has no ads, collects no data, and reduces your screen time, resulting in a healthier life.
+    <string name="review_message">Sakinah Launcher is free and always will be. It has no ads, collects no data, and reduces your screen time, resulting in a healthier life.
         \n\nWe hope you enjoy it. Tell us what you think.</string>
     <string name="alignment_changed">Alignment changed ✅</string>
     <string name="home_screen">Home screen</string>

@@ -5,7 +5,7 @@
     <string name="set_as_default_launcher_u"><u>Зробити лаунчером за замовчування</u></string>
     <string name="set_as_default_launcher_first">Зробити лаунчером за замовчування</string>
     <string name="double_tap_to_lock_screen">Блокування подвійним тапом</string>
-    <string name="admin_permission_message">Sakina Launcher обіцяє відповідально використовувати роздільну здатність екрана блокування. Sakina Launcher не збирає і не передає будь-які дані.</string>
+    <string name="admin_permission_message">Sakinah Launcher обіцяє відповідально використовувати роздільну здатність екрана блокування. Sakinah Launcher не збирає і не передає будь-які дані.</string>
     <string name="off">Викл</string>
     <string name="on">Вкл</string>
     <string name="change_default_launcher">Змінити лаунчер за замовчуванням</string>
@@ -43,31 +43,31 @@
     <string name="welcome_to_sakina_settings">Ласкаво просимо до налаштувань!
         \n\nПам\'ятайте, якщо у вас є питання, на нашій сторінці «Про нас» є відповідь.</string>
     <string name="rate_us_message">Привіт, ти більше не побачиш це повідомлення.
-        \n\nЯкщо вам подобається Sakina Launcher, чи можете ви поставити нам 5 зірок? Це допомагає нам покращити наш рейтинг і робить нас щасливими. Дякую тобі!</string>
+        \n\nЯкщо вам подобається Sakinah Launcher, чи можете ви поставити нам 5 зірок? Це допомагає нам покращити наш рейтинг і робить нас щасливими. Дякую тобі!</string>
     <string name="share_message">Привіт, нам потрібна ваша допомога! Минулого року ми перевищили мільйон завантажень. Цього року ми хочемо досягти мільйона більше, але ми не можемо зробити це поодинці.
-        \n\nБудь ласка, не могли б ви поділитися Sakina Launcher зі своїми друзями? Дякую і гарного дня!</string>
-    <string name="keyboard_message">Привіт, клавіатура - це найшвидший спосіб знайти та запустити програми в Sakina Launcher. Чи можемо ми попросити вас залишити це увімкненим ще на кілька днів, а потім прийняти рішення?
+        \n\nБудь ласка, не могли б ви поділитися Sakinah Launcher зі своїми друзями? Дякую і гарного дня!</string>
+    <string name="keyboard_message">Привіт, клавіатура - це найшвидший спосіб знайти та запустити програми в Sakinah Launcher. Чи можемо ми попросити вас залишити це увімкненим ще на кілька днів, а потім прийняти рішення?
         \n\nВибір завжди за вами.</string>
     <string name="app_usage_message">Щоб показати/ховати час роботи з екраном на головному екрані, будь ласка, дозвольте або забороніть дозвіл на використання програми.
         \n\nПримітка: Не збираються дані про використання програми. Все обробляється на вашому пристрої.</string>
-    <string name="pro_message">Sakina Launcher також має професійну версію під назвою Pro Launcher. Вона має додаткові функції, такі як погода, віджети, шрифти, папки, фони AMOLED тощо.
-        \n\nЦе також найкращий спосіб підтримати розробників Sakina Launcher. Ознайомтеся!</string>
-    <string name="wallpaper_message">Sakina Launcher пропонує красиві нові шпалери щодня. Дайте вашому головному екрану новий вигляд кожного дня, безкоштовно!
+    <string name="pro_message">Sakinah Launcher також має професійну версію під назвою Pro Launcher. Вона має додаткові функції, такі як погода, віджети, шрифти, папки, фони AMOLED тощо.
+        \n\nЦе також найкращий спосіб підтримати розробників Sakinah Launcher. Ознайомтеся!</string>
+    <string name="wallpaper_message">Sakinah Launcher пропонує красиві нові шпалери щодня. Дайте вашому головному екрану новий вигляд кожного дня, безкоштовно!
         \n\nХочете спробувати?</string>
-    <string name="accessibility_service_description">Дозвіл на доступ потрібний, щоб увімкнути подвійне торкання для блокування та кнопку «Домому» для показу нещодавніх додатків. Будь-які дані, отримані Sakina Launcher через цей сервіс, не залишать ваш пристрій.</string>
+    <string name="accessibility_service_description">Дозвіл на доступ потрібний, щоб увімкнути подвійне торкання для блокування та кнопку «Домому» для показу нещодавніх додатків. Будь-які дані, отримані Sakinah Launcher через цей сервіс, не залишать ваш пристрій.</string>
     <string name="copy">Копіювати</string>
     <string name="close">Закрити</string>
     <string name="date">Дата</string>
     <string name="date_only">Толільки дата</string>
     <string name="bottom_on">Внизу: Вкл</string>
     <string name="bottom_off">Внизу: Викл</string>
-    <string name="please_set_sakina_as_default_first">Спочатку встановіть Sakina Launcher як стандартний лаунчер.</string>
-    <string name="hidden_apps_message">Примітка. Натисніть «Sakina Launcher» у верхній частині сторінки налаштувань, щоб знайти приховані програми.
+    <string name="please_set_sakina_as_default_first">Спочатку встановіть Sakinah Launcher як стандартний лаунчер.</string>
+    <string name="hidden_apps_message">Примітка. Натисніть «Sakinah Launcher» у верхній частині сторінки налаштувань, щоб знайти приховані програми.
         \n\nДокладніша інформація доступна на нашій сторінці «Про нас» нижче.</string>
     <string name="swipe_down_for">Проведіть вниз для</string>
     <string name="search">Пошук</string>
     <string name="notifications">Повідомлення</string>
-    <string name="accessibility_disclosure">Увімкніть службу доступності Sakina Launcher у налаштуваннях Вашого пристрою, щоб увімкнути жести подвійного торкання для блокування або кнопки «Домому» для нещодавніх додатків.\n\nЗверніть увагу, що ця служба використовується лише для цих жестів. Наша служба доступності не збирає та не поширює жодних даних.</string>
+    <string name="accessibility_disclosure">Увімкніть службу доступності Sakinah Launcher у налаштуваннях Вашого пристрою, щоб увімкнути жести подвійного торкання для блокування або кнопки «Домому» для нещодавніх додатків.\n\nЗверніть увагу, що ця служба використовується лише для цих жестів. Наша служба доступності не збирає та не поширює жодних даних.</string>
     <string name="permission">Дозвіл</string>
     <string name="double_tap_lock">Блокування подвійним дотиком</string>
     <string name="home_button_show_recents">Кнопка додому для нещодавніх</string>
@@ -79,7 +79,7 @@
     <string name="text_size">Розмір тексту</string>
     <string name="enabled">Включено</string>
     <string name="please_turn_on_double_tap_to_unlock">Будь ласка, увімкніть подвійний дотик для блокування</string>
-    <string name="launcher_failed_to_lock_device">Sakina Launcher не вдалося заблокувати пристрій.\nБудь ласка, перевірте налаштування вашої програми.</string>
+    <string name="launcher_failed_to_lock_device">Sakinah Launcher не вдалося заблокувати пристрій.\nБудь ласка, перевірте налаштування вашої програми.</string>
     <string name="long_press_to_select_app">Тривале натискання для вибору програми</string>
     <string name="unable_to_open_app">Неможливо відкрити інформацію про програму</string>
     <string name="copied">Скопійовано</string>
@@ -87,17 +87,17 @@
     <string name="type_a_new_app_name_first">Спочатку введіть нове ім\'я програми</string>
     <string name="app_not_found">Додаток не знайдено</string>
     <string name="your_wallpaper_will_update_shortly">Ваші шпалери незабаром оновляться</string>
-    <string name="sakina_is_not_default_launcher">Sakina Launcher не є стандартним лаунчером.\nЩоденне оновлення шпалер може завершитися помилкою.</string>
+    <string name="sakina_is_not_default_launcher">Sakinah Launcher не є стандартним лаунчером.\nЩоденне оновлення шпалер може завершитися помилкою.</string>
     <string name="no_hidden_apps">Немає прихованих додатків</string>
     <string name="hidden_apps">Приховані додатків</string>
     <string name="adapter_show">Показати</string>
     <string name="adapter_hide">Приховати</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Ви користуєтеся своїм телефоном, чи ваш телефон використовує вас?</string>
-    <string name="about_sakina">Про нас Sakina Launcher</string>
+    <string name="about_sakina">Про нас Sakinah Launcher</string>
     <string name="screen_time">Час екрану</string>
     <string name="did_you_know">Ти знав?</string>
     <string name="leave_a_review">Залиште відгук</string>
-    <string name="review_message">Sakina Launcher є і завжди буде абсолютно безкоштовним. У ньому немає реклами. Він не збирає дані. Найважливіше те, що це допомагає вам скоротити час використання екрана та жити здоровішим цифровим життям.
+    <string name="review_message">Sakinah Launcher є і завжди буде абсолютно безкоштовним. У ньому немає реклами. Він не збирає дані. Найважливіше те, що це допомагає вам скоротити час використання екрана та жити здоровішим цифровим життям.
         \n\nМи вважаємо, що перехід на мінімальний лаунчер є відмінним рішенням. Хоча ми явно упереджені, ми сподіваємося, що вам сподобається. Не соромтеся поділитися з нами своїми думками!</string>
     <string name="alignment_changed">Вирівнювання змінено ✅</string>
     <string name="home_screen">Головний екран</string>

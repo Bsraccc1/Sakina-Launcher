@@ -15,15 +15,15 @@
     <string name="_8">8</string>
     <string name="okay">OK</string>
     <string name="your_wallpaper_will_update_shortly">Twoja tapeta zostanie wkrótce zaktualizowana</string>
-    <string name="sakina_is_not_default_launcher">Sakina Launcher nie jest domyślnym programem uruchamiającym. Codzienna aktualizacja tapety może się nie powieść.</string>
+    <string name="sakina_is_not_default_launcher">Sakinah Launcher nie jest domyślnym programem uruchamiającym. Codzienna aktualizacja tapety może się nie powieść.</string>
     <string name="no_hidden_apps">Brak ukrytych aplikacji</string>
     <string name="hidden_apps">Ukrytych aplikacji</string>
-    <string name="hidden_apps_message">Uwaga: Stuknij w „Sakina Launcher” u góry tej strony ustawień, aby znaleźć ukryte aplikacje.
+    <string name="hidden_apps_message">Uwaga: Stuknij w „Sakinah Launcher” u góry tej strony ustawień, aby znaleźć ukryte aplikacje.
         \n\nWięcej informacji znajduje się na stronie Informacje poniżej.</string>
     <string name="swipe_down_for">Przesuń w dół, aby</string>
     <string name="search">Szukaj</string>
     <string name="notifications">Powiadomienia</string>
-    <string name="accessibility_disclosure">Włącz usługę ułatwień dostępu Sakina Launcher w ustawieniach swojego urządzenia, aby włączyć gesty podwójnego dotknięcia do zablokowania lub przycisku ekranu głównego dla ostatnich aplikacji.\n\nZwróć uwagę, że ta usługa jest używana tylko do tych gestów. Nasza usługa ułatwień dostępu nie zbiera ani nie udostępnia żadnych danych.</string>
+    <string name="accessibility_disclosure">Włącz usługę ułatwień dostępu Sakinah Launcher w ustawieniach swojego urządzenia, aby włączyć gesty podwójnego dotknięcia do zablokowania lub przycisku ekranu głównego dla ostatnich aplikacji.\n\nZwróć uwagę, że ta usługa jest używana tylko do tych gestów. Nasza usługa ułatwień dostępu nie zbiera ani nie udostępnia żadnych danych.</string>
     <string name="permission">Uprawnienie</string>
     <string name="double_tap_lock">Kliknij dwukrotnie, aby zablokować</string>
     <string name="home_button_show_recents">Przycisk ekranu głównego dla ostatnich</string>
@@ -35,7 +35,7 @@
     <string name="text_size">Rozmiar czcionki</string>
     <string name="enabled">Włączony</string>
     <string name="please_turn_on_double_tap_to_unlock">Włącz podwójne dotknięcie, aby zablokować</string>
-    <string name="launcher_failed_to_lock_device">Sakina Launcherowi nie udało się zablokować urządzenia. Sprawdź ustawienia aplikacji.</string>
+    <string name="launcher_failed_to_lock_device">Sakinah Launcherowi nie udało się zablokować urządzenia. Sprawdź ustawienia aplikacji.</string>
     <string name="long_press_to_select_app">Naciśnij długo, aby wybrać aplikację</string>
     <string name="unable_to_open_app">Nie można otworzyć informacji o aplikacji</string>
     <string name="copied">Skopiowane</string>
@@ -44,7 +44,7 @@
     <string name="adapter_show">Pokaż</string>
     <string name="adapter_hide">Ukryj</string>
     <string name="double_tap_to_lock_screen">Kliknij dwukrotnie, aby zablokować</string>
-    <string name="admin_permission_message">Sakina Launcher obiecuje odpowiedzialnie korzystać z uprawnień blokady ekranu. Sakina Launcher nie gromadzi ani nie udostępnia żadnych danych.</string>
+    <string name="admin_permission_message">Sakinah Launcher obiecuje odpowiedzialnie korzystać z uprawnień blokady ekranu. Sakinah Launcher nie gromadzi ani nie udostępnia żadnych danych.</string>
     <string name="off">Nie</string>
     <string name="on">Tak</string>
     <string name="change_default_launcher">Zmień domyślny program uruchamiający</string>
@@ -71,31 +71,31 @@
     <string name="light">Jasny</string>
     <string name="welcome_to_sakina_settings">Witamy w ustawieniach!
         \n\nPamiętaj, jeśli masz jakiekolwiek pytania, nasza strona „O nas” ma odpowiedź.</string>
-    <string name="rate_us_message">Hej, czy uważasz, że Sakina Launcher jest przydatny? Jeśli tak, ocena 5 gwiazdek to najlepszy sposób, aby nas wesprzeć.\n\nDziękuję i więcej tego nie zobaczysz.</string>
+    <string name="rate_us_message">Hej, czy uważasz, że Sakinah Launcher jest przydatny? Jeśli tak, ocena 5 gwiazdek to najlepszy sposób, aby nas wesprzeć.\n\nDziękuję i więcej tego nie zobaczysz.</string>
     <string name="share_message">Cześć, potrzebujemy Twojej pomocy! W zeszłym roku przekroczyliśmy milion pobrań. W tym roku chcemy dotrzeć do kolejnego miliona, ale sami nie możemy tego zrobić.
-        \n\nCzy byłbyś tak miły i udostępnił Sakina Launcher swoim znajomym? Dziękuję i życzę cudownego dnia!</string>
-    <string name="keyboard_message">Cześć, klawiatura to najszybszy sposób znajdowania i uruchamiania aplikacji w Sakina Launcher. Czy możemy poprosić o pozostawienie tego włączonego jeszcze przez kilka dni, a następnie podjęcie decyzji?\n\nWybór zawsze należy do Ciebie.</string>
+        \n\nCzy byłbyś tak miły i udostępnił Sakinah Launcher swoim znajomym? Dziękuję i życzę cudownego dnia!</string>
+    <string name="keyboard_message">Cześć, klawiatura to najszybszy sposób znajdowania i uruchamiania aplikacji w Sakinah Launcher. Czy możemy poprosić o pozostawienie tego włączonego jeszcze przez kilka dni, a następnie podjęcie decyzji?\n\nWybór zawsze należy do Ciebie.</string>
     <string name="app_usage_message">Aby wyświetlić/ukryć czas ekranu na ekranie głównym, pozwól lub zabroń aplikacji na dostęp do danych o użyciu.
         \n\nUwaga: Nie są gromadzone żadne dane o użyciu aplikacji. Wszystko jest przetwarzane na Twoim urządzeniu.</string>
-    <string name="pro_message">Sakina Launcher ma również wersję pro o nazwie Pro Launcher. Posiada dodatkowe funkcje, takie jak pogoda, widgety, czcionki, foldery, tapety AMOLED itp.
-        \n\nTo także najlepszy sposób na wsparcie deweloperów Sakina Launcher. Sprawdź to!</string>
-    <string name="wallpaper_message">Sakina Launcher oferuje piękne nowe tapety codziennie. Nadaj swojemu ekranowi głównemu świeży wygląd każdego dnia, za darmo!
+    <string name="pro_message">Sakinah Launcher ma również wersję pro o nazwie Pro Launcher. Posiada dodatkowe funkcje, takie jak pogoda, widgety, czcionki, foldery, tapety AMOLED itp.
+        \n\nTo także najlepszy sposób na wsparcie deweloperów Sakinah Launcher. Sprawdź to!</string>
+    <string name="wallpaper_message">Sakinah Launcher oferuje piękne nowe tapety codziennie. Nadaj swojemu ekranowi głównemu świeży wygląd każdego dnia, za darmo!
         \n\nChcesz spróbować?</string>
-    <string name="accessibility_service_description">Uprawnienia dostępu są wymagane, aby włączyć podwójne dotknięcie do zablokowania i przycisk ekranu głównego do wyświetlania ostatnich aplikacji. Wszelkie dane pozyskane przez Sakina Launcher za pośrednictwem tej usługi nie opuszczą Twojego urządzenia.</string>
+    <string name="accessibility_service_description">Uprawnienia dostępu są wymagane, aby włączyć podwójne dotknięcie do zablokowania i przycisk ekranu głównego do wyświetlania ostatnich aplikacji. Wszelkie dane pozyskane przez Sakinah Launcher za pośrednictwem tej usługi nie opuszczą Twojego urządzenia.</string>
     <string name="copy">Kopiuj</string>
     <string name="close">Zamknij</string>
     <string name="date">Data</string>
     <string name="date_only">Tylko data</string>
     <string name="bottom_on">Dół: włączony</string>
     <string name="bottom_off">Dół: wyłączone</string>
-    <string name="please_set_sakina_as_default_first">Najpierw ustaw Sakina Launcher jako domyślny program uruchamiający</string>
+    <string name="please_set_sakina_as_default_first">Najpierw ustaw Sakinah Launcher jako domyślny program uruchamiający</string>
     <string name="app_not_found">Nie znaleziono aplikacji</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Czy używasz telefonu, czy telefon używa ciebie?</string>
-    <string name="about_sakina">O Sakina Launcher</string>
+    <string name="about_sakina">O Sakinah Launcher</string>
     <string name="screen_time">Czas ekranowy</string>
     <string name="did_you_know">Czy wiedziałeś?</string>
     <string name="leave_a_review">Ucz się więcej</string>
-    <string name="review_message">Sakina Launcher jest i zawsze będzie całkowicie darmowy. Nie zawiera reklam. Nie zbiera żadnych danych. Co najważniejsze, pomaga skrócić czas spędzany przed ekranem i prowadzić zdrowsze cyfrowe życie.
+    <string name="review_message">Sakinah Launcher jest i zawsze będzie całkowicie darmowy. Nie zawiera reklam. Nie zbiera żadnych danych. Co najważniejsze, pomaga skrócić czas spędzany przed ekranem i prowadzić zdrowsze cyfrowe życie.
         \n\nWierzymy, że przejście na minimalny program uruchamiający to doskonała decyzja. Chociaż jesteśmy oczywiście stronniczy, mamy nadzieję, że spodoba ci się to doświadczenie. Podziel się z nami swoimi przemyśleniami!</string>
     <string name="alignment_changed">Wyrównanie zmienione ✅</string>
     <string name="home_screen">Ekran główny</string>

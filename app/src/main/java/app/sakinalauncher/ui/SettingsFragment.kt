@@ -153,7 +153,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
         when (view.id) {
             R.id.sakinaHiddenApps -> showHiddenApps()
-            R.id.moreFeatures -> requireContext().openUrl("https://github.com/Bsraccc1")
+            R.id.moreFeatures -> requireContext().openUrl("https://github.com/Bsraccc1/Sakina-Launcher")
             R.id.screenTimeOnOff -> viewModel.showDialog.postValue(Constants.Dialog.DIGITAL_WELLBEING)
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
             R.id.setLauncher -> viewModel.resetLauncherLiveData.call()

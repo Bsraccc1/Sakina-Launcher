@@ -5,7 +5,7 @@
     <string name="set_as_default_launcher_u"><u>Définir comme lanceur par défaut</u></string>
     <string name="set_as_default_launcher_first">Définir comme lanceur par défaut</string>
     <string name="double_tap_to_lock_screen">Double appui pour verrouiller</string>
-    <string name="admin_permission_message">Sakina Launcher promet d\'utiliser l\'autorisation d\'écran de verrouillage de manière responsable. Sakina Launcher ne collecte ni ne partage aucune donnée.</string>
+    <string name="admin_permission_message">Sakinah Launcher promet d\'utiliser l\'autorisation d\'écran de verrouillage de manière responsable. Sakinah Launcher ne collecte ni ne partage aucune donnée.</string>
     <string name="off">Désactivé</string>
     <string name="on">Activé</string>
     <string name="change_default_launcher">Changer le lanceur par défaut</string>
@@ -42,30 +42,30 @@
     <string name="light">Clair</string>
     <string name="welcome_to_sakina_settings">Bienvenue dans les paramètres !
         \n\nN\'oubliez pas, si vous avez des questions, notre page À propos a la réponse.</string>
-    <string name="rate_us_message">Hé, trouvez-vous Sakina Launcher utile? Si oui, une note de 5 étoiles est le meilleur moyen de nous soutenir.
+    <string name="rate_us_message">Hé, trouvez-vous Sakinah Launcher utile? Si oui, une note de 5 étoiles est le meilleur moyen de nous soutenir.
         \n\nMerci, vous ne verrez plus ce message.</string>
     <string name="share_message">Bonjour, nous avons besoin de votre aide ! L\'année dernière, nous avons franchi le million de téléchargements. Cette année, nous voulons atteindre un million de plus, mais nous ne pouvons pas le faire seuls.
-        \n\nAuriez-vous la gentillesse de partager Sakina Launcher avec vos amis, s\'il vous plaît ? Merci et passez une merveilleuse journée!</string>
-    <string name="keyboard_message">Bonjour, le clavier est le moyen le plus rapide de trouver et de lancer des applications dans Sakina Launcher. Pouvons-nous vous demander de garder cela activé pendant quelques jours de plus, puis de décider? Le choix vous appartient toujours.</string>
+        \n\nAuriez-vous la gentillesse de partager Sakinah Launcher avec vos amis, s\'il vous plaît ? Merci et passez une merveilleuse journée!</string>
+    <string name="keyboard_message">Bonjour, le clavier est le moyen le plus rapide de trouver et de lancer des applications dans Sakinah Launcher. Pouvons-nous vous demander de garder cela activé pendant quelques jours de plus, puis de décider? Le choix vous appartient toujours.</string>
     <string name="app_usage_message">Pour afficher/masquer le temps d\'écran sur l\'écran d\'accueil, autorisez ou refusez l\'autorisation d\'utilisation de l\'application.
         \n\nRemarque : Aucune donnée d\'utilisation de l\'application n\'est collectée. Tout est traité sur votre appareil.</string>
-    <string name="pro_message">Sakina Launcher a également une version pro appelée Pro Launcher. Elle dispose de fonctionnalités supplémentaires telles que la météo, les widgets, les polices, les dossiers, les fonds d\'écran AMOLED, etc.
-        \n\nC\'est aussi le meilleur moyen de soutenir les développeurs d\'Sakina Launcher. Jetez-y un œil !</string>
-    <string name="wallpaper_message">Sakina Launcher propose de superbes fonds d\'écran nouveaux chaque jour. Donne un nouveau look à ton écran d\'accueil chaque jour, gratuitement!
+    <string name="pro_message">Sakinah Launcher a également une version pro appelée Pro Launcher. Elle dispose de fonctionnalités supplémentaires telles que la météo, les widgets, les polices, les dossiers, les fonds d\'écran AMOLED, etc.
+        \n\nC\'est aussi le meilleur moyen de soutenir les développeurs d\'Sakinah Launcher. Jetez-y un œil !</string>
+    <string name="wallpaper_message">Sakinah Launcher propose de superbes fonds d\'écran nouveaux chaque jour. Donne un nouveau look à ton écran d\'accueil chaque jour, gratuitement!
         \n\nTu veux essayer?</string>
-    <string name="accessibility_service_description">L\'autorisation d\'accessibilité est requise pour activer le double appui pour verrouiller et le bouton d\'accueil pour afficher les applications récentes. Toutes les données acquises par Sakina Launcher via ce service ne quitteront pas votre appareil.</string>
+    <string name="accessibility_service_description">L\'autorisation d\'accessibilité est requise pour activer le double appui pour verrouiller et le bouton d\'accueil pour afficher les applications récentes. Toutes les données acquises par Sakinah Launcher via ce service ne quitteront pas votre appareil.</string>
     <string name="copy">Copier</string>
     <string name="close">Fermer</string>
     <string name="date">Date</string>
     <string name="date_only">Date uniquement</string>
     <string name="bottom_on">Bas : Activé</string>
     <string name="bottom_off">Bas : Désactivé</string>
-    <string name="please_set_sakina_as_default_first">Veuillez d\'abord définir Sakina Launcher comme lanceur par défaut.</string>
-    <string name="hidden_apps_message">Remarque : Appuyez sur \"Sakina Launcher\" en haut de cette page pour trouver vos applications cachées.\n\nPlus de détails sont disponibles dans notre page \"À propos\" ci-dessous.</string>
+    <string name="please_set_sakina_as_default_first">Veuillez d\'abord définir Sakinah Launcher comme lanceur par défaut.</string>
+    <string name="hidden_apps_message">Remarque : Appuyez sur \"Sakinah Launcher\" en haut de cette page pour trouver vos applications cachées.\n\nPlus de détails sont disponibles dans notre page \"À propos\" ci-dessous.</string>
     <string name="swipe_down_for">Balayer vers le bas pour</string>
     <string name="search">Rechercher</string>
     <string name="notifications">Notifications</string>
-    <string name="accessibility_disclosure">Veuillez activer le service d\'accessibilité d\'Sakina Launcher dans les paramètres de votre appareil pour utiliser les gestes Double appui pour verrouiller ou Bouton d\'accueil pour les applications récentes.\n\nVeuillez noter que ce service est utilisé uniquement pour ces gestes. Notre service d\'accessibilité ne collecte ni ne partage aucune donnée.</string>
+    <string name="accessibility_disclosure">Veuillez activer le service d\'accessibilité d\'Sakinah Launcher dans les paramètres de votre appareil pour utiliser les gestes Double appui pour verrouiller ou Bouton d\'accueil pour les applications récentes.\n\nVeuillez noter que ce service est utilisé uniquement pour ces gestes. Notre service d\'accessibilité ne collecte ni ne partage aucune donnée.</string>
     <string name="permission">Autorisation</string>
     <string name="double_tap_lock">Appuyer deux fois pour verrouiller</string>
     <string name="home_button_show_recents">Bouton d\'accueil pour les récents</string>
@@ -77,7 +77,7 @@
     <string name="text_size">Taille du texte</string>
     <string name="enabled">Activé</string>
     <string name="please_turn_on_double_tap_to_unlock">Veuillez appuyer deux fois pour verrouiller.</string>
-    <string name="launcher_failed_to_lock_device">Sakina Launcher n\'a pas réussi à verrouiller le téléphone.
+    <string name="launcher_failed_to_lock_device">Sakinah Launcher n\'a pas réussi à verrouiller le téléphone.
         Veuillez vérifier les paramètres de votre application.</string>
     <string name="long_press_to_select_app">Appuyez longuement pour sélectionner une application.</string>
     <string name="unable_to_open_app">Impossible d\'ouvrir les informations sur l\'application</string>
@@ -86,18 +86,18 @@
     <string name="type_a_new_app_name_first">Tapez d\'abord un nouveau nom d\'application.</string>
     <string name="app_not_found">Application introuvable</string>
     <string name="your_wallpaper_will_update_shortly">Votre fond d\'écran sera bientôt mis à jour.</string>
-    <string name="sakina_is_not_default_launcher">Sakina Launcher n\'est pas le lanceur par défaut.
+    <string name="sakina_is_not_default_launcher">Sakinah Launcher n\'est pas le lanceur par défaut.
         La mise à jour quotidienne du fond d\'écran peut échouer.</string>
     <string name="no_hidden_apps">Aucune application cachées</string>
     <string name="hidden_apps">Applications cachées</string>
     <string name="adapter_show">Afficher</string>
     <string name="adapter_hide">Masquer</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Utilisez-vous votre téléphone, ou votre téléphone vous utilise-t-il?</string>
-    <string name="about_sakina">À propos Sakina Launcher</string>
+    <string name="about_sakina">À propos Sakinah Launcher</string>
     <string name="screen_time">Temps d\'écran</string>
     <string name="did_you_know">Saviez-vous?</string>
     <string name="leave_a_review">Laisser un commentaire</string>
-    <string name="review_message">Sakina Launcher est et sera toujours entièrement gratuit. Il n\'y a pas de publicité. Il ne collecte aucune donnée. Plus important encore, cela vous aide à réduire votre temps d’écran et à vivre une vie numérique plus saine.
+    <string name="review_message">Sakinah Launcher est et sera toujours entièrement gratuit. Il n\'y a pas de publicité. Il ne collecte aucune donnée. Plus important encore, cela vous aide à réduire votre temps d’écran et à vivre une vie numérique plus saine.
         \n\nNous pensons que passer à un lanceur minimal est une excellente décision. Même si nous sommes évidemment partiaux, nous espérons que vous appréciez l\'expérience. N\'hésitez pas à partager vos idées avec nous!</string>
     <string name="alignment_changed">Alignement changé ✅</string>
     <string name="home_screen">Écran d\'accueil</string>

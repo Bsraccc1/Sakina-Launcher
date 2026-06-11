@@ -15,14 +15,14 @@
     <string name="_8">ثمانية</string>
     <string name="okay">حسنًا</string>
     <string name="your_wallpaper_will_update_shortly">سيتم تحديث الخلفية الخاصة بك قريبًا</string>
-    <string name="sakina_is_not_default_launcher">Sakina Launcher ليس المشغل الافتراضي. قد يفشل التحديث اليومي للخلفية.</string>
+    <string name="sakina_is_not_default_launcher">Sakinah Launcher ليس المشغل الافتراضي. قد يفشل التحديث اليومي للخلفية.</string>
     <string name="no_hidden_apps">لا توجد تطبيقات مخفية</string>
     <string name="hidden_apps">تطبيقات مخفية</string>
-    <string name="hidden_apps_message">ملاحظة: اضغط على \"Sakina Launcher\" أعلى الصفحة للعثور على تطبيقاتك المخفية.  المزيد من التفاصيل متوفرة في صفحة \"حول\" أدناه.</string>
+    <string name="hidden_apps_message">ملاحظة: اضغط على \"Sakinah Launcher\" أعلى الصفحة للعثور على تطبيقاتك المخفية.  المزيد من التفاصيل متوفرة في صفحة \"حول\" أدناه.</string>
     <string name="swipe_down_for">اسحب لأسفل من أجل</string>
     <string name="search">يبحث</string>
     <string name="notifications">إشعارات</string>
-    <string name="accessibility_disclosure">يرجى تشغيل خدمة الوصول في Sakina Launcher في إعدادات جهازك لتمكين إيماءة النقر المزدوج للقفل أو زر الشاشة الرئيسية لعرض التطبيقات الأخيرة.
+    <string name="accessibility_disclosure">يرجى تشغيل خدمة الوصول في Sakinah Launcher في إعدادات جهازك لتمكين إيماءة النقر المزدوج للقفل أو زر الشاشة الرئيسية لعرض التطبيقات الأخيرة.
     \n\nيرجى ملاحظة أن هذه الخدمة تُستخدم فقط لهذه الإيماءات. خدمة الوصول لدينا لا تجمع أو تشارك أي بيانات.</string>
     <string name="permission">إذن</string>
     <string name="double_tap_lock">النقر المزدوج للقفل</string>
@@ -35,7 +35,7 @@
     <string name="text_size">حجم الخط</string>
     <string name="enabled">ممكّن</string>
     <string name="please_turn_on_double_tap_to_unlock">يرجى تشغيل النقر المزدوج لفتح القفل</string>
-    <string name="launcher_failed_to_lock_device">فشل Sakina Launcher في قفل الجهاز. يرجى التحقق من إعدادات التطبيق الخاص بك.</string>
+    <string name="launcher_failed_to_lock_device">فشل Sakinah Launcher في قفل الجهاز. يرجى التحقق من إعدادات التطبيق الخاص بك.</string>
     <string name="long_press_to_select_app">اضغط مطوّلًا لاختيار التطبيق</string>
     <string name="unable_to_open_app">تعذر فتح التطبيق</string>
     <string name="copied">نُسخ</string>
@@ -44,7 +44,7 @@
     <string name="adapter_show">يعرض</string>
     <string name="adapter_hide">يخفي</string>
     <string name="double_tap_to_lock_screen">انقر مرتين لقفل الشاشة</string>
-    <string name="admin_permission_message">يعد Sakina Launcher باستخدام إذن قفل الشاشة بشكل مسؤول. لا يقوم Sakina Launcher بجمع أو مشاركة أي بيانات.</string>
+    <string name="admin_permission_message">يعد Sakinah Launcher باستخدام إذن قفل الشاشة بشكل مسؤول. لا يقوم Sakinah Launcher بجمع أو مشاركة أي بيانات.</string>
     <string name="off">ﻻ</string>
     <string name="on">نعم</string>
     <string name="change_default_launcher">تغيير المشغل الافتراضي</string>
@@ -70,30 +70,30 @@
     <string name="light">مضيء</string>
     <string name="welcome_to_sakina_settings">مرحبًا بك في الإعدادات!\n\nتذكر، إذا كان لديك أي سؤال، فإن صفحة "حول" لدينا تحتوي على الإجابة.</string>
     <string name="rate_us_message">مرحبًا ، لن ترى هذه الرسالة مرة أخرى.
-        \n\nإذا كنت تحب Sakina Launcher ، فهل يمكنك أن تعطينا تصنيف 5 نجوم؟ يساعدنا ذلك على تحسين تصنيفنا ويجعلنا سعداء. شكرًا لك!</string>
+        \n\nإذا كنت تحب Sakinah Launcher ، فهل يمكنك أن تعطينا تصنيف 5 نجوم؟ يساعدنا ذلك على تحسين تصنيفنا ويجعلنا سعداء. شكرًا لك!</string>
     <string name="share_message">مرحبا، نحن بحاجة لمساعدتكم! في العام الماضي تجاوزنا مليون عملية تنزيل. نريد هذا العام أن نصل إلى مليون آخرين ولكن لا يمكننا القيام بذلك بمفردنا.
-        \n\nهل تتفضل بمشاركة Sakina Launcher مع أصدقائك، من فضلك؟ شكرا لك، ويوم رائع!</string>
-    <string name="keyboard_message">مرحبًا ، لوحة المفاتيح هي أسرع طريقة للعثور على التطبيقات وتشغيلها في Sakina Launcher. هل يمكننا أن نطلب منك الاحتفاظ بهذا الأمر لبضعة أيام أخرى ثم اتخاذ القرار؟ الاختيار دائما لك.</string>
+        \n\nهل تتفضل بمشاركة Sakinah Launcher مع أصدقائك، من فضلك؟ شكرا لك، ويوم رائع!</string>
+    <string name="keyboard_message">مرحبًا ، لوحة المفاتيح هي أسرع طريقة للعثور على التطبيقات وتشغيلها في Sakinah Launcher. هل يمكننا أن نطلب منك الاحتفاظ بهذا الأمر لبضعة أيام أخرى ثم اتخاذ القرار؟ الاختيار دائما لك.</string>
     <string name="app_usage_message">لعرض/إخفاء وقت استخدام الشاشة على الشاشة الرئيسية، يرجى السماح أو منع إذن استخدام التطبيق.
         \n\nملاحظة: لا يتم جمع أي بيانات حول استخدام التطبيقات. يتم معالجة كل شيء على جهازك.</string>
-    <string name="pro_message">يحتوي Sakina Launcher أيضًا على إصدار احترافي يسمى Pro Launcher. يحتوي على ميزات إضافية مثل الطقس، والأدوات، والخطوط، والمجلدات، وخلفيات AMOLED، وما إلى ذلك.
-        \n\nإنه أيضًا أفضل طريقة لدعم مطوري Sakina Launcher. تحقق من ذلك!</string>
-    <string name="wallpaper_message">يقدم Sakina Launcher خلفيات جميلة جديدة يوميًا. امنح شاشتك الرئيسية مظهرًا جديدًا كل يوم، مجانًا!
+    <string name="pro_message">يحتوي Sakinah Launcher أيضًا على إصدار احترافي يسمى Pro Launcher. يحتوي على ميزات إضافية مثل الطقس، والأدوات، والخطوط، والمجلدات، وخلفيات AMOLED، وما إلى ذلك.
+        \n\nإنه أيضًا أفضل طريقة لدعم مطوري Sakinah Launcher. تحقق من ذلك!</string>
+    <string name="wallpaper_message">يقدم Sakinah Launcher خلفيات جميلة جديدة يوميًا. امنح شاشتك الرئيسية مظهرًا جديدًا كل يوم، مجانًا!
         \n\nهل ترغب في تجربته؟</string>
-    <string name="accessibility_service_description">إذن الوصول مطلوب لتمكين النقر المزدوج للقفل وزر الشاشة الرئيسية لعرض التطبيقات الأخيرة. أي بيانات حصل عليها Sakina Launcher عبر هذه الخدمة لن تترك جهازك.</string>
+    <string name="accessibility_service_description">إذن الوصول مطلوب لتمكين النقر المزدوج للقفل وزر الشاشة الرئيسية لعرض التطبيقات الأخيرة. أي بيانات حصل عليها Sakinah Launcher عبر هذه الخدمة لن تترك جهازك.</string>
     <string name="copy">ينسخ</string>
     <string name="close">يغلق</string>
     <string name="date">تاريخ</string>
     <string name="date_only">التاريخ فقط</string>
     <string name="bottom_on">المحاذاة ﻷسفل</string>
     <string name="bottom_off">المحاذاة ﻷعلى</string>
-    <string name="please_set_sakina_as_default_first">يرجى تعيين Sakina Launcher كمشغل افتراضي أولاً</string>
+    <string name="please_set_sakina_as_default_first">يرجى تعيين Sakinah Launcher كمشغل افتراضي أولاً</string>
     <string name="app_not_found">التطبيق غير موجود</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">هل تستخدم هاتفك أم أن هاتفك يستخدمك؟</string>
-    <string name="about_sakina">عن Sakina Launcher</string>
+    <string name="about_sakina">عن Sakinah Launcher</string>
     <string name="did_you_know">هل كنت تعلم؟</string>
     <string name="leave_a_review">أخبرنا رأيك</string>
-    <string name="review_message">Sakina Launcher هو وسيظل دائمًا مجانيًا تمامًا. ليس لديها إعلانات. لا يجمع أي بيانات. والأهم من ذلك أنه يساعدك على تقليل وقت الشاشة والعيش حياة رقمية أكثر صحة.
+    <string name="review_message">Sakinah Launcher هو وسيظل دائمًا مجانيًا تمامًا. ليس لديها إعلانات. لا يجمع أي بيانات. والأهم من ذلك أنه يساعدك على تقليل وقت الشاشة والعيش حياة رقمية أكثر صحة.
         \n\nنحن نعتقد أن التحول إلى الحد الأدنى من المشغل هو قرار ممتاز. على الرغم من أننا متحيزون بشكل واضح، إلا أننا نأمل أن تستمتع بالتجربة. لا تتردد في مشاركة أفكارك معنا!</string>
     <string name="screen_time">وقت الشاشة</string>
     <string name="alignment_changed">تم تغيير المحاذاة ✅</string>
