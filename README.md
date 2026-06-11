@@ -17,6 +17,7 @@ Quiet home screen. Prayer times, dzikir, notes, todos and a focus timer — all 
 ![Min SDK](https://img.shields.io/badge/minSdk-24-blue)
 ![Target SDK](https://img.shields.io/badge/targetSdk-35-blue)
 ![License](https://img.shields.io/badge/License-GPLv3-yellow)
+![APK Size](https://img.shields.io/badge/APK~size-2.8%20MB-brightgreen)
 
 </div>
 
@@ -78,9 +79,9 @@ you actually open every day kept a single swipe away.
 
 ### 📝 Productive Panel
 - Chat-style notes with floating tap actions (delete, edit, copy, done, close).
-- Todo list with done state.
+- Todo list with multi-select batch delete and done state.
 - Focus / Pomodoro timer with circular progress.
-- Smooth panel, list and action transitions.
+- Keyboard-aware panel — rises above the IME, never hidden behind it.
 
 ### 🔒 Privacy
 - No ads. No analytics. No account. Your data stays on the device.
@@ -94,19 +95,11 @@ you actually open every day kept a single swipe away.
 
 ## 📸 Preview / Screenshots
 
-> [!NOTE]
-> Screenshots live in `Assets/screenshots/`. Replace the placeholders below with your own
-> captures if they are missing.
-
 <div align="center">
 
-| Home | Productive Panel | Muslim Center |
-| :---: | :---: | :---: |
-| ![Home](Assets/screenshots/home.png) | ![Productive panel](Assets/screenshots/productive_panel.png) | ![Muslim Center](Assets/screenshots/muslim_center_latest.png) |
-
-| Dhikr Pager | Focus Timer | Note Actions |
-| :---: | :---: | :---: |
-| ![Dhikr](Assets/screenshots/muslim_center_after_swipe.png) | ![Timer](Assets/screenshots/timer_panel_latest.png) | ![Note actions](Assets/screenshots/note_actions_tap.png) |
+| Home | Notes | Todo | Muslim Center | Focus Timer |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Home](Assets/screenshots/home.webp) | ![Notes](Assets/screenshots/productive_panel.webp) | ![Todo](Assets/screenshots/todo_panel.webp) | ![Muslim Center](Assets/screenshots/muslim_center_latest.webp) | ![Timer](Assets/screenshots/timer_panel_latest.webp) |
 
 </div>
 
@@ -190,8 +183,8 @@ cd Sakina-Launcher
 **Useful commands**
 
 ```bash
-./gradlew assembleDebug      # debug APK
-./gradlew assembleRelease    # release APK (signed with the debug keystore)
+./gradlew assembleDebug      # debug APK (~9 MB, unminified)
+./gradlew assembleRelease    # release APK (~2.8 MB, R8-minified + resource-shrunk)
 ./gradlew installDebug       # build + install to a connected device
 ./gradlew lint               # static analysis report
 ./gradlew clean              # clean build outputs
@@ -220,7 +213,7 @@ Sakina-Launcher/
 │       │   ├── MainActivity.kt  # single entry point / nav host
 │       │   └── MainViewModel.kt # shared ViewModel
 │       └── res/                 # layouts, drawables, fonts, strings, navigation, anims
-├── Assets/screenshots/          # README screenshots
+├── Assets/screenshots/          # README screenshots (WebP)
 ├── .github/workflows/           # CI + release-APK workflows
 ├── ARCHITECTURE_REVIEW.md       # architecture deepening notes
 ├── CONTEXT.md                   # domain glossary
