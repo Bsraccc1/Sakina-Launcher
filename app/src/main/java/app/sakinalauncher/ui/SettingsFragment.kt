@@ -86,6 +86,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         componentName = ComponentName(requireContext(), DeviceAdmin::class.java)
         checkAdminPermission()
 
+        // Once the user has reached Settings, the first-run home tips have served
+        // their purpose. Clear the flag so the tips never appear again.
+        prefs.firstSettingsOpen = false
+
         binding.homeAppsNum.text = prefs.homeAppsNum.toString()
         populateProMessage()
         populateKeyboardText()
