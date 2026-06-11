@@ -44,7 +44,7 @@ import app.sakinalauncher.helper.appUsagePermissionGranted
 import app.sakinalauncher.helper.getColorFromAttr
 import app.sakinalauncher.helper.isAccessServiceEnabled
 import app.sakinalauncher.helper.isEinkDisplay
-import app.sakinalauncher.helper.isOlauncherDefault
+import app.sakinalauncher.helper.isSakinaDefault
 import app.sakinalauncher.helper.isTablet
 import app.sakinalauncher.helper.openAppInfo
 import app.sakinalauncher.helper.openUrl
@@ -80,7 +80,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         viewModel = activity?.run {
             ViewModelProvider(this)[MainViewModel::class.java]
         } ?: throw Exception("Invalid Activity")
-        viewModel.isOlauncherDefault()
+        viewModel.isSakinaDefault()
 
         deviceManager = requireContext().getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         componentName = ComponentName(requireContext(), DeviceAdmin::class.java)
@@ -152,7 +152,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             binding.alignmentSelectLayout.visibility = View.GONE
 
         when (view.id) {
-            R.id.olauncherHiddenApps -> showHiddenApps()
+            R.id.sakinaHiddenApps -> showHiddenApps()
             R.id.moreFeatures -> requireContext().openUrl("https://github.com/Bsraccc1")
             R.id.screenTimeOnOff -> viewModel.showDialog.postValue(Constants.Dialog.DIGITAL_WELLBEING)
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
@@ -209,7 +209,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.languageText -> showLanguagePicker()
             R.id.fontText -> showFontPicker()
 
-            R.id.aboutOlauncher -> {
+            R.id.aboutSakina -> {
                 prefs.aboutClicked = true
                 viewModel.showDialog.postValue(Constants.Dialog.ABOUT)
             }
@@ -238,11 +238,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initClickListeners() {
-        binding.olauncherHiddenApps.setOnClickListener(this)
+        binding.sakinaHiddenApps.setOnClickListener(this)
         binding.scrollLayout.setOnClickListener(this)
         binding.appInfo.setOnClickListener(this)
         binding.setLauncher.setOnClickListener(this)
-        binding.aboutOlauncher.setOnClickListener(this)
+        binding.aboutSakina.setOnClickListener(this)
         binding.moreFeatures.setOnClickListener(this)
         binding.autoShowKeyboard.setOnClickListener(this)
         binding.toggleLock.setOnClickListener(this)
@@ -303,7 +303,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initObservers() {
-        viewModel.isOlauncherDefault.observe(viewLifecycleOwner) {
+        viewModel.isSakinaDefault.observe(viewLifecycleOwner) {
             if (it) {
                 binding.setLauncher.text = getString(R.string.change_default_launcher)
                 prefs.toShowHintCounter += 1
@@ -464,7 +464,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun toggleDailyWallpaperUpdate() {
-        if (prefs.dailyWallpaper.not() && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES && viewModel.isOlauncherDefault.value == false) {
+        if (prefs.dailyWallpaper.not() && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES && viewModel.isSakinaDefault.value == false) {
             requireContext().showToast(R.string.set_as_default_launcher_first)
             return
         }
@@ -477,10 +477,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun showWallpaperToasts() {
-        if (isOlauncherDefault(requireContext()))
+        if (isSakinaDefault(requireContext()))
             requireContext().showToast(getString(R.string.your_wallpaper_will_update_shortly))
         else
-            requireContext().showToast(getString(R.string.olauncher_is_not_default_launcher), Toast.LENGTH_LONG)
+            requireContext().showToast(getString(R.string.sakina_is_not_default_launcher), Toast.LENGTH_LONG)
     }
 
     private fun toggleSolidBackground() {
@@ -626,8 +626,8 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun updateHomeBottomAlignment() {
-        if (viewModel.isOlauncherDefault.value != true) {
-            requireContext().showToast(getString(R.string.please_set_olauncher_as_default_first), Toast.LENGTH_LONG)
+        if (viewModel.isSakinaDefault.value != true) {
+            requireContext().showToast(getString(R.string.please_set_sakina_as_default_first), Toast.LENGTH_LONG)
             return
         }
         prefs.homeBottomAlignment = !prefs.homeBottomAlignment
@@ -1036,7 +1036,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateActionHints() {
         if (prefs.aboutClicked.not())
-            binding.aboutOlauncher.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
+            binding.aboutSakina.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
     }
 
     private fun populateProMessage() {

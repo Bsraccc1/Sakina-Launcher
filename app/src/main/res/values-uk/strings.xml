@@ -40,7 +40,7 @@
     <string name="system_default">Системна</string>
     <string name="dark">Темна</string>
     <string name="light">Світла</string>
-    <string name="welcome_to_olauncher_settings">Ласкаво просимо до налаштувань!
+    <string name="welcome_to_sakina_settings">Ласкаво просимо до налаштувань!
         \n\nПам\'ятайте, якщо у вас є питання, на нашій сторінці «Про нас» є відповідь.</string>
     <string name="rate_us_message">Привіт, ти більше не побачиш це повідомлення.
         \n\nЯкщо вам подобається Sakina Launcher, чи можете ви поставити нам 5 зірок? Це допомагає нам покращити наш рейтинг і робить нас щасливими. Дякую тобі!</string>
@@ -61,7 +61,7 @@
     <string name="date_only">Толільки дата</string>
     <string name="bottom_on">Внизу: Вкл</string>
     <string name="bottom_off">Внизу: Викл</string>
-    <string name="please_set_olauncher_as_default_first">Спочатку встановіть Sakina Launcher як стандартний лаунчер.</string>
+    <string name="please_set_sakina_as_default_first">Спочатку встановіть Sakina Launcher як стандартний лаунчер.</string>
     <string name="hidden_apps_message">Примітка. Натисніть «Sakina Launcher» у верхній частині сторінки налаштувань, щоб знайти приховані програми.
         \n\nДокладніша інформація доступна на нашій сторінці «Про нас» нижче.</string>
     <string name="swipe_down_for">Проведіть вниз для</string>
@@ -87,13 +87,13 @@
     <string name="type_a_new_app_name_first">Спочатку введіть нове ім\'я програми</string>
     <string name="app_not_found">Додаток не знайдено</string>
     <string name="your_wallpaper_will_update_shortly">Ваші шпалери незабаром оновляться</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher не є стандартним лаунчером.\nЩоденне оновлення шпалер може завершитися помилкою.</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher не є стандартним лаунчером.\nЩоденне оновлення шпалер може завершитися помилкою.</string>
     <string name="no_hidden_apps">Немає прихованих додатків</string>
     <string name="hidden_apps">Приховані додатків</string>
     <string name="adapter_show">Показати</string>
     <string name="adapter_hide">Приховати</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Ви користуєтеся своїм телефоном, чи ваш телефон використовує вас?</string>
-    <string name="about_olauncher">Про нас Sakina Launcher</string>
+    <string name="about_sakina">Про нас Sakina Launcher</string>
     <string name="screen_time">Час екрану</string>
     <string name="did_you_know">Ти знав?</string>
     <string name="leave_a_review">Залиште відгук</string>

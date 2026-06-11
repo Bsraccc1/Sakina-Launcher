@@ -38,7 +38,7 @@ import app.sakinalauncher.helper.isDarkThemeOn
 import app.sakinalauncher.helper.isDaySince
 import app.sakinalauncher.helper.isDefaultLauncher
 import app.sakinalauncher.helper.isEinkDisplay
-import app.sakinalauncher.helper.isOlauncherDefault
+import app.sakinalauncher.helper.isSakinaDefault
 import app.sakinalauncher.helper.isTablet
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.rateApp
@@ -256,8 +256,8 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 Constants.Dialog.PRO_MESSAGE -> {
-                    showMessageDialog(R.string.hey, R.string.pro_message, R.string.olauncher_pro) {
-                        openUrl(Constants.URL_OLAUNCHER_PRO)
+                    showMessageDialog(R.string.hey, R.string.pro_message, R.string.sakina_pro) {
+                        openUrl(Constants.URL_SAKINA_PRO)
                     }
                 }
             }
@@ -300,28 +300,28 @@ class MainActivity : AppCompatActivity() {
             Constants.UserState.WALLPAPER -> {
                 if (prefs.wallpaperMsgShown || prefs.dailyWallpaper)
                     prefs.userState = Constants.UserState.REVIEW
-                else if (isOlauncherDefault(this))
+                else if (isSakinaDefault(this))
                     viewModel.showDialog.postValue(Constants.Dialog.WALLPAPER)
             }
 
             Constants.UserState.REVIEW -> {
                 if (prefs.rateClicked)
                     prefs.userState = Constants.UserState.SHARE
-                else if (isOlauncherDefault(this) && prefs.firstOpenTime.hasBeenHours(1))
+                else if (isSakinaDefault(this) && prefs.firstOpenTime.hasBeenHours(1))
                     viewModel.showDialog.postValue(Constants.Dialog.REVIEW)
             }
 
             Constants.UserState.RATE -> {
                 if (prefs.rateClicked)
                     prefs.userState = Constants.UserState.SHARE
-                else if (isOlauncherDefault(this)
+                else if (isSakinaDefault(this)
                     && prefs.firstOpenTime.isDaySince() >= 7
                     && calendar.get(Calendar.HOUR_OF_DAY) >= 16
                 ) viewModel.showDialog.postValue(Constants.Dialog.RATE)
             }
 
             Constants.UserState.SHARE -> {
-                if (isOlauncherDefault(this) && prefs.firstOpenTime.hasBeenDays(14)
+                if (isSakinaDefault(this) && prefs.firstOpenTime.hasBeenDays(14)
                     && prefs.shareShownTime.isDaySince() >= 70
                     && calendar.get(Calendar.HOUR_OF_DAY) >= 16
                 ) viewModel.showDialog.postValue(Constants.Dialog.SHARE)
@@ -357,7 +357,7 @@ class MainActivity : AppCompatActivity() {
             }
             // Default launcher: the system composites the wallpaper behind our
             // translucent window, so we hide our manual layer and stay transparent.
-            isOlauncherDefault(this) -> {
+            isSakinaDefault(this) -> {
                 binding.wallpaperLayer.visibility = View.GONE
                 binding.wallpaperLayer.setImageDrawable(null)
                 binding.root.background = null

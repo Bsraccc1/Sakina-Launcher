@@ -15,7 +15,7 @@
     <string name="_8">8</string>
     <string name="okay">Tamam</string>
     <string name="your_wallpaper_will_update_shortly">Duvar kağıdınız birazdan güncellenecek</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher varsayılan başlatıcınız değil. Günlük duvar kağıtları hatalı çalışabilir.</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher varsayılan başlatıcınız değil. Günlük duvar kağıtları hatalı çalışabilir.</string>
     <string name="no_hidden_apps">Gizli uygulama yok</string>
     <string name="hidden_apps">Gizli uygulamalar</string>
     <string name="hidden_apps_message">Not: Gizli uygulamalarınızı bulmak için bu ayarlar sayfasının üst kısmındaki \"Sakina Launcher\" yazısına dokunun.
@@ -69,7 +69,7 @@
     <string name="system_default">Sistem</string>
     <string name="dark">Koyu</string>
     <string name="light">Açık</string>
-    <string name="welcome_to_olauncher_settings">Ayarlar sayfasına hoş geldiniz!
+    <string name="welcome_to_sakina_settings">Ayarlar sayfasına hoş geldiniz!
         \n\nUnutmayın, herhangi bir sorunuz olursa "Hakkında" sayfamıza danışabilirsiniz.</string>
     <string name="rate_us_message">Merhaba, bu mesajı bir daha görmeyeceksiniz.
         \n\nSakina Launcher\'ı beğendiyseniz bize tam puan verir misiniz? Sıralamamızı yükseltmemize yardımcı oluyor ve bizi neşelendiriyor. Teşekkür ederiz!</string>
@@ -90,10 +90,10 @@
     <string name="date_only">Sadece tarih</string>
     <string name="bottom_on">Alt: Açık</string>
     <string name="bottom_off">Alt: Kapalı</string>
-    <string name="please_set_olauncher_as_default_first">Lütfen önce Sakina Launcher\'ı varsayılan başlatıcınız olarak ayarlayın</string>
+    <string name="please_set_sakina_as_default_first">Lütfen önce Sakina Launcher\'ı varsayılan başlatıcınız olarak ayarlayın</string>
     <string name="app_not_found">Uygulama bulunamadı</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Sen mi telefonunu, kullanıyorsun yoksa telefon mu seni kullanıyor?</string>
-    <string name="about_olauncher">Sakina Launcher Hakkında</string>
+    <string name="about_sakina">Sakina Launcher Hakkında</string>
     <string name="screen_time">Ekran süresi</string>
     <string name="did_you_know">Biliyor muydunuz?</string>
     <string name="leave_a_review">Değerlendirme bırakın</string>

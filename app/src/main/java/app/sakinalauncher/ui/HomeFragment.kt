@@ -79,7 +79,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         super.onResume()
         populateHomeScreen(false)
         app.sakinalauncher.helper.FontHelper.applyFont(view, prefs)
-        viewModel.isOlauncherDefault()
+        viewModel.isSakinaDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
     }
@@ -162,7 +162,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             R.id.setDefaultLauncher -> {
                 prefs.hideSetDefaultLauncher = true
                 binding.setDefaultLauncher.visibility = View.GONE
-                if (viewModel.isOlauncherDefault.value != true) {
+                if (viewModel.isSakinaDefault.value != true) {
                     requireContext().showToast(R.string.set_as_default_launcher)
                     findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
                 }
@@ -180,7 +180,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         viewModel.refreshHome.observe(viewLifecycleOwner) {
             populateHomeScreen(it)
         }
-        viewModel.isOlauncherDefault.observe(viewLifecycleOwner, Observer {
+        viewModel.isSakinaDefault.observe(viewLifecycleOwner, Observer {
             if (it != true) {
                 if (prefs.dailyWallpaper && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES) {
                     prefs.dailyWallpaper = false

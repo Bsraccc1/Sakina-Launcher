@@ -40,7 +40,7 @@
     <string name="system_default">di sistema</string>
     <string name="dark">Scuro</string>
     <string name="light">Chiaro</string>
-    <string name="welcome_to_olauncher_settings">Benvenuto nelle impostazioni!
+    <string name="welcome_to_sakina_settings">Benvenuto nelle impostazioni!
         \n\nRicorda, se hai domande, la nostra pagina Informazioni ha la risposta.</string>
     <string name="rate_us_message">Ehi, trovi utile Sakina Launcher? Se sì, una valutazione a 5 stelle è il modo migliore per sostenerci.
         \n\nGrazie e non lo vedrai più.</string>
@@ -61,7 +61,7 @@
     <string name="date_only">Solo data</string>
     <string name="bottom_on">In basso: acceso</string>
     <string name="bottom_off">In basso: spento</string>
-    <string name="please_set_olauncher_as_default_first">Imposta Sakina Launcher come launcher predefinito</string>
+    <string name="please_set_sakina_as_default_first">Imposta Sakina Launcher come launcher predefinito</string>
     <string name="hidden_apps_message">Nota: tocca \'Sakina Launcher\' nella parte superiore di questa pagina per trovare le tue app nascoste.
         \n\nUlteriori dettagli sono disponibili nella pagina Informazioni di seguito.</string>
     <string name="swipe_down_for">Scorri verso il basso per</string>
@@ -87,13 +87,13 @@
     <string name="type_a_new_app_name_first">Digita prima un nuovo nome per l\'app</string>
     <string name="app_not_found">App non trovata</string>
     <string name="your_wallpaper_will_update_shortly">Lo sfondo verrà aggiornato a breve</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher non è il programma di avvio predefinito.\nL\'aggiornamento giornaliero dello sfondo potrebbe non riuscire.</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher non è il programma di avvio predefinito.\nL\'aggiornamento giornaliero dello sfondo potrebbe non riuscire.</string>
     <string name="no_hidden_apps">Nessuna app nascosta</string>
     <string name="hidden_apps">App nascoste</string>
     <string name="adapter_show">mostra</string>
     <string name="adapter_hide">nascondi</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Stai usando il tuo telefono, o è il tuo telefono che sta usando te?</string>
-    <string name="about_olauncher">Info Sakina Launcher</string>
+    <string name="about_sakina">Info Sakina Launcher</string>
     <string name="screen_time">Tempo di schermo</string>
     <string name="did_you_know">Lo sapevate?</string>
     <string name="leave_a_review">Lascia una recensione</string>

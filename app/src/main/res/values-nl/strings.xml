@@ -39,7 +39,7 @@
     <string name="system_default">Systeem</string>
     <string name="dark">Donker</string>
     <string name="light">Licht</string>
-    <string name="welcome_to_olauncher_settings">Welkom bij de instellingen!
+    <string name="welcome_to_sakina_settings">Welkom bij de instellingen!
         \n\nOnthoud, als je vragen hebt, heeft onze Over-pagina het antwoord.</string>
     <string name="rate_us_message">Hoi, je zult dit bericht niet meer zien.
         \n\nAls je Sakina Launcher nuttig vindt, zou je dan een 5-sterren beoordeling willen achterlaten? Het zou veel voor ons betekenen. Dank je!</string>
@@ -62,7 +62,7 @@
     <string name="date_only">Alleen datum</string>
     <string name="bottom_on">Onder: Aan</string>
     <string name="bottom_off">Onder: Uit</string>
-    <string name="please_set_olauncher_as_default_first">Stel Sakina Launcher eerst in als standaard</string>
+    <string name="please_set_sakina_as_default_first">Stel Sakina Launcher eerst in als standaard</string>
     <string name="hidden_apps_message">Opmerking: Tik bovenaan deze instellingenpagina op \'Sakina Launcher\' om je verborgen apps te vinden.\n\nMeer informatie is beschikbaar op onze Over-pagina.</string>
     <string name="swipe_down_for">Veeg omlaag voor</string>
     <string name="search">Zoeken</string>
@@ -87,13 +87,13 @@
     <string name="type_a_new_app_name_first">Typ eerst een nieuwe app-naam</string>
     <string name="app_not_found">App niet gevonden</string>
     <string name="your_wallpaper_will_update_shortly">Je achtergrond wordt binnenkort bijgewerkt</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher is niet de standaard launcher. Achtergrondupdate zal mislukken.</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher is niet de standaard launcher. Achtergrondupdate zal mislukken.</string>
     <string name="no_hidden_apps">Geen verborgen apps</string>
     <string name="hidden_apps">Verborgen apps</string>
     <string name="adapter_show">Toon</string>
     <string name="adapter_hide">Verbergen</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Gebruik je je telefoon, of gebruikt je telefoon jou?</string>
-    <string name="about_olauncher">Over en veelgestelde vragen</string>
+    <string name="about_sakina">Over en veelgestelde vragen</string>
     <string name="screen_time">Schermtijd</string>
     <string name="did_you_know">Wist je dat?</string>
     <string name="leave_a_review">Laat een recensie achter</string>

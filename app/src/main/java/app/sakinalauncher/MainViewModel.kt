@@ -27,7 +27,7 @@ import app.sakinalauncher.helper.getAppsList
 import app.sakinalauncher.helper.getPrivateSpaceApps
 import app.sakinalauncher.helper.getPrivateSpaceUserHandle
 import app.sakinalauncher.helper.hasBeenMinutes
-import app.sakinalauncher.helper.isOlauncherDefault
+import app.sakinalauncher.helper.isSakinaDefault
 import app.sakinalauncher.helper.isPackageInstalled
 import app.sakinalauncher.helper.isPrivateSpaceLocked
 import app.sakinalauncher.helper.showToast
@@ -47,7 +47,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val updateSwipeApps = MutableLiveData<Any>()
     val appList = MutableLiveData<List<AppModel>?>()
     val hiddenApps = MutableLiveData<List<AppModel>?>()
-    val isOlauncherDefault = MutableLiveData<Boolean>()
+    val isSakinaDefault = MutableLiveData<Boolean>()
     val launcherResetFailed = MutableLiveData<Boolean>()
     val homeAppAlignment = MutableLiveData<Int>()
     val screenTimeValue = MutableLiveData<String>()
@@ -408,8 +408,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun isOlauncherDefault() {
-        isOlauncherDefault.value = isOlauncherDefault(appContext)
+    fun isSakinaDefault() {
+        isSakinaDefault.value = isSakinaDefault(appContext)
     }
 
     fun setWallpaperWorker() {

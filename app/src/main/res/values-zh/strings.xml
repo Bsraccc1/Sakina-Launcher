@@ -6,7 +6,7 @@
     <string name="set_as_default_launcher_first">设置为默认启动器</string>
     <string name="okay">好的</string>
     <string name="your_wallpaper_will_update_shortly">您的壁纸即将更新</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher 不是默认启动器。 每日壁纸更新可能会失败。</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher 不是默认启动器。 每日壁纸更新可能会失败。</string>
     <string name="no_hidden_apps">没有隐藏的应用程序</string>
     <string name="hidden_apps">隐藏的应用程序</string>
     <string name="hidden_apps_message">注意：点击此设置页面顶部的“Sakina Launcher”即可找到隐藏的应用程序。
@@ -70,7 +70,7 @@
     <string name="system_default">系统</string>
     <string name="dark">黑暗</string>
     <string name="light">光</string>
-    <string name="welcome_to_olauncher_settings">欢迎来到设置！
+    <string name="welcome_to_sakina_settings">欢迎来到设置！
         \n\n请记住，如果您有任何问题，我们的“关于”页面有答案。</string>
     <string name="rate_us_message">您好，您不会再看到此消息。
         \n\n如果您喜欢 Sakina Launcher，能给我们一个 5 星评价吗？ 它帮助我们提高排名并使我们高兴。 谢谢你！</string>
@@ -91,10 +91,10 @@
     <string name="date_only">仅限日期</string>
     <string name="bottom_on">底部：打开</string>
     <string name="bottom_off">底部：关闭</string>
-    <string name="please_set_olauncher_as_default_first">请先将 Sakina Launcher 设置为默认启动器</string>
+    <string name="please_set_sakina_as_default_first">请先将 Sakina Launcher 设置为默认启动器</string>
     <string name="app_not_found">找不到应用程序</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">是你在用手机，还是手机在用你？</string>
-    <string name="about_olauncher">关于 Sakina Launcher</string>
+    <string name="about_sakina">关于 Sakina Launcher</string>
     <string name="screen_time">屏幕时间</string>
     <string name="did_you_know">你可知道？</string>
     <string name="leave_a_review">发表评论</string>

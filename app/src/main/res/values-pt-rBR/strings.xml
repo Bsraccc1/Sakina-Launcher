@@ -40,7 +40,7 @@
     <string name="system_default">Sistema</string>
     <string name="dark">Escuro</string>
     <string name="light">Claro</string>
-    <string name="welcome_to_olauncher_settings">Bem-vindo às configurações!
+    <string name="welcome_to_sakina_settings">Bem-vindo às configurações!
         \n\nLembre-se, se você tiver alguma dúvida, nossa página Sobre tem a resposta.</string>
     <string name="rate_us_message">Ei, você acha Sakina Launcher útil? Se sim, uma classificação de 5 estrelas é a melhor maneira de nos apoiar. Obrigado.</string>
     <string name="share_message">Olá, precisamos da sua ajuda! No ano passado ultrapassamos um milhão de downloads. Este ano queremos chegar a mais um milhão, mas não podemos fazê-lo sozinhos.
@@ -60,7 +60,7 @@
     <string name="date_only">Apenas data</string>
     <string name="bottom_on">Fundo: Ativado</string>
     <string name="bottom_off">Fundo: Desligado</string>
-    <string name="please_set_olauncher_as_default_first">Por favor, defina Sakina Launcher como seu lançador padrão primeiro</string>
+    <string name="please_set_sakina_as_default_first">Por favor, defina Sakina Launcher como seu lançador padrão primeiro</string>
     <string name="hidden_apps_message">Nota: Toque em \"Sakina Launcher\" na parte superior desta página de Configurações para encontrar seus aplicativos ocultos.
         \n\nMais detalhes disponíveis em nossa página Sobre abaixo.</string>
     <string name="swipe_down_for">Deslize para baixo para</string>
@@ -86,13 +86,13 @@
     <string name="type_a_new_app_name_first">Digite um novo nome de aplicativo primeiro</string>
     <string name="app_not_found">Aplicativo não encontrado</string>
     <string name="your_wallpaper_will_update_shortly">Seu fundo de ecrã será atualizado em breve</string>
-    <string name="olauncher_is_not_default_launcher">Sakina Launcher não é launcher padrão. A atualização diária do fundo de ecrã pode falhar.</string>
+    <string name="sakina_is_not_default_launcher">Sakina Launcher não é launcher padrão. A atualização diária do fundo de ecrã pode falhar.</string>
     <string name="no_hidden_apps">Sem aplicativos ocultos</string>
     <string name="hidden_apps">Aplicativos ocultos</string>
     <string name="adapter_show">Mostrar</string>
     <string name="adapter_hide">Esconder</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Você está usando seu telefone, ou seu telefone está usando você?</string>
-    <string name="about_olauncher">Sobre Sakina Launcher</string>
+    <string name="about_sakina">Sobre Sakina Launcher</string>
     <string name="screen_time">Tempo de tela</string>
     <string name="did_you_know">Você sabia?</string>
     <string name="leave_a_review">Deixe um comentário</string>
