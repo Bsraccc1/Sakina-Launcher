@@ -74,9 +74,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Sakina Launcher ${{ steps.version.outputs.tag }}
+          name: Sakinah Launcher ${{ steps.version.outputs.tag }}
           body: |
-            Automated release for Sakina Launcher ${{ steps.version.outputs.tag }}.
+            Automated release for Sakinah Launcher ${{ steps.version.outputs.tag }}.
             versionName: ${{ steps.version.outputs.name }}
             versionCode: ${{ steps.version.outputs.code }}
           draft: false

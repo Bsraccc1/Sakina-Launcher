@@ -44,21 +44,21 @@ jobs:
       
     - name: Rename APK files
       run: |
-        mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
-        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
+        mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/sakinah-launcher-${{ steps.version.outputs.tag }}-debug.apk
+        mv app/build/outputs/apk/release/app-release-unsigned.apk app/build/outputs/apk/release/sakinah-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
       
     - name: Upload Debug APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sakina-launcher-debug-${{ steps.version.outputs.date }}
-        path: app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
+        name: sakinah-launcher-debug-${{ steps.version.outputs.date }}
+        path: app/build/outputs/apk/debug/sakinah-launcher-${{ steps.version.outputs.tag }}-debug.apk
         retention-days: 30
         
     - name: Upload Release APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: sakina-launcher-release-${{ steps.version.outputs.date }}
-        path: app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
+        name: sakinah-launcher-release-${{ steps.version.outputs.date }}
+        path: app/build/outputs/apk/release/sakinah-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
         retention-days: 90
     
     - name: Create GitHub Release
@@ -66,9 +66,9 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ steps.version.outputs.tag }}
-        name: Sakina Launcher ${{ steps.version.outputs.tag }}
+        name: Sakinah Launcher ${{ steps.version.outputs.tag }}
         body: |
-          ## 🚀 Sakina Launcher Build ${{ steps.version.outputs.tag }}
+          ## 🚀 Sakinah Launcher Build ${{ steps.version.outputs.tag }}
           
           **Build Date:** ${{ steps.version.outputs.date }}
           **Commit:** ${{ github.sha }}
@@ -83,8 +83,8 @@ jobs:
           ---
           Built automatically by GitHub Actions
         files: |
-          app/build/outputs/apk/debug/sakina-launcher-${{ steps.version.outputs.tag }}-debug.apk
-          app/build/outputs/apk/release/sakina-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
+          app/build/outputs/apk/debug/sakinah-launcher-${{ steps.version.outputs.tag }}-debug.apk
+          app/build/outputs/apk/release/sakinah-launcher-${{ steps.version.outputs.tag }}-release-unsigned.apk
         draft: false
         prerelease: false
       env:
