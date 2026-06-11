@@ -1,28 +1,32 @@
 package app.sakinalauncher.listener
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
 import app.sakinalauncher.data.Constants
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListener {
+    private val handler = Handler(Looper.getMainLooper())
     private var longPressOn = false
+    private var pendingLongPress: Runnable? = null
     private val gestureDetector: GestureDetector
 
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
         when (motionEvent.action) {
             MotionEvent.ACTION_DOWN -> view.isPressed = true
-            MotionEvent.ACTION_UP -> view.isPressed = false
+            MotionEvent.ACTION_UP,
+            MotionEvent.ACTION_CANCEL -> {
+                view.isPressed = false
+                longPressOn = false
+                pendingLongPress?.let { handler.removeCallbacks(it) }
+                pendingLongPress = null
+            }
         }
         return gestureDetector.onTouchEvent(motionEvent)
     }
@@ -47,13 +51,12 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
 
         override fun onLongPress(e: MotionEvent) {
             longPressOn = true
-            GlobalScope.launch {
-                delay(Constants.LONG_PRESS_DELAY_MS)
-                withContext(Dispatchers.Main) {
-                    if (isActive && longPressOn)
-                        onLongClick(view)
-                }
+            pendingLongPress?.let { handler.removeCallbacks(it) }
+            pendingLongPress = Runnable {
+                if (longPressOn) onLongClick(view)
+                pendingLongPress = null
             }
+            handler.postDelayed(pendingLongPress!!, Constants.LONG_PRESS_DELAY_MS)
             super.onLongPress(e)
         }
 

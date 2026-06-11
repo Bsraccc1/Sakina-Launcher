@@ -1,15 +1,12 @@
 package app.sakinalauncher.data.muslim
 
 import com.google.gson.annotations.SerializedName
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
-import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 interface PrayerApi {
@@ -56,39 +53,11 @@ interface AladhanApi {
 }
 
 object PrayerApiClient {
-    private const val MAX_RETRIES = 3
-
-    private val retryInterceptor = Interceptor { chain ->
-        val request = chain.request()
-        var lastError: IOException? = null
-        var attempt = 0
-        while (attempt < MAX_RETRIES) {
-            try {
-                val response = chain.proceed(request)
-                if (response.isSuccessful || response.code in 400..499) return@Interceptor response
-                response.close()
-                lastError = IOException("HTTP ${response.code}")
-            } catch (error: IOException) {
-                lastError = error
-            }
-            attempt++
-            if (attempt < MAX_RETRIES) {
-                try {
-                    Thread.sleep(400L * attempt)
-                } catch (_: InterruptedException) {
-                    Thread.currentThread().interrupt()
-                }
-            }
-        }
-        throw lastError ?: IOException("Request failed")
-    }
-
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(20, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
-        .callTimeout(35, TimeUnit.SECONDS)
+        .connectTimeout(8, TimeUnit.SECONDS)
+        .readTimeout(12, TimeUnit.SECONDS)
+        .callTimeout(15, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
-        .addInterceptor(retryInterceptor)
         .build()
 
     val api: PrayerApi by lazy {

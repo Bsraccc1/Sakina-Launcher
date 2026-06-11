@@ -83,22 +83,27 @@ class NotePanelStore(context: Context) {
     }
 
     fun moveNoteToTodo(id: String, nowMillis: Long = System.currentTimeMillis()): MovedNote? {
-        val note = getNotes().firstOrNull { it.id == id } ?: return null
+        val notes = getNotes()
+        val note = notes.firstOrNull { it.id == id } ?: return null
         val todo = TodoItem(
             id = UUID.randomUUID().toString(),
             text = note.text,
             createdAtMillis = nowMillis,
         )
-        saveNotes(getNotes().filterNot { it.id == id })
-        saveTodos(getTodos() + todo)
+        saveNotesAndTodos(
+            notes = notes.filterNot { it.id == id },
+            todos = getTodos() + todo,
+        )
         return MovedNote(note, todo)
     }
 
     fun undoMoveToTodo(movedNote: MovedNote): Boolean {
         val todos = getTodos()
         if (todos.none { it.id == movedNote.todo.id }) return false
-        saveTodos(todos.filterNot { it.id == movedNote.todo.id })
-        saveNotes((getNotes() + movedNote.note).distinctBy { it.id })
+        saveNotesAndTodos(
+            notes = (getNotes() + movedNote.note).distinctBy { it.id },
+            todos = todos.filterNot { it.id == movedNote.todo.id },
+        )
         return true
     }
 
@@ -150,12 +155,67 @@ class NotePanelStore(context: Context) {
         return updated
     }
 
+    fun deleteNotes(ids: Set<String>): Int {
+        if (ids.isEmpty()) return 0
+        val notes = getNotes()
+        val nextNotes = notes.filterNot { it.id in ids }
+        val removed = notes.size - nextNotes.size
+        if (removed > 0) saveNotes(nextNotes)
+        return removed
+    }
+
+    fun deleteTodos(ids: Set<String>): Int {
+        if (ids.isEmpty()) return 0
+        val todos = getTodos()
+        val nextTodos = todos.filterNot { it.id in ids }
+        val removed = todos.size - nextTodos.size
+        if (removed > 0) saveTodos(nextTodos)
+        return removed
+    }
+
+    fun toggleNotesDone(ids: Set<String>, nowMillis: Long = System.currentTimeMillis()): Int {
+        if (ids.isEmpty()) return 0
+        var updated = 0
+        val nextNotes = getNotes().map { note ->
+            if (note.id in ids) {
+                updated += 1
+                note.copy(isDone = note.isDone.not(), updatedAtMillis = nowMillis)
+            } else {
+                note
+            }
+        }
+        if (updated > 0) saveNotes(nextNotes)
+        return updated
+    }
+
+    fun toggleTodosDone(ids: Set<String>, nowMillis: Long = System.currentTimeMillis()): Int {
+        if (ids.isEmpty()) return 0
+        var updated = 0
+        val nextTodos = getTodos().map { todo ->
+            if (todo.id in ids) {
+                updated += 1
+                todo.copy(isDone = todo.isDone.not(), updatedAtMillis = nowMillis)
+            } else {
+                todo
+            }
+        }
+        if (updated > 0) saveTodos(nextTodos)
+        return updated
+    }
+
     private fun saveNotes(notes: List<NoteMessage>) {
         prefs.edit { putString(KEY_NOTES, NotePanelCodec.encodeNotes(notes)) }
     }
 
     private fun saveTodos(todos: List<TodoItem>) {
         prefs.edit { putString(KEY_TODOS, NotePanelCodec.encodeTodos(todos)) }
+    }
+
+    private fun saveNotesAndTodos(notes: List<NoteMessage>, todos: List<TodoItem>) {
+        prefs.edit {
+            putString(KEY_NOTES, NotePanelCodec.encodeNotes(notes))
+            putString(KEY_TODOS, NotePanelCodec.encodeTodos(todos))
+        }
     }
 
     companion object {

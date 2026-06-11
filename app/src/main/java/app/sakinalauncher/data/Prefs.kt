@@ -276,8 +276,8 @@ class Prefs(context: Context) {
     var fontFamily: Int by intPref(FONT_FAMILY, Constants.FontFamily.POPPINS)
 
     var hiddenApps: MutableSet<String>
-        get() = prefs.getStringSet(HIDDEN_APPS, mutableSetOf()) as MutableSet<String>
-        set(value) = prefs.edit { putStringSet(HIDDEN_APPS, value).apply() }
+        get() = prefs.getStringSet(HIDDEN_APPS, emptySet()).orEmpty().toMutableSet()
+        set(value) = prefs.edit { putStringSet(HIDDEN_APPS, value.toSet()).apply() }
 
     var hiddenAppsUpdated: Boolean by boolPref(HIDDEN_APPS_UPDATED, false)
     var toShowHintCounter: Int by intPref(SHOW_HINT_COUNTER, 1)

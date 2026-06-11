@@ -442,16 +442,20 @@ class NotePanelFragment : Fragment() {
     }
 
     private fun deleteSelectedNotes() {
-        selectedNoteIds.toList().forEach {
-            if (mode == NotePanelMode.TODO) store.deleteTodo(it) else store.deleteNote(it)
+        if (mode == NotePanelMode.TODO) {
+            store.deleteTodos(selectedNoteIds)
+        } else {
+            store.deleteNotes(selectedNoteIds)
         }
         selectedNoteIds.clear()
         render()
     }
 
     private fun doneSelectedNotes() {
-        selectedNoteIds.toList().forEach {
-            if (mode == NotePanelMode.TODO) store.toggleTodo(it) else store.toggleNoteDone(it)
+        if (mode == NotePanelMode.TODO) {
+            store.toggleTodosDone(selectedNoteIds)
+        } else {
+            store.toggleNotesDone(selectedNoteIds)
         }
         selectedNoteIds.clear()
         render()
@@ -546,7 +550,6 @@ class NotePanelFragment : Fragment() {
         timer = object : CountDownTimer(timerRemainingMillis, TIMER_TICK_MS) {
             override fun onTick(millisUntilFinished: Long) {
                 timerRemainingMillis = millisUntilFinished
-                prefs.pomodoroTimerRemainingMillis = millisUntilFinished
                 renderTimer()
             }
 
@@ -733,6 +736,9 @@ class NotePanelFragment : Fragment() {
     }
 
     override fun onStop() {
+        if (timerRunning.not()) {
+            prefs.pomodoroTimerRemainingMillis = timerRemainingMillis
+        }
         binding.input.hideKeyboard()
         super.onStop()
     }

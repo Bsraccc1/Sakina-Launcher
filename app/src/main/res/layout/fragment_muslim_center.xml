@@ -13,7 +13,6 @@
         android:id="@+id/rootLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layoutAnimation="@anim/layout_anim_from_bottom"
         android:orientation="vertical"
         android:paddingHorizontal="20dp"
         android:paddingTop="36dp"

@@ -4,6 +4,7 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import app.sakinalauncher.R
 import app.sakinalauncher.data.NoteMessage
@@ -22,7 +23,15 @@ class NotePanelAdapter(
     private var rows: List<NotePanelRow> = emptyList()
     private var selectedNoteIds: Set<String> = emptySet()
 
+    init {
+        setHasStableIds(true)
+    }
+
     override fun getItemCount(): Int = rows.size
+
+    override fun getItemId(position: Int): Long {
+        return stableRowId(rows[position])
+    }
 
     override fun getItemViewType(position: Int): Int {
         return when (rows[position]) {
@@ -60,9 +69,49 @@ class NotePanelAdapter(
     }
 
     fun setRows(rows: List<NotePanelRow>, selectedNoteIds: Set<String> = emptySet()) {
+        val oldRows = this.rows
+        val oldSelectedIds = this.selectedNoteIds
+        val nextSelectedIds = selectedNoteIds.toSet()
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = oldRows.size
+
+            override fun getNewListSize(): Int = rows.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                return stableRowId(oldRows[oldItemPosition]) == stableRowId(rows[newItemPosition])
+            }
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+                val oldRow = oldRows[oldItemPosition]
+                val newRow = rows[newItemPosition]
+                return oldRow == newRow &&
+                    isSelected(oldRow, oldSelectedIds) == isSelected(newRow, nextSelectedIds)
+            }
+        })
         this.rows = rows
-        this.selectedNoteIds = selectedNoteIds
-        notifyDataSetChanged()
+        this.selectedNoteIds = nextSelectedIds
+        diff.dispatchUpdatesTo(this)
+    }
+
+    private fun stableRowId(row: NotePanelRow): Long {
+        return when (row) {
+            is NotePanelRow.DaySeparator -> "day:${row.dayStartMillis}".hashCode().toLong()
+            is NotePanelRow.SectionSeparator -> "section:${row.label}".hashCode().toLong()
+            is NotePanelRow.Message -> "note:${row.note.id}".hashCode().toLong()
+            is NotePanelRow.Todo -> "todo:${row.item.id}".hashCode().toLong()
+        }
+    }
+
+    private fun NotePanelRow.selectedId(): String? {
+        return when (this) {
+            is NotePanelRow.Message -> note.id
+            is NotePanelRow.Todo -> item.id
+            else -> null
+        }
+    }
+
+    private fun isSelected(row: NotePanelRow, selectedIds: Set<String>): Boolean {
+        return row.selectedId()?.let { it in selectedIds } ?: false
     }
 
     class SeparatorViewHolder(private val binding: AdapterNoteDaySeparatorBinding) :
@@ -94,14 +143,8 @@ class NotePanelAdapter(
             )
             repeatHint.isVisible = row.repeatLabel != null
             repeatHint.text = row.repeatLabel
-            if (!note.isDone) {
-                root.animate().cancel()
-                if (isSelected) {
-                    root.animate().alpha(0.8f).setDuration(100).start()
-                } else {
-                    root.animate().alpha(1f).setDuration(200).start()
-                }
-            }
+            root.animate().cancel()
+            root.alpha = if (isSelected && !note.isDone) 0.8f else 1f
             root.setOnClickListener { clickListener(note) }
         }
     }
@@ -128,14 +171,8 @@ class NotePanelAdapter(
                 if (todo.isDone) R.drawable.bg_todo_checkbox_done else R.drawable.bg_todo_checkbox
             )
             todoCheckIcon.isVisible = todo.isDone
-            if (!todo.isDone) {
-                root.animate().cancel()
-                if (isSelected) {
-                    root.animate().alpha(0.8f).setDuration(100).start()
-                } else {
-                    root.animate().alpha(1f).setDuration(200).start()
-                }
-            }
+            root.animate().cancel()
+            root.alpha = if (isSelected && !todo.isDone) 0.8f else 1f
             root.setOnClickListener { clickListener(todo) }
         }
     }

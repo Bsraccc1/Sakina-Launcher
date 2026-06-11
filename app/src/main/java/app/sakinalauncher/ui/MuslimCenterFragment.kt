@@ -46,6 +46,7 @@ class MuslimCenterFragment : Fragment() {
     private var sourceDirection: String? = null
     private var currentSchedule: PrayerSchedule? = null
     private var prayerTickerJob: Job? = null
+    private var refreshPrayerJob: Job? = null
 
     private var _binding: FragmentMuslimCenterBinding? = null
     private val binding get() = _binding!!
@@ -109,7 +110,8 @@ class MuslimCenterFragment : Fragment() {
     }
 
     private fun refreshPrayerTimes() {
-        viewLifecycleOwner.lifecycleScope.launch {
+        refreshPrayerJob?.cancel()
+        refreshPrayerJob = viewLifecycleOwner.lifecycleScope.launch {
             try {
                 if (prayerStore.autoDetectLocation && hasLocationPermission()) {
                     tryAutoDetectLocation()
@@ -284,6 +286,8 @@ class MuslimCenterFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        refreshPrayerJob?.cancel()
+        refreshPrayerJob = null
         prayerTickerJob?.cancel()
         prayerTickerJob = null
         super.onDestroyView()

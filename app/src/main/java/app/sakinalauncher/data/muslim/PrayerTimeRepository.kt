@@ -14,7 +14,7 @@ import java.util.TimeZone
 class PrayerTimeRepository(
     private val kemenagApi: PrayerApi,
     private val aladhanApi: AladhanApi,
-    private val store: PrayerTimeStore,
+    private val store: PrayerScheduleStore,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     suspend fun allCities(): List<PrayerCity> = withContext(ioDispatcher) {
@@ -61,11 +61,18 @@ class PrayerTimeRepository(
     suspend fun getOrFetchToday(forceRefresh: Boolean = false): PrayerScheduleResult = withContext(ioDispatcher) {
         val timeZoneId = activeTimeZoneId()
         val today = todayYmd(timeZoneId)
-        val cacheKey = store.activeCacheKey
-        if (!forceRefresh && store.isCacheFreshForDate(cacheKey, today, PrayerCache.CACHE_TTL_MILLIS)) {
-            val cached = store.getCachedScheduleForDate(cacheKey, today)
-            if (cached != null) return@withContext PrayerScheduleResult.Cached(cached, "")
+        if (!forceRefresh) {
+            activeCacheKeysForRead().firstNotNullOfOrNull { cacheKey ->
+                if (store.isCacheFreshForDate(cacheKey, today, PrayerCache.CACHE_TTL_MILLIS)) {
+                    store.getCachedScheduleForDate(cacheKey, today)
+                } else {
+                    null
+                }
+            }?.let { cached ->
+                return@withContext PrayerScheduleResult.Cached(cached, "")
+            }
         }
+        val cacheKey = activeCacheKeyForWrite()
         val now = Calendar.getInstance(TimeZone.getTimeZone(timeZoneId))
         val year = now.get(Calendar.YEAR)
         val month = now.get(Calendar.MONTH) + 1
@@ -114,7 +121,6 @@ class PrayerTimeRepository(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            android.util.Log.e("DEBUG-prayer", "Kemenag month batch failed: ${error.javaClass.simpleName}: ${error.message}", error)
             return refreshKemenagSingleDay(cacheKey, today)
         }
     }
@@ -150,7 +156,6 @@ class PrayerTimeRepository(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            android.util.Log.e("DEBUG-prayer", "Aladhan month batch failed: ${error.javaClass.simpleName}: ${error.message}", error)
             return refreshGlobalSingleDay(cacheKey, today)
         }
     }
@@ -163,6 +168,20 @@ class PrayerTimeRepository(
         store.cityId = city.id
         store.cityLabel = city.location
         return city.id
+    }
+
+    private suspend fun activeCacheKeyForWrite(): String {
+        if (store.provider == PrayerProvider.KEMENAG && store.cityId.isBlank()) {
+            ensureKemenagCityId()
+        }
+        return store.activeCacheKey
+    }
+
+    private fun activeCacheKeysForRead(): List<String> {
+        if (store.provider != PrayerProvider.KEMENAG) return listOf(store.activeCacheKey)
+        val currentKey = store.activeCacheKey
+        val queryKey = "${PrayerProvider.KEMENAG.id}:${store.cityQuery}"
+        return listOf(currentKey, queryKey).distinct()
     }
 
     private suspend fun refreshKemenagSingleDay(cacheKey: String, today: String): PrayerScheduleResult {
@@ -178,7 +197,6 @@ class PrayerTimeRepository(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                android.util.Log.e("DEBUG-prayer", "Kemenag attempt $attempt failed: ${error.javaClass.simpleName}: ${error.message}", error)
                 lastError = error.message ?: lastError
                 if (attempt < MAX_FETCH_ATTEMPTS - 1) {
                     delay(BACKOFF_BASE_MS * (attempt + 1))
@@ -211,7 +229,6 @@ class PrayerTimeRepository(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                android.util.Log.e("DEBUG-prayer", "Global attempt $attempt failed: ${error.javaClass.simpleName}: ${error.message}", error)
                 lastError = error.message ?: lastError
                 if (attempt < MAX_FETCH_ATTEMPTS - 1) {
                     delay(BACKOFF_BASE_MS * (attempt + 1))
@@ -285,7 +302,7 @@ class PrayerTimeRepository(
             provider = PrayerProvider.KEMENAG,
             timeZoneId = timeZoneId,
             cacheKey = cacheKey,
-            dateYmd = times.date.orEmpty(),
+            dateYmd = times.date.orEmpty().ifBlank { kemenagDateLabelYmd(times.dateLabel) },
         )
     }
 
@@ -352,6 +369,16 @@ class PrayerTimeRepository(
         }.getOrDefault("")
     }
 
+    private fun kemenagDateLabelYmd(value: String?): String {
+        if (value.isNullOrBlank()) return ""
+        return runCatching {
+            val rawDate = value.substringAfter(",").trim()
+            val source = SimpleDateFormat("dd/MM/yyyy", Locale.US)
+            val target = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            target.format(source.parse(rawDate)!!)
+        }.getOrDefault("")
+    }
+
     private fun apiDate(timeZoneId: String): String {
         val format = SimpleDateFormat("dd-MM-yyyy", Locale.US)
         format.timeZone = TimeZone.getTimeZone(timeZoneId)
@@ -394,8 +421,8 @@ class PrayerTimeRepository(
     }
 
     companion object {
-        private const val MAX_FETCH_ATTEMPTS = 3
-        private const val BACKOFF_BASE_MS = 600L
+        private const val MAX_FETCH_ATTEMPTS = 2
+        private const val BACKOFF_BASE_MS = 300L
 
         val globalPresetLocations = listOf(
             GlobalPrayerLocation("Makkah", "Saudi Arabia", 21.4225, 39.8262, "Asia/Riyadh", 4),

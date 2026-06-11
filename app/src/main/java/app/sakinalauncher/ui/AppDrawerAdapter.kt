@@ -217,6 +217,8 @@ class AppDrawerAdapter(
 
     class ViewHolder(private val binding: AdapterAppDrawerBinding) :
         RecyclerView.ViewHolder(binding.root) {
+        private var renameWatcher: TextWatcher? = null
+
         fun bind(
             flag: Int,
             appLabelGravity: Int,
@@ -241,6 +243,7 @@ class AppDrawerAdapter(
             otherProfileIndicator.isVisible = appModel.user != myUserHandle
 
             appTitle.setOnClickListener { clickListener(appModel) }
+            var originalAppName = ""
 
             appTitle.setOnLongClickListener {
                 if (appModel.appPackage.isNotEmpty()) {
@@ -269,7 +272,8 @@ class AppDrawerAdapter(
             // Configure rename behavior
             appRename.setOnClickListener {
                 if (appModel.appPackage.isNotEmpty()) {
-                    etAppRename.hint = getAppName(etAppRename.context, appModel.appPackage, appModel.user)
+                    originalAppName = getAppName(etAppRename.context, appModel.appPackage, appModel.user)
+                    etAppRename.hint = originalAppName
                     etAppRename.setText(appModel.appLabel)
                     etAppRename.setSelectAllOnFocus(true)
                     renameLayout.visibility = View.VISIBLE
@@ -281,9 +285,10 @@ class AppDrawerAdapter(
             etAppRename.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
                 appTitle.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
             }
-            etAppRename.addTextChangedListener(object : TextWatcher {
+            renameWatcher?.let { etAppRename.removeTextChangedListener(it) }
+            renameWatcher = object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    etAppRename.hint = getAppName(etAppRename.context, appModel.appPackage, appModel.user)
+                    etAppRename.hint = originalAppName
                 }
 
                 override fun beforeTextChanged(
@@ -297,7 +302,8 @@ class AppDrawerAdapter(
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     etAppRename.hint = ""
                 }
-            })
+            }
+            etAppRename.addTextChangedListener(renameWatcher)
             etAppRename.setOnEditorActionListener { _, actionCode, _ ->
                 if (actionCode == EditorInfo.IME_ACTION_DONE) {
                     val renameLabel = etAppRename.text.toString().trim()
@@ -316,9 +322,12 @@ class AppDrawerAdapter(
                     appRenameListener(appModel, renameLabel)
                     renameLayout.visibility = View.GONE
                 } else {
+                    val fallbackName = originalAppName.ifBlank {
+                        getAppName(etAppRename.context, appModel.appPackage, appModel.user)
+                    }
                     appRenameListener(
                         appModel,
-                        getAppName(etAppRename.context, appModel.appPackage, appModel.user)
+                        fallbackName
                     )
                     renameLayout.visibility = View.GONE
                 }

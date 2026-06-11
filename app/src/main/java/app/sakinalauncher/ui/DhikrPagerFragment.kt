@@ -21,6 +21,8 @@ class DhikrPagerFragment : Fragment() {
     private val countMap = mutableMapOf<Int, Int>() // Track count per card index
     private lateinit var prefs: app.sakinalauncher.data.Prefs
     private var pendingAdvance: Runnable? = null
+    private var pendingCountSave: Runnable? = null
+    private val pendingCountSaveIndices = mutableSetOf<Int>()
 
     private var _binding: FragmentDhikrPagerBinding? = null
     private val binding get() = _binding!!
@@ -93,21 +95,21 @@ class DhikrPagerFragment : Fragment() {
         
         if (newCount >= card.repetitionCount) {
             countMap[cardIndex] = card.repetitionCount
-            saveCountProgress(cardIndex, card.repetitionCount)
-            render()
+            renderCounterProgress(card, card.repetitionCount)
+            scheduleCountProgressSave(cardIndex)
             animateCounter()
             pendingAdvance?.let { binding.tasbihCounter.removeCallbacks(it) }
             pendingAdvance = Runnable {
                 val currentBinding = _binding ?: return@Runnable
                 countMap[cardIndex] = 0
-                saveCountProgress(cardIndex, 0)
+                scheduleCountProgressSave(cardIndex)
                 if (index == cardIndex) showNext() else currentBinding.root.post { render() }
             }
             binding.tasbihCounter.postDelayed(pendingAdvance, 300)
         } else {
             countMap[cardIndex] = newCount
-            saveCountProgress(cardIndex, newCount)
-            render()
+            renderCounterProgress(card, newCount)
+            scheduleCountProgressSave(cardIndex)
             animateCounter()
         }
     }
@@ -128,6 +130,23 @@ class DhikrPagerFragment : Fragment() {
         prefs.putInt(key, count)
     }
 
+    private fun scheduleCountProgressSave(index: Int) {
+        pendingCountSaveIndices.add(index)
+        pendingCountSave?.let { _binding?.root?.removeCallbacks(it) }
+        pendingCountSave = Runnable { flushCountProgress() }
+        _binding?.root?.postDelayed(pendingCountSave, COUNT_SAVE_DEBOUNCE_MS)
+    }
+
+    private fun flushCountProgress() {
+        pendingCountSave?.let { _binding?.root?.removeCallbacks(it) }
+        pendingCountSave = null
+        val indices = pendingCountSaveIndices.toList()
+        pendingCountSaveIndices.clear()
+        indices.forEach { idx ->
+            saveCountProgress(idx, countMap.getOrDefault(idx, 0))
+        }
+    }
+
     private fun render() {
         val cards = DhikrContent.cardsFor(period)
         if (cards.isEmpty()) return
@@ -144,10 +163,13 @@ class DhikrPagerFragment : Fragment() {
         
         val currentCount = countMap.getOrDefault(index, 0)
         binding.repetition.text = getString(R.string.dhikr_repetition, card.repetitionCount)
-        binding.tasbihCounter.text = getString(R.string.dhikr_counter, currentCount, card.repetitionCount)
-        
-        val progress = (currentCount.toFloat() / card.repetitionCount.toFloat() * 100).toInt()
-        binding.progressBar.progress = progress
+        renderCounterProgress(card, currentCount)
+    }
+
+    private fun renderCounterProgress(card: app.sakinalauncher.data.muslim.DhikrCard, count: Int) {
+        val boundedCount = count.coerceIn(0, card.repetitionCount)
+        binding.tasbihCounter.text = getString(R.string.dhikr_counter, boundedCount, card.repetitionCount)
+        binding.progressBar.progress = (boundedCount.toFloat() / card.repetitionCount.toFloat() * 100).toInt()
     }
 
     private fun animateCounter() {
@@ -162,12 +184,14 @@ class DhikrPagerFragment : Fragment() {
     }
 
     private fun showNext() {
+        flushCountProgress()
         val cards = DhikrContent.cardsFor(period)
         index = if (index == cards.lastIndex) 0 else index + 1
         render()
     }
 
     private fun showPrevious() {
+        flushCountProgress()
         val cards = DhikrContent.cardsFor(period)
         index = if (index == 0) cards.lastIndex else index - 1
         render()
@@ -179,6 +203,7 @@ class DhikrPagerFragment : Fragment() {
 
     override fun onDestroyView() {
         pendingAdvance?.let { _binding?.tasbihCounter?.removeCallbacks(it) }
+        flushCountProgress()
         pendingAdvance = null
         super.onDestroyView()
         _binding = null
@@ -187,5 +212,6 @@ class DhikrPagerFragment : Fragment() {
     companion object {
         private const val KEY_PERIOD = "dhikr_period"
         private const val KEY_INDEX = "dhikr_index"
+        private const val COUNT_SAVE_DEBOUNCE_MS = 350L
     }
 }

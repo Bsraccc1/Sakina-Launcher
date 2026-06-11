@@ -63,6 +63,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     private lateinit var viewModel: MainViewModel
     private lateinit var deviceManager: DevicePolicyManager
     private lateinit var componentName: ComponentName
+    private var cachedKemenagCities: List<PrayerCity>? = null
 
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
@@ -826,10 +827,11 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         val presetQueries = arrayOf("jakarta", "bandung", "surabaya", "yogyakarta", "medan", "makassar")
         viewLifecycleOwner.lifecycleScope.launch {
             requireContext().showToast(getString(R.string.loading_locations))
-            val fallbackCities = presetQueries.mapNotNull { query ->
-                prayerRepository.searchCities(query).firstOrNull()
-            }.distinctBy { it.id }
-            val cities = prayerRepository.allCities().ifEmpty { fallbackCities }
+            val cities = cachedKemenagCities ?: prayerRepository.allCities().ifEmpty {
+                presetQueries.mapNotNull { query ->
+                    prayerRepository.searchCities(query).firstOrNull()
+                }.distinctBy { it.id }
+            }.also { cachedKemenagCities = it }
             if (cities.isEmpty()) {
                 requireContext().showToast(getString(R.string.unable_to_load_prayer_times))
                 return@launch

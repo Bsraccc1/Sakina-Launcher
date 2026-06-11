@@ -57,7 +57,7 @@ jobs:
           if [ -n "$INPUT_TAG" ]; then
             RELEASE_TAG="$INPUT_TAG"
           else
-            RELEASE_TAG="v${VERSION_NAME}-build.${{ github.run_number }}"
+            RELEASE_TAG="${VERSION_NAME}-build.${{ github.run_number }}"
           fi
 
           echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"

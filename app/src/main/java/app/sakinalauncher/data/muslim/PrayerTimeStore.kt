@@ -9,87 +9,108 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
-const val CACHE_TTL_MILLIS: Long = 5L * 24L * 60L * 60L * 1000L
+interface PrayerScheduleStore {
+    var provider: PrayerProvider
+    var cityQuery: String
+    var cityId: String
+    var cityLabel: String
+    var autoDetectLocation: Boolean
+    var globalLocationLabel: String
+    var globalCountry: String
+    var globalLatitude: Double
+    var globalLongitude: Double
+    var globalTimeZoneId: String
+    var globalMethod: Int
+    val activeCacheKey: String
 
-class PrayerTimeStore(context: Context) {
+    fun getCachedSchedule(): PrayerSchedule?
+    fun getStaleCachedSchedule(): PrayerSchedule?
+    fun saveSchedule(schedule: PrayerSchedule)
+    fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>)
+    fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule?
+    fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule?
+    fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean
+}
+
+class PrayerTimeStore(context: Context) : PrayerScheduleStore {
     private val prefs = context.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
 
-    var provider: PrayerProvider
+    override var provider: PrayerProvider
         get() = PrayerProvider.fromId(prefs.getString(KEY_PROVIDER, PrayerProvider.KEMENAG.id))
         set(value) = prefs.edit { putString(KEY_PROVIDER, value.id) }
 
-    var cityQuery: String
+    override var cityQuery: String
         get() = prefs.getString(KEY_CITY_QUERY, DEFAULT_CITY_QUERY).orEmpty().ifBlank { DEFAULT_CITY_QUERY }
         set(value) = prefs.edit { putString(KEY_CITY_QUERY, value.trim().ifBlank { DEFAULT_CITY_QUERY }) }
 
-    var cityId: String
+    override var cityId: String
         get() = prefs.getString(KEY_CITY_ID, "").orEmpty()
         set(value) = prefs.edit { putString(KEY_CITY_ID, value) }
 
-    var cityLabel: String
+    override var cityLabel: String
         get() = prefs.getString(KEY_CITY_LABEL, "").orEmpty()
         set(value) = prefs.edit { putString(KEY_CITY_LABEL, value) }
 
-    var autoDetectLocation: Boolean
+    override var autoDetectLocation: Boolean
         get() = prefs.getBoolean(KEY_AUTO_DETECT_LOCATION, false)
         set(value) = prefs.edit { putBoolean(KEY_AUTO_DETECT_LOCATION, value) }
 
-    var globalLocationLabel: String
+    override var globalLocationLabel: String
         get() = prefs.getString(KEY_GLOBAL_LOCATION_LABEL, DEFAULT_GLOBAL_LOCATION_LABEL).orEmpty()
             .ifBlank { DEFAULT_GLOBAL_LOCATION_LABEL }
         set(value) = prefs.edit {
             putString(KEY_GLOBAL_LOCATION_LABEL, value.trim().ifBlank { DEFAULT_GLOBAL_LOCATION_LABEL })
         }
 
-    var globalCountry: String
+    override var globalCountry: String
         get() = prefs.getString(KEY_GLOBAL_COUNTRY, DEFAULT_GLOBAL_COUNTRY).orEmpty()
             .ifBlank { DEFAULT_GLOBAL_COUNTRY }
         set(value) = prefs.edit {
             putString(KEY_GLOBAL_COUNTRY, value.trim().ifBlank { DEFAULT_GLOBAL_COUNTRY })
         }
 
-    var globalLatitude: Double
+    override var globalLatitude: Double
         get() = Double.fromBits(prefs.getLong(KEY_GLOBAL_LATITUDE, DEFAULT_GLOBAL_LATITUDE.toBits()))
         set(value) = prefs.edit { putLong(KEY_GLOBAL_LATITUDE, value.toBits()) }
 
-    var globalLongitude: Double
+    override var globalLongitude: Double
         get() = Double.fromBits(prefs.getLong(KEY_GLOBAL_LONGITUDE, DEFAULT_GLOBAL_LONGITUDE.toBits()))
         set(value) = prefs.edit { putLong(KEY_GLOBAL_LONGITUDE, value.toBits()) }
 
-    var globalTimeZoneId: String
+    override var globalTimeZoneId: String
         get() = prefs.getString(KEY_GLOBAL_TIME_ZONE_ID, DEFAULT_GLOBAL_TIME_ZONE_ID).orEmpty()
             .ifBlank { DEFAULT_GLOBAL_TIME_ZONE_ID }
         set(value) = prefs.edit {
             putString(KEY_GLOBAL_TIME_ZONE_ID, value.trim().ifBlank { DEFAULT_GLOBAL_TIME_ZONE_ID })
         }
 
-    var globalMethod: Int
+    override var globalMethod: Int
         get() = prefs.getInt(KEY_GLOBAL_METHOD, DEFAULT_GLOBAL_METHOD)
         set(value) = prefs.edit { putInt(KEY_GLOBAL_METHOD, value) }
 
-    val activeCacheKey: String
+    override val activeCacheKey: String
         get() = when (provider) {
             PrayerProvider.KEMENAG -> "${provider.id}:${cityId.ifBlank { cityQuery }}"
             PrayerProvider.GLOBAL -> "${provider.id}:$globalLatitude:$globalLongitude:$globalMethod:$globalTimeZoneId"
         }
 
-    fun getCachedSchedule(): PrayerSchedule? {
+    override fun getCachedSchedule(): PrayerSchedule? {
         val today = todayYmd(currentTimeZoneId())
         return getCachedScheduleForDate(activeCacheKey, today)
             ?.takeIf { it.provider == provider && it.isFetchedToday() }
     }
 
-    fun getStaleCachedSchedule(): PrayerSchedule? {
+    override fun getStaleCachedSchedule(): PrayerSchedule? {
         val today = todayYmd(currentTimeZoneId())
         return getStaleCachedScheduleForDate(activeCacheKey, today)
             ?.takeIf { it.provider == provider }
     }
 
-    fun saveSchedule(schedule: PrayerSchedule) {
+    override fun saveSchedule(schedule: PrayerSchedule) {
         saveSchedules(schedule.cacheKey.ifBlank { activeCacheKey }, listOf(schedule))
     }
 
-    fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>) {
+    override fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>) {
         if (schedules.isEmpty()) return
         purgeOtherCacheKeys(cacheKey)
         prefs.edit {
@@ -104,15 +125,15 @@ class PrayerTimeStore(context: Context) {
         enforceDateCap(cacheKey)
     }
 
-    fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
+    override fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
         return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
     }
 
-    fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
+    override fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
         return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
     }
 
-    fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean {
+    override fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean {
         val schedule = getStaleCachedScheduleForDate(cacheKey, dateYmd) ?: return false
         return System.currentTimeMillis() - schedule.fetchedAtMillis <= ttlMillis
     }
