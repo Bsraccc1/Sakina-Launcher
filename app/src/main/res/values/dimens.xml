@@ -1,5 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+      Single source of truth for typography and spacing.
+
+      Text sizes use sp and spacing uses dp; both are ALREADY density-independent
+      (Android scales them by the device density + user font scale at runtime).
+      We therefore do NOT bucket these by DPI (values-hdpi, values-xhdpi, ...) —
+      doing so double-scales and makes the text-to-screen ratio drift between
+      devices of the same physical size but different density.
+
+      For genuinely larger screens (tablets), see values-sw600dp/dimens.xml,
+      which keys off smallest-width (the correct axis for layout precision)
+      rather than density.
+    -->
+
+    <!-- Typography -->
+    <dimen name="text_large">28sp</dimen>
+    <dimen name="text_small">16sp</dimen>
+    <dimen name="time_size">60sp</dimen>
+    <dimen name="date_size">16sp</dimen>
+
+    <!-- Spacing -->
+    <dimen name="app_padding_vertical">12dp</dimen>
+    <dimen name="home_app_padding_vertical">10dp</dimen>
+
+    <!-- App-drawer alphabet fast-scroller -->
     <dimen name="alphabet_recycler_margin_bottom">16dp</dimen>
     <dimen name="alphabet_recycler_margin_end">10dp</dimen>
     <dimen name="alphabet_recycler_margin_start">320dp</dimen>

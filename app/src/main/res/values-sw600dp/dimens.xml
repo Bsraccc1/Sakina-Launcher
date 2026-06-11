@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Tablets / large screens (smallest width >= 600dp).
+
+      smallest-width (sw) is the correct axis for scaling layout up on bigger
+      screens — unlike DPI, it reflects actual physical size. Slightly larger
+      typography and breathing room here; phones fall back to values/dimens.xml.
+    -->
+
+    <!-- Typography -->
+    <dimen name="text_large">32sp</dimen>
+    <dimen name="text_small">18sp</dimen>
+    <dimen name="time_size">72sp</dimen>
+    <dimen name="date_size">18sp</dimen>
+
+    <!-- Spacing -->
+    <dimen name="app_padding_vertical">16dp</dimen>
+    <dimen name="home_app_padding_vertical">14dp</dimen>
+
+    <!-- App-drawer alphabet fast-scroller -->
+    <dimen name="alphabet_recycler_margin_bottom">16dp</dimen>
+    <dimen name="alphabet_recycler_margin_end">10dp</dimen>
+    <dimen name="alphabet_recycler_margin_start">320dp</dimen>
+</resources>
