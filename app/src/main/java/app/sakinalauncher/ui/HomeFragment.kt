@@ -1,6 +1,5 @@
 package app.sakinalauncher.ui
 
-import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
@@ -54,7 +53,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
-    private lateinit var deviceManager: DevicePolicyManager
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
@@ -70,8 +68,6 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         viewModel = activity?.run {
             ViewModelProvider(this)[MainViewModel::class.java]
         } ?: throw Exception("Invalid Activity")
-
-        deviceManager = context?.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
         initObservers()
         setHomeAlignment(prefs.homeAlignment)
@@ -577,9 +573,32 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     }
 
     private fun lockPhone() {
+        // The accessibility service runs in a separate process (:serviceProcess),
+        // so we cannot call it directly via a static reference. Instead we fire a
+        // TYPE_VIEW_CLICKED accessibility event on the lock placeholder view; the
+        // service catches it (matched by contentDescription) and performs the lock.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+            app.sakinalauncher.helper.isAccessServiceEnabled(requireContext())
+        ) {
+            binding.lock.performClick()
+            return
+        }
+        // Fallback for older versions or when the a11y service is unavailable:
+        // use DevicePolicyManager if device admin is active.
         requireActivity().runOnUiThread {
             try {
-                deviceManager.lockNow()
+                val dpm = requireContext()
+                    .getSystemService(Context.DEVICE_POLICY_SERVICE) as android.app.admin.DevicePolicyManager
+                val cn = android.content.ComponentName(
+                    requireContext(),
+                    app.sakinalauncher.listener.DeviceAdmin::class.java
+                )
+                if (dpm.isAdminActive(cn)) {
+                    dpm.lockNow()
+                } else {
+                    requireContext().showToast(getString(R.string.please_turn_on_double_tap_to_unlock), Toast.LENGTH_LONG)
+                    findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
+                }
             } catch (e: SecurityException) {
                 requireContext().showToast(getString(R.string.please_turn_on_double_tap_to_unlock), Toast.LENGTH_LONG)
                 findNavController().navigate(R.id.action_mainFragment_to_settingsFragment)
@@ -694,10 +713,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
             override fun onDoubleClick() {
                 super.onDoubleClick()
                 if (!prefs.lockModeOn) return
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                    binding.lock.performClick()
-                else
-                    lockPhone()
+                lockPhone()
             }
 
             override fun onClick() {

@@ -5,7 +5,7 @@
     <string name="set_as_default_launcher_u"><u>Imposta come launcher predefinito</u></string>
     <string name="set_as_default_launcher_first">Imposta come launcher predefinito</string>
     <string name="double_tap_to_lock_screen">Tocca due volte per bloccare</string>
-    <string name="admin_permission_message">Olauncher userà l’autorizzazione della schermata di blocco in modo responsabile. Olauncher non raccoglie né condivide alcun dato.</string>
+    <string name="admin_permission_message">Sakina Launcher userà l’autorizzazione della schermata di blocco in modo responsabile. Sakina Launcher non raccoglie né condivide alcun dato.</string>
     <string name="off">Off</string>
     <string name="on">On</string>
     <string name="change_default_launcher">Cambia il launcher  predefinito</string>
@@ -42,32 +42,32 @@
     <string name="light">Chiaro</string>
     <string name="welcome_to_olauncher_settings">Benvenuto nelle impostazioni!
         \n\nRicorda, se hai domande, la nostra pagina Informazioni ha la risposta.</string>
-    <string name="rate_us_message">Ehi, trovi utile Olauncher? Se sì, una valutazione a 5 stelle è il modo migliore per sostenerci.
+    <string name="rate_us_message">Ehi, trovi utile Sakina Launcher? Se sì, una valutazione a 5 stelle è il modo migliore per sostenerci.
         \n\nGrazie e non lo vedrai più.</string>
     <string name="share_message">Ciao, abbiamo bisogno del tuo aiuto! L\'anno scorso abbiamo superato il milione di download. Quest’anno vogliamo raggiungere un milione in più ma non possiamo farcela da soli.
-        \n\nSaresti così gentile da condividere Olauncher con i tuoi amici, per favore? Grazie e buona giornata!</string>
-    <string name="keyboard_message">Ciao, la tastiera è il modo più veloce per trovare e avviare le app in Olauncher. Possiamo chiederti di metterlo alla prova ancora per qualche giorno e poi decidere?
+        \n\nSaresti così gentile da condividere Sakina Launcher con i tuoi amici, per favore? Grazie e buona giornata!</string>
+    <string name="keyboard_message">Ciao, la tastiera è il modo più veloce per trovare e avviare le app in Sakina Launcher. Possiamo chiederti di metterlo alla prova ancora per qualche giorno e poi decidere?
         \n\nSei sempre tu a scegliere.</string>
     <string name="app_usage_message">Per visualizzare/nascondere il tempo di utilizzo dello schermo sulla schermata iniziale, conceda o neghi il permesso di utilizzo dell\'app.
         \n\nNota: Non vengono raccolti dati sull\'utilizzo dell\'app. Tutto viene elaborato sul tuo dispositivo.</string>
-    <string name="pro_message">Olauncher ha anche una versione pro chiamata Pro Launcher. Ha funzionalità extra come meteo, widget, font, cartelle, sfondi AMOLED, e così via.
-        \n\nÈ anche il modo migliore per supportare gli sviluppatori di Olauncher. Dai un\'occhiata!</string>
-    <string name="wallpaper_message">Olauncher offre bellissimi sfondi nuovi ogni giorno. Dai un aspetto fresco alla tua schermata principale ogni giorno, gratuitamente!
+    <string name="pro_message">Sakina Launcher ha anche una versione pro chiamata Pro Launcher. Ha funzionalità extra come meteo, widget, font, cartelle, sfondi AMOLED, e così via.
+        \n\nÈ anche il modo migliore per supportare gli sviluppatori di Sakina Launcher. Dai un\'occhiata!</string>
+    <string name="wallpaper_message">Sakina Launcher offre bellissimi sfondi nuovi ogni giorno. Dai un aspetto fresco alla tua schermata principale ogni giorno, gratuitamente!
         \n\nVuoi provarlo?</string>
-    <string name="accessibility_service_description">L\’autorizzazione di accessibilità è necessaria per abilitare il doppio tocco per il blocco schermo e il tasto Home per mostrare le app recenti. Qualsiasi dato acquisito da Olauncher tramite questo servizio rimarrà all\’interno del telefono.</string>
+    <string name="accessibility_service_description">L\’autorizzazione di accessibilità è necessaria per abilitare il doppio tocco per il blocco schermo e il tasto Home per mostrare le app recenti. Qualsiasi dato acquisito da Sakina Launcher tramite questo servizio rimarrà all\’interno del telefono.</string>
     <string name="copy">copia</string>
     <string name="close">chiudi</string>
     <string name="date">Data</string>
     <string name="date_only">Solo data</string>
     <string name="bottom_on">In basso: acceso</string>
     <string name="bottom_off">In basso: spento</string>
-    <string name="please_set_olauncher_as_default_first">Imposta Olauncher come launcher predefinito</string>
-    <string name="hidden_apps_message">Nota: tocca \'Olauncher\' nella parte superiore di questa pagina per trovare le tue app nascoste.
+    <string name="please_set_olauncher_as_default_first">Imposta Sakina Launcher come launcher predefinito</string>
+    <string name="hidden_apps_message">Nota: tocca \'Sakina Launcher\' nella parte superiore di questa pagina per trovare le tue app nascoste.
         \n\nUlteriori dettagli sono disponibili nella pagina Informazioni di seguito.</string>
     <string name="swipe_down_for">Scorri verso il basso per</string>
     <string name="search">Ricerca</string>
     <string name="notifications">Notifiche</string>
-    <string name="accessibility_disclosure">Attiva il servizio di accessibilità di Olauncher nelle impostazioni del tuo dispositivo per abilitare i gesti Doppio tocco per bloccare o Tasto Home per le app recenti.\n\nTieni presente che questo servizio viene utilizzato solo per questi gesti. Il nostro servizio di accessibilità non raccoglie né condivide alcun dato.</string>
+    <string name="accessibility_disclosure">Attiva il servizio di accessibilità di Sakina Launcher nelle impostazioni del tuo dispositivo per abilitare i gesti Doppio tocco per bloccare o Tasto Home per le app recenti.\n\nTieni presente che questo servizio viene utilizzato solo per questi gesti. Il nostro servizio di accessibilità non raccoglie né condivide alcun dato.</string>
     <string name="permission">Autorizza</string>
     <string name="double_tap_lock">Tocca due volte per bloccare</string>
     <string name="home_button_show_recents">Tasto Home per i recenti</string>
@@ -79,7 +79,7 @@
     <string name="text_size">Dimensione del testo</string>
     <string name="enabled">Abilitato</string>
     <string name="please_turn_on_double_tap_to_unlock">Attiva il doppio tocco per sbloccare</string>
-    <string name="launcher_failed_to_lock_device">Olauncher non è riuscito a bloccare il dispositivo.\nControlla le impostazioni dell\'app.</string>
+    <string name="launcher_failed_to_lock_device">Sakina Launcher non è riuscito a bloccare il dispositivo.\nControlla le impostazioni dell\'app.</string>
     <string name="long_press_to_select_app">Premere a lungo per selezionare l\'app</string>
     <string name="unable_to_open_app">Impossibile aprire l\'app</string>
     <string name="copied">Copiato</string>
@@ -87,17 +87,17 @@
     <string name="type_a_new_app_name_first">Digita prima un nuovo nome per l\'app</string>
     <string name="app_not_found">App non trovata</string>
     <string name="your_wallpaper_will_update_shortly">Lo sfondo verrà aggiornato a breve</string>
-    <string name="olauncher_is_not_default_launcher">Olauncher non è il programma di avvio predefinito.\nL\'aggiornamento giornaliero dello sfondo potrebbe non riuscire.</string>
+    <string name="olauncher_is_not_default_launcher">Sakina Launcher non è il programma di avvio predefinito.\nL\'aggiornamento giornaliero dello sfondo potrebbe non riuscire.</string>
     <string name="no_hidden_apps">Nessuna app nascosta</string>
     <string name="hidden_apps">App nascoste</string>
     <string name="adapter_show">mostra</string>
     <string name="adapter_hide">nascondi</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Stai usando il tuo telefono, o è il tuo telefono che sta usando te?</string>
-    <string name="about_olauncher">Info Olauncher</string>
+    <string name="about_olauncher">Info Sakina Launcher</string>
     <string name="screen_time">Tempo di schermo</string>
     <string name="did_you_know">Lo sapevate?</string>
     <string name="leave_a_review">Lascia una recensione</string>
-    <string name="review_message">Olauncher è e sarà sempre completamente gratuito. Non ha pubblicità. Non raccoglie dati. Ancora più importante, ti aiuta a ridurre il tempo trascorso davanti allo schermo e a vivere una vita digitale più sana.
+    <string name="review_message">Sakina Launcher è e sarà sempre completamente gratuito. Non ha pubblicità. Non raccoglie dati. Ancora più importante, ti aiuta a ridurre il tempo trascorso davanti allo schermo e a vivere una vita digitale più sana.
         \n\nCrediamo che passare a un launcher minimale sia un\'ottima decisione. Anche se siamo ovviamente di parte, ci auguriamo che l\'esperienza ti piaccia. Sentitevi liberi di condividere i tuoi pensieri con noi!</string>
     <string name="alignment_changed">Allineamento cambiato ✅</string>
     <string name="home_screen">Schermata principale</string>

@@ -9,11 +9,14 @@
     tools:context=".ui.HomeFragment">
 
     <!-- Placeholder layout for locking screen-->
+    <!-- Height is 48dp (not 1dp) so accessibility click events are reliably dispatched -->
     <FrameLayout
         android:id="@+id/lock"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:contentDescription="@string/lock_layout_description" />
+        android:layout_height="48dp"
+        android:contentDescription="@string/lock_layout_description"
+        android:focusable="false"
+        android:clickable="false" />
 
     <!-- Placeholder layout for showing recent apps-->
     <FrameLayout

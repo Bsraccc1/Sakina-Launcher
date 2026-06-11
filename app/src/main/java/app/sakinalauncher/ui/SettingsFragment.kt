@@ -125,14 +125,15 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
                 requireActivity().onBackPressedDispatcher.onBackPressed()
                 return@addCallback
             }
+            // Disable callback first to prevent recursion, then fade out dim
+            // and pop back simultaneously so text + dim disappear together
+            isEnabled = false
             dim.animate()
                 .alpha(0f)
                 .setDuration(SETTINGS_DIM_DURATION)
-                .withEndAction {
-                    isEnabled = false
-                    if (isAdded) requireActivity().onBackPressedDispatcher.onBackPressed()
-                }
                 .start()
+            // Pop immediately so the fragment exit transition overlaps with dim fade
+            if (isAdded) findNavController().popBackStack()
         }
     }
 

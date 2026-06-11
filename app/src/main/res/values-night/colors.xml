@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- In dark mode, use a lighter (less opaque) scrim since the wallpaper
+         is likely already dark and the settings content uses light-on-dark colors -->
+    <color name="settingsDimScrim">#50000000</color>
+</resources>
