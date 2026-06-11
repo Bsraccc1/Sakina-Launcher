@@ -1,14 +1,9 @@
 <resources>
     <string name="app_name" translatable="false">Sakina Launcher</string>
-    <string name="github" translatable="false">Github</string>
     <string name="lock_layout_description" translatable="false">lock layout description to be used a unique id to lock screen</string>
     <string name="recents_layout_description" translatable="false">recents layout description to be used a unique id to show recent apps</string>
     <string name="olauncher_pro" translatable="false">Olauncher Pro</string>
-    <string name="digital_minimalism" translatable="false"><u>Digital Minimalism</u></string>
-    <string name="new_app_note_safe" translatable="false"><u>Note to Self</u>\n<sub><small>(Ad-Free)</small></sub></string>
-    <string name="new_app_minimal_todo_lists" translatable="false"><u>Minimal Todo Lists</u>\n<sub><small>(Ad-Free)</small></sub></string>
     <string name="day_battery" formatted="false" translatable="false">%s, %d%%</string>
-    <string name="tag_0" translatable="false">0</string>
     <string name="tag_1" translatable="false">1</string>
     <string name="tag_2" translatable="false">2</string>
     <string name="tag_3" translatable="false">3</string>
@@ -24,24 +19,14 @@
     <string name="set_as_default_launcher">Set as default launcher</string>
     <string name="set_as_default_launcher_u"><u>Set as default launcher</u></string>
     <string name="set_as_default_launcher_first">Set Olauncher default first</string>
-    <string name="app_text_color">Text color</string>
     <string name="double_tap_to_lock_screen">Double tap to lock</string>
     <string name="home_button_show_recents">Home button for recents</string>
     <string name="admin_permission_message">Olauncher promises to use the accessibility permission responsibly. Olauncher does not collect or share any data.</string>
-    <string name="about">About</string>
     <string name="off">Off</string>
     <string name="on">On</string>
-    <string name="black">Black</string>
-    <string name="white">White</string>
     <string name="change_default_launcher">Change default launcher</string>
-    <string name="privacy">Privacy</string>
-    <string name="share">Share</string>
     <string name="share_now">Share now</string>
-    <string name="rate">Rate</string>
     <string name="rate_now">Rate now</string>
-    <string name="follow">Follow</string>
-    <string name="email">Email</string>
-    <string name="donate">Donate</string>
     <string name="swipe_up_for_apps">1. Swipe up for all apps\n2. Long press anywhere for settings</string>
     <string name="apps_on_home_screen">Apps on home screen</string>
     <string name="daily_wallpaper_update">Daily new wallpaper</string>
@@ -50,8 +35,6 @@
     <string name="right">Right</string>
     <string name="center">Center</string>
     <string name="home_layout_alignment">App alignment</string>
-    <string name="swipe_left_app">Swipe left app</string>
-    <string name="swipe_right_app">Swipe right app</string>
     <string name="swipe_left_for" translatable="false">Swipe left for</string>
     <string name="swipe_right_for" translatable="false">Swipe right for</string>
     <string name="_0">0</string>
@@ -63,9 +46,7 @@
     <string name="_6">6</string>
     <string name="_7">7</string>
     <string name="_8">8</string>
-    <string name="app_drawer_tips">Tip: Start typing an app name to auto-launch it</string>
     <string name="okay">Okay</string>
-    <string name="cool">Cool!</string>
     <string name="auto_show_keyboard">Auto show keyboard</string>
     <string name="hide">Hide</string>
     <string name="status_bar">Status bar on top</string>
@@ -92,7 +73,6 @@
     <!--         \n\nIf you have a moment to spare, could you please share Olauncher with others? Olauncher needs people. More importantly, people need Olauncher.</string>-->
     <string name="keyboard_message">Hi, keyboard is the fastest way to find and launch apps in Olauncher. Can we request you to keep this On for a few more days and then decide?
         \n\nThe choice is always yours.</string>
-    <string name="digital_wellbeing_message">If you want to set time limits for certain apps, Digital Wellbeing feature of Android can help you do it.           Please search for Digital Wellbeing in your phone settings and enable it.</string>
     <string name="app_usage_message">To show/hide your screen time on the home screen, please allow or disallow the app usage permission.
         \n\nNote: No app usage data is collected. Everything is processed on your device.</string>
     <string name="pro_message">Olauncher also has a pro version called Pro Launcher. It has extra features like weather, widgets, fonts, folders, AMOLED wallpapers, and so on.
@@ -100,30 +80,19 @@
     <string name="wallpaper_message">Olauncher offers beautiful new wallpapers daily. Give your homescreen a fresh new look every day, for free!
         \n\nWant to try it?</string>
     <string name="accessibility_service_description">The accessibility permission is required to enable double tap to lock and home button to show recent apps. Any data acquired by Olauncher via this service will not leave your device.</string>
-    <string name="support_olauncher_for_free">Support Olauncher for free by using our Amazon affiliate link.</string>
-    <string name="support_olauncher_message">Every time you buy something using our link, we get a small commission. Please save the link and use it whenever you shop online.\nThank you!</string>
-    <string name="open">Open link</string>
     <string name="copy">Copy</string>
     <string name="close">Close</string>
-    <string name="not_now">Not now</string>
-    <string name="public_roadmap">Olauncher public roadmap</string>
-    <string name="instagram">Instagram</string>
-    <string name="twitter">Developer</string>
-    <string name="roadmap">Roadmap</string>
     <string name="date">Date</string>
     <string name="date_only">Date only</string>
     <string name="bottom_on">Bottom: On</string>
     <string name="bottom_off">Bottom: Off</string>
     <string name="please_set_olauncher_as_default_first">Please set Olauncher as default first</string>
-    <string name="affiliate">Affiliate</string>
-    <string name="tip_start_typing_for_rename">Tip: Start typing for app RENAME option</string>
     <string name="hidden_apps_message">Note: Tap on \'Olauncher\' at the top of this Settings page to find your hidden apps.\n\nMore details available in our About page.</string>
     <string name="swipe_down_for">Swipe down for</string>
     <string name="search">Search</string>
     <string name="notifications">Notifications</string>
     <string name="accessibility_disclosure">Please turn on Olauncher\'s accessibility service in your device\'s settings to enable Double tap to lock or Home button for recent apps gestures.
     \n\nPlease note that this service is only used for these gestures. Our accessibility service does not collect or share any data.</string>
-    <string name="accept">Accept</string>
     <string name="permission">Permission</string>
     <string name="double_tap_lock">Double tap to lock</string>
     <string name="enable">Enable</string>
@@ -133,7 +102,6 @@
     <string name="delete">Uninstall</string>
     <string name="text_size">Text size</string>
     <string name="enabled">Enabled</string>
-    <string name="disabled">Disabled</string>
     <string name="please_turn_on_double_tap_to_unlock">Please turn on double tap to lock</string>
     <string name="launcher_failed_to_lock_device">Olauncher failed to lock device.\nPlease check your app settings.</string>
     <string name="long_press_to_select_app">Long press to select app</string>
@@ -142,15 +110,8 @@
     <string name="system_app_cannot_delete">System app, cannot delete</string>
     <string name="type_a_new_app_name_first">Type a new app name first</string>
     <string name="app_not_found">App not found</string>
-    <string name="unable_to_launch_app">Unable to launch app</string>
-    <string name="search_for_Launcher_or_home_app">Search for Launcher or Home app</string>
-    <string name="swipe_left_app_enabled">Swipe left app enabled</string>
-    <string name="swipe_right_app_enabled">Swipe right app enabled</string>
-    <string name="swipe_left_app_disabled">Swipe left app disabled</string>
-    <string name="swipe_right_app_disabled">Swipe right app disabled</string>
     <string name="your_wallpaper_will_update_shortly">Your wallpaper will update shortly</string>
     <string name="olauncher_is_not_default_launcher">Olauncher is not default. Wallpaper update will fail.</string>
-    <string name="long_press_to_enable">Long press to enable</string>
     <string name="no_hidden_apps">No hidden apps</string>
     <string name="hidden_apps">Hidden apps</string>
     <string name="adapter_show">Show</string>
@@ -158,7 +119,6 @@
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Are you using your phone, or is your phone using you?</string>
     <string name="about_olauncher">About and FAQs</string>
     <string name="screen_time">Screen time</string>
-    <string name="learn_more">Learn more</string>
     <string name="did_you_know">Did you know?</string>
     <string name="leave_a_review">Leave a review</string>
     <string name="review_message">Olauncher is free and always will be. It has no ads, collects no data, and reduces your screen time, resulting in a healthier life.
@@ -181,26 +141,13 @@
     <string name="send" translatable="false">Send</string>
     <string name="add" translatable="false">Add</string>
     <string name="save" translatable="false">Save</string>
-    <string name="edit" translatable="false">Edit</string>
     <string name="edit_note" translatable="false">Edit note</string>
-    <string name="edit_todo" translatable="false">Edit todo</string>
     <string name="delete_note" translatable="false">Delete note</string>
-    <string name="delete_todo" translatable="false">Delete todo</string>
-    <string name="note_delete_action" translatable="false">Delete</string>
     <string name="note_done" translatable="false">Done</string>
-    <string name="note_tools" translatable="false">Note tools</string>
-    <string name="move_to_todo" translatable="false">Move to Todo</string>
-    <string name="pin_note" translatable="false">Pin</string>
-    <string name="unpin_note" translatable="false">Unpin</string>
-    <string name="moved_to_todo" translatable="false">Moved to Todo</string>
-    <string name="undo" translatable="false">Undo</string>
-    <string name="open_todo" translatable="false">Open Todo</string>
-    <string name="open_notes" translatable="false">Open Notes</string>
     <string name="no_notes_yet" translatable="false">No notes yet</string>
     <string name="no_todos_yet" translatable="false">No todos yet</string>
     <string name="note_empty_message" translatable="false">Note cannot be empty</string>
     <string name="todo_empty_message" translatable="false">Todo cannot be empty</string>
-    <string name="menu_dots" translatable="false">...</string>
     <string name="start" translatable="false">Start</string>
     <string name="pause" translatable="false">Pause</string>
     <string name="resume" translatable="false">Resume</string>
@@ -214,7 +161,6 @@
     <string name="prayer_times">Prayer times</string>
     <string name="next_prayer">Next prayer</string>
     <string name="set_location_placeholder">Tap to change location</string>
-    <string name="city">City</string>
     <string name="prayer_region">Prayer location</string>
     <string name="prayer_source_setting">Prayer source</string>
     <string name="prayer_provider_kemenag">Kemenag/MyQuran</string>
@@ -222,14 +168,12 @@
     <string name="auto_detect_region">Auto detect location</string>
     <string name="location_not_found">Location not found</string>
     <string name="location_permission_denied">Location permission denied</string>
-    <string name="city_empty_message">City cannot be empty</string>
     <string name="no_results">No results found</string>
     <string name="loading_locations">Loading locations...</string>
     <string name="search_city_country">Search city or country</string>
     <string name="loading_prayer_times">Loading prayer times...</string>
     <string name="unable_to_load_prayer_times">Unable to load prayer times</string>
     <string name="cached_schedule">Cached</string>
-    <string name="next_prayer_value" formatted="false">Next prayer: %1$s %2$s</string>
     <string name="prayer_chip_value" formatted="false">%1$s\n%2$s</string>
     <string name="prayer_source">Source: Prayer provider</string>
     <string name="prayer_source_live" formatted="false">Source: %1$s - updated %2$s</string>
@@ -247,10 +191,8 @@
     <string name="dhikr_repetition" formatted="false">Read %1$d times</string>
     <string name="dhikr_position" formatted="false">%1$d of %2$d</string>
     <string name="dhikr_tap_to_count">Tap to count</string>
-    <string name="dhikr_tap_hint">Tap the circle to count · swipe to move</string>
     <string name="dhikr_section_translit">Transliteration</string>
     <string name="dhikr_section_meaning">Meaning</string>
-    <string name="dhikr_done">Completed</string>
     <string name="previous">Previous</string>
     <string name="next">Next</string>
     <string name="dzikir_source">Source: almanhaj.or.id</string>
@@ -259,7 +201,5 @@
     <string name="language">Language</string>
     <string name="language_english">English</string>
     <string name="language_indonesian">Indonesian</string>
-    <string name="open_source" translatable="false">Open source</string>
-    <string name="swipe_target" translatable="false">Swipe target</string>
     <string name="muslim" translatable="false">Muslim</string>
 </resources>

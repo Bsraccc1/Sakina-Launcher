@@ -23,9 +23,4 @@
     <!-- Spacing -->
     <dimen name="app_padding_vertical">12dp</dimen>
     <dimen name="home_app_padding_vertical">10dp</dimen>
-
-    <!-- App-drawer alphabet fast-scroller -->
-    <dimen name="alphabet_recycler_margin_bottom">16dp</dimen>
-    <dimen name="alphabet_recycler_margin_end">10dp</dimen>
-    <dimen name="alphabet_recycler_margin_start">320dp</dimen>
 </resources>

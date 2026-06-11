@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.SystemClock
 import android.text.InputType
-import android.util.TypedValue
 import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -430,30 +429,6 @@ class NotePanelFragment : Fragment() {
         requireContext().showToast(getString(R.string.copied))
     }
 
-    private fun copyNote(note: NoteMessage) {
-        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.notes), note.text))
-        requireContext().showToast(getString(R.string.copied))
-    }
-
-    private fun deleteNote(note: NoteMessage) {
-        store.deleteNote(note.id)
-        selectedNoteIds.remove(note.id)
-        render()
-    }
-
-    private fun showEditNote(note: NoteMessage, clearSelectionAfterSave: Boolean) {
-        showEditDialog(
-            title = getString(R.string.edit_note),
-            initialText = note.text,
-            emptyMessage = getString(R.string.note_empty_message),
-        ) { text ->
-            store.updateNote(note.id, text)
-            if (clearSelectionAfterSave) selectedNoteIds.remove(note.id)
-            render()
-        }
-    }
-
     private fun selectAllNotes() {
         val allIds = if (mode == NotePanelMode.NOTES) {
             store.getNotes().sortedByDescending { it.createdAtMillis }.map { it.id }
@@ -696,12 +671,6 @@ class NotePanelFragment : Fragment() {
 
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).toInt()
-    }
-
-    private fun themeColor(attr: Int): Int {
-        val outValue = TypedValue()
-        requireContext().theme.resolveAttribute(attr, outValue, true)
-        return outValue.data
     }
 
     private fun restoreTimerState(savedInstanceState: Bundle?) {
