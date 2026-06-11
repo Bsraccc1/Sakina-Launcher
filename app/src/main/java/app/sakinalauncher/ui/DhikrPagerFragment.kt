@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import androidx.fragment.app.Fragment
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
@@ -45,7 +46,6 @@ class DhikrPagerFragment : Fragment() {
         initSwipe()
         initTasbihCounter()
         initNavButtons()
-        binding.tasbihCounter.addPressScale(0.94f)
         render()
         app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
     }
@@ -151,17 +151,13 @@ class DhikrPagerFragment : Fragment() {
     }
 
     private fun animateCounter() {
-        binding.tasbihCounter.animate()
-            .scaleX(1.2f)
-            .scaleY(1.2f)
-            .setDuration(100)
-            .withEndAction {
-                binding.tasbihCounter.animate()
-                    .scaleX(1.0f)
-                    .scaleY(1.0f)
-                    .setDuration(100)
-                    .start()
-            }
+        val counter = _binding?.tasbihCounter ?: return
+        counter.animate().cancel()
+        counter.alpha = 0.4f
+        counter.animate()
+            .alpha(1.0f)
+            .setDuration(250)
+            .setInterpolator(DecelerateInterpolator())
             .start()
     }
 

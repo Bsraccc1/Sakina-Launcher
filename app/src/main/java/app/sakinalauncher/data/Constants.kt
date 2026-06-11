@@ -69,6 +69,7 @@ object Constants {
         const val POPPINS = 1
         const val SERIF = 2
         const val MONOSPACE = 3
+        const val OUTFIT = 4
     }
 
     object CharacterIndicator {

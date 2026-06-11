@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
 import androidx.core.os.LocaleListCompat
@@ -108,6 +109,31 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         initObservers()
 
         app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
+
+        // Fade the dim overlay in when entering settings, and fade it back out
+        // on exit. Duration is deliberately long enough to be clearly visible.
+        binding.settingsDim.alpha = 0f
+        binding.settingsDim.animate()
+            .alpha(1f)
+            .setDuration(SETTINGS_DIM_DURATION)
+            .start()
+
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            val dim = _binding?.settingsDim
+            if (dim == null) {
+                isEnabled = false
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+                return@addCallback
+            }
+            dim.animate()
+                .alpha(0f)
+                .setDuration(SETTINGS_DIM_DURATION)
+                .withEndAction {
+                    isEnabled = false
+                    if (isAdded) requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
+                .start()
+        }
     }
 
     override fun onClick(view: View) {
@@ -126,7 +152,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
         when (view.id) {
             R.id.olauncherHiddenApps -> showHiddenApps()
-            R.id.moreFeatures -> viewModel.showDialog.postValue(Constants.Dialog.PRO_MESSAGE)
+            R.id.moreFeatures -> requireContext().openUrl("https://github.com/Bsraccc1")
             R.id.screenTimeOnOff -> viewModel.showDialog.postValue(Constants.Dialog.DIGITAL_WELLBEING)
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
             R.id.setLauncher -> viewModel.resetLauncherLiveData.call()
@@ -184,7 +210,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
             R.id.aboutOlauncher -> {
                 prefs.aboutClicked = true
-                requireContext().openUrl(Constants.URL_ABOUT_OLAUNCHER)
+                viewModel.showDialog.postValue(Constants.Dialog.ABOUT)
             }
         }
     }
@@ -276,10 +302,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun initObservers() {
-        if (prefs.firstSettingsOpen) {
-            viewModel.showDialog.postValue(Constants.Dialog.ABOUT)
-            prefs.firstSettingsOpen = false
-        }
         viewModel.isOlauncherDefault.observe(viewLifecycleOwner) {
             if (it) {
                 binding.setLauncher.text = getString(R.string.change_default_launcher)
@@ -563,6 +585,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         val values = intArrayOf(
             Constants.FontFamily.SYSTEM,
             Constants.FontFamily.POPPINS,
+            Constants.FontFamily.OUTFIT,
             Constants.FontFamily.SERIF,
             Constants.FontFamily.MONOSPACE,
         )
@@ -1034,5 +1057,6 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     companion object {
         private const val REQUEST_LOCATION_PERMISSION = 901
+        private const val SETTINGS_DIM_DURATION = 450L
     }
 }

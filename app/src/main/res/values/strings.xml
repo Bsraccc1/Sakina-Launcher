@@ -56,6 +56,7 @@
     <string name="font">Font</string>
     <string name="font_system_default">System default</string>
     <string name="font_poppins">Poppins</string>
+    <string name="font_outfit">Outfit</string>
     <string name="font_serif">Serif</string>
     <string name="font_monospace">Monospace</string>
     <string name="gestures">Gestures</string>
@@ -118,6 +119,8 @@
     <string name="adapter_hide">Hide</string>
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Are you using your phone, or is your phone using you?</string>
     <string name="about_olauncher">About and FAQs</string>
+    <string name="about_title">About Sakina Launcher</string>
+    <string name="about_message">Sakina Launcher is a calm, minimal launcher with a built-in Muslim Center — prayer times, morning &amp; evening dhikr, and a tasbih counter.\n\nQuick FAQ:\n• Open Settings: long-press the home screen.\n• Lock the screen: double-tap home (enable the accessibility toggle in Settings first).\n• Notes, To-do &amp; Timer: swipe to open the note panel.\n• Hidden apps: long-press an app name in the app list.\n\nMade for focus, not distraction.</string>
     <string name="screen_time">Screen time</string>
     <string name="did_you_know">Did you know?</string>
     <string name="leave_a_review">Leave a review</string>
@@ -126,7 +129,7 @@
     <string name="alignment_changed">Alignment changed ✅</string>
     <string name="home_screen">Home screen</string>
     <string name="hey">Hey</string>
-    <string name="more_features">More features…</string>
+    <string name="more_features">More app</string>
     <string name="new_year_wish">Here\'s to a year better than any before. Happy new year!</string>
     <string name="new_year_wish_1">It doesn\'t matter how January went. You still have the rest of the year to do better than ever.</string>
     <string name="cheers">Cheers!</string>

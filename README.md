@@ -97,9 +97,9 @@ you actually open every day kept a single swipe away.
 
 <div align="center">
 
-| Home | Notes | Todo | Muslim Center | Focus Timer |
-| :---: | :---: | :---: | :---: | :---: |
-| ![Home](Assets/screenshots/home.webp) | ![Notes](Assets/screenshots/productive_panel.webp) | ![Todo](Assets/screenshots/todo_panel.webp) | ![Muslim Center](Assets/screenshots/muslim_center_latest.webp) | ![Timer](Assets/screenshots/timer_panel_latest.webp) |
+| Home | App Drawer | Settings | Todo | Muslim Center | Focus Timer |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| ![Home](Assets/screenshots/home.webp) | ![App Drawer](Assets/screenshots/app_drawer.webp) | ![Settings](Assets/screenshots/settings.webp) | ![Todo](Assets/screenshots/todo_panel.webp) | ![Muslim Center](Assets/screenshots/muslim_center_latest.webp) | ![Timer](Assets/screenshots/timer_panel_latest.webp) |
 
 </div>
 

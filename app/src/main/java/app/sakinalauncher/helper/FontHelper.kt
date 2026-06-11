@@ -29,6 +29,9 @@ object FontHelper {
             Constants.FontFamily.POPPINS ->
                 runCatching { ResourcesCompat.getFont(context, R.font.poppins_regular) }.getOrNull()
                     ?: Typeface.SANS_SERIF
+            Constants.FontFamily.OUTFIT ->
+                runCatching { ResourcesCompat.getFont(context, R.font.outfit_regular) }.getOrNull()
+                    ?: Typeface.SANS_SERIF
             Constants.FontFamily.SERIF -> Typeface.SERIF
             Constants.FontFamily.MONOSPACE -> Typeface.MONOSPACE
             else -> Typeface.SANS_SERIF
@@ -39,6 +42,7 @@ object FontHelper {
     fun labelFor(context: Context, fontFamily: Int): String {
         val res = when (fontFamily) {
             Constants.FontFamily.POPPINS -> R.string.font_poppins
+            Constants.FontFamily.OUTFIT -> R.string.font_outfit
             Constants.FontFamily.SERIF -> R.string.font_serif
             Constants.FontFamily.MONOSPACE -> R.string.font_monospace
             else -> R.string.font_system_default

@@ -27,4 +27,7 @@
     <!--Dialog surface: near-opaque dark so content behind is not visible-->
     <color name="dialogSurfaceSolid">#F21A1A1A</color>
 
+    <!--Settings dim scrim: darkens the wallpaper while the settings screen is open-->
+    <color name="settingsDimScrim">#B3000000</color>
+
 </resources>

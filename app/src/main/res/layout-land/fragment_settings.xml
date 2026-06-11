@@ -4,8 +4,16 @@
     android:id="@+id/mainActivityLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
-    android:background="?attr/primaryShadeDarkColor">
+    android:animateLayoutChanges="true">
+
+    <!-- Dim overlay: fades in when entering settings to darken the wallpaper,
+         and fades back out on exit. Sits behind all settings content. -->
+    <View
+        android:id="@+id/settingsDim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@color/settingsDimScrim" />
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -34,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                
                 android:orientation="vertical"
                 android:padding="12dp">
 
@@ -98,7 +106,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                
                 android:orientation="vertical"
                 android:padding="12dp">
 
@@ -207,7 +215,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="vertical"
@@ -595,7 +603,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                
                 android:clipChildren="false"
                 android:clipToPadding="false"
                 android:orientation="vertical"
@@ -905,7 +913,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/rounded_rect_shade_color"
+                
                 android:orientation="vertical"
                 android:padding="12dp">
 

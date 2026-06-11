@@ -94,6 +94,14 @@ class NotePanelAdapter(
             )
             repeatHint.isVisible = row.repeatLabel != null
             repeatHint.text = row.repeatLabel
+            if (!note.isDone) {
+                root.animate().cancel()
+                if (isSelected) {
+                    root.animate().alpha(0.8f).setDuration(100).start()
+                } else {
+                    root.animate().alpha(1f).setDuration(200).start()
+                }
+            }
             root.setOnClickListener { clickListener(note) }
         }
     }
@@ -120,6 +128,14 @@ class NotePanelAdapter(
                 if (todo.isDone) R.drawable.bg_todo_checkbox_done else R.drawable.bg_todo_checkbox
             )
             todoCheckIcon.isVisible = todo.isDone
+            if (!todo.isDone) {
+                root.animate().cancel()
+                if (isSelected) {
+                    root.animate().alpha(0.8f).setDuration(100).start()
+                } else {
+                    root.animate().alpha(1f).setDuration(200).start()
+                }
+            }
             root.setOnClickListener { clickListener(todo) }
         }
     }
