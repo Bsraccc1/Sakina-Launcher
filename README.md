@@ -144,9 +144,9 @@ shoulders of several open-source projects and services — every one of them is 
 The easiest way is to grab a prebuilt APK from the Releases page.
 
 1. Open the latest [GitHub Release](https://github.com/Bsraccc1/Sakina-Launcher/releases).
-2. Download `Sakina-Launcher-<version>.apk`.
+2. Download `Sakinah-Launcher-<version>.apk`.
 3. Install it on your Android 7.0+ device.
-4. Press **Home** and select **Sakina Launcher** as the default Home app.
+4. Press **Home** and select **Sakinah Launcher** as the default Home app.
 
 > [!TIP]
 > If Android blocks the install, enable **Install unknown apps** for the browser or file
@@ -155,6 +155,17 @@ The easiest way is to grab a prebuilt APK from the Releases page.
 > [!NOTE]
 > Debug builds use the `app.sakinalauncher.debug` application id, so they install side-by-side
 > with a release build.
+
+### Automatic release (GitHub Actions)
+
+Workflow: [`.github/workflows/release.yml`](.github/workflows/release.yml)
+
+| How | What happens |
+| --- | --- |
+| Push a tag `v*` | e.g. `git tag v6.6.1 && git push origin v6.6.1` → build + GitHub Release |
+| **Actions → Release APK → Run workflow** | Manual release; optional custom tag / pre-release |
+
+The workflow runs unit tests, builds `assembleRelease`, and uploads the APK to [Releases](https://github.com/Bsraccc1/Sakina-Launcher/releases).
 
 ---
 

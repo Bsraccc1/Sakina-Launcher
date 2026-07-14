@@ -1,3 +1,12 @@
+# Build a signed-for-distribution release APK and publish it to GitHub Releases.
+#
+# Triggers:
+#   - Push a tag:   git tag v6.6.1 && git push origin v6.6.1
+#   - Manual:       Actions → Release APK → Run workflow
+#
+# Note: Release build currently uses the debug keystore (see app/build.gradle).
+# For Play Store / production signing, add KEYSTORE secrets and switch signingConfig.
+
 name: Release APK
 
 on:
@@ -6,33 +15,46 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Optional release version/tag name (e.g. v6.5.0). Defaults to the app versionName.'
+      tag:
+        description: 'Release tag (e.g. v6.6.1). Leave empty to use versionName from app/build.gradle.'
         required: false
         default: ''
+      prerelease:
+        description: 'Mark this release as pre-release'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
+    name: Build & publish release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-          cache: 'gradle'
+          cache: gradle
 
-      - name: Grant execute permission for gradlew
+      - name: Make gradlew executable
         run: chmod +x gradlew
 
       - name: Generate debug keystore
+        # Matches app/build.gradle release.signingConfig = signingConfigs.debug
         run: |
           mkdir -p "$HOME/.android"
           if [ ! -f "$HOME/.android/debug.keystore" ]; then
@@ -47,49 +69,100 @@ jobs:
               -dname "CN=Android Debug,O=Android,C=US"
           fi
 
-      - name: Run unit tests
+      - name: Unit tests
         run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Build Release APK
+      - name: Build release APK
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Resolve version info
-        id: version
+      - name: Resolve version & tag
+        id: meta
         run: |
-          VERSION_NAME=$(grep "versionName" app/build.gradle | awk '{print $2}' | tr -d '"')
-          VERSION_CODE=$(grep "versionCode" app/build.gradle | awk '{print $2}')
-          INPUT_VERSION="${{ github.event.inputs.version }}"
-          if [ -n "$INPUT_VERSION" ]; then
-            RELEASE_TAG="$INPUT_VERSION"
-          elif [ "${{ github.ref_type }}" = "tag" ]; then
-            RELEASE_TAG="${{ github.ref_name }}"
+          set -euo pipefail
+          VERSION_NAME=$(grep -E '^\s*versionName\s+' app/build.gradle | head -1 | awk '{print $2}' | tr -d '"')
+          VERSION_CODE=$(grep -E '^\s*versionCode\s+' app/build.gradle | head -1 | awk '{print $2}')
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          elif [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
           else
-            RELEASE_TAG="$VERSION_NAME"
+            TAG="$VERSION_NAME"
           fi
-          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
-          echo "Built version: $VERSION_NAME (code: $VERSION_CODE), release tag: $RELEASE_TAG"
 
-      - name: Rename APK
+          # Ensure tag starts with v when versionName already has it
+          APK_NAME="Sakinah-Launcher-${VERSION_NAME}.apk"
+
+          {
+            echo "version_name=$VERSION_NAME"
+            echo "version_code=$VERSION_CODE"
+            echo "tag=$TAG"
+            echo "apk_name=$APK_NAME"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "versionName=$VERSION_NAME versionCode=$VERSION_CODE tag=$TAG apk=$APK_NAME"
+
+      - name: Stage APK
+        id: apk
         run: |
-          cd app/build/outputs/apk/release
-          ls -lh
-          APK_FILE=$(ls *.apk | head -1)
-          echo "Found: $APK_FILE"
-          cp "$APK_FILE" "Sakina-Launcher-${{ steps.version.outputs.name }}.apk"
-          ls -lh Sakina-Launcher-*.apk
+          set -euo pipefail
+          SRC=$(find app/build/outputs/apk/release -name "*.apk" -type f | head -1)
+          if [ -z "$SRC" ]; then
+            echo "No APK found under app/build/outputs/apk/release"
+            ls -laR app/build/outputs/apk || true
+            exit 1
+          fi
+          mkdir -p dist
+          OUT="dist/${{ steps.meta.outputs.apk_name }}"
+          cp "$SRC" "$OUT"
+          ls -lh "$OUT"
+          echo "path=$OUT" >> "$GITHUB_OUTPUT"
+          echo "size=$(du -h "$OUT" | cut -f1)" >> "$GITHUB_OUTPUT"
 
-      - name: Publish GitHub Release
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.meta.outputs.apk_name }}
+          path: ${{ steps.apk.outputs.path }}
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Create GitHub Release & upload APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: Sakinah Launcher ${{ steps.version.outputs.tag }}
-          body: |
-            Automated release of Sakinah Launcher ${{ steps.version.outputs.tag }}
-            (versionName: ${{ steps.version.outputs.name }}, versionCode: ${{ steps.version.outputs.code }}).
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Sakinah Launcher ${{ steps.meta.outputs.tag }}
           draft: false
-          prerelease: false
-          files: app/build/outputs/apk/release/Sakina-Launcher-${{ steps.version.outputs.name }}.apk
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.prerelease || false }}
+          generate_release_notes: true
+          body: |
+            ## Sakinah Launcher ${{ steps.meta.outputs.tag }}
+
+            | | |
+            |--|--|
+            | **versionName** | `${{ steps.meta.outputs.version_name }}` |
+            | **versionCode** | `${{ steps.meta.outputs.version_code }}` |
+            | **APK** | `${{ steps.meta.outputs.apk_name }}` |
+            | **Size** | ${{ steps.apk.outputs.size }} |
+
+            ### Install
+            1. Download the APK below
+            2. Allow install from unknown sources if prompted
+            3. Open the APK and install
+            4. Press **Home** → set **Sakinah Launcher** as default
+
+            > Built automatically by GitHub Actions. Signed with the project debug keystore (see `app/build.gradle`).
+          files: ${{ steps.apk.outputs.path }}
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          {
+            echo "### Release published"
+            echo ""
+            echo "- **Tag:** \`${{ steps.meta.outputs.tag }}\`"
+            echo "- **APK:** \`${{ steps.meta.outputs.apk_name }}\` (${{ steps.apk.outputs.size }})"
+            echo "- **Releases:** ${{ github.server_url }}/${{ github.repository }}/releases"
+          } >> "$GITHUB_STEP_SUMMARY"
