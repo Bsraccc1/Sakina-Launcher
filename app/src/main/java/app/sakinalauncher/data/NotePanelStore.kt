@@ -11,12 +11,24 @@ class NotePanelStore(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
 
+    @Volatile
+    private var notesCache: List<NoteMessage>? = null
+
+    @Volatile
+    private var todosCache: List<TodoItem>? = null
+
     fun getNotes(): List<NoteMessage> {
-        return NotePanelCodec.decodeNotes(prefs.getString(KEY_NOTES, null))
+        notesCache?.let { return it }
+        val decoded = NotePanelCodec.decodeNotes(prefs.getString(KEY_NOTES, null))
+        notesCache = decoded
+        return decoded
     }
 
     fun getTodos(): List<TodoItem> {
-        return NotePanelCodec.decodeTodos(prefs.getString(KEY_TODOS, null))
+        todosCache?.let { return it }
+        val decoded = NotePanelCodec.decodeTodos(prefs.getString(KEY_TODOS, null))
+        todosCache = decoded
+        return decoded
     }
 
     fun addNote(text: String, nowMillis: Long = System.currentTimeMillis()): NoteMessage {
@@ -204,14 +216,18 @@ class NotePanelStore(context: Context) {
     }
 
     private fun saveNotes(notes: List<NoteMessage>) {
+        notesCache = notes
         prefs.edit { putString(KEY_NOTES, NotePanelCodec.encodeNotes(notes)) }
     }
 
     private fun saveTodos(todos: List<TodoItem>) {
+        todosCache = todos
         prefs.edit { putString(KEY_TODOS, NotePanelCodec.encodeTodos(todos)) }
     }
 
     private fun saveNotesAndTodos(notes: List<NoteMessage>, todos: List<TodoItem>) {
+        notesCache = notes
+        todosCache = todos
         prefs.edit {
             putString(KEY_NOTES, NotePanelCodec.encodeNotes(notes))
             putString(KEY_TODOS, NotePanelCodec.encodeTodos(todos))

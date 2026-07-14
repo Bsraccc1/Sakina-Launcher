@@ -1,7 +1,10 @@
 package app.sakinalauncher.ui
 
+import android.app.Activity
+import android.appwidget.AppWidgetManager
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -16,16 +19,19 @@ import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.core.view.isVisible
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import app.sakinalauncher.MainActivity
 import app.sakinalauncher.MainViewModel
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
@@ -34,9 +40,11 @@ import app.sakinalauncher.data.NotePanelMode
 import app.sakinalauncher.data.NotePanelRows
 import app.sakinalauncher.data.NotePanelStore
 import app.sakinalauncher.data.Prefs
+import app.sakinalauncher.data.ProductiveWidgetStore
 import app.sakinalauncher.data.TodoItem
 import app.sakinalauncher.databinding.FragmentNotePanelBinding
 import app.sakinalauncher.helper.AppDialog
+import app.sakinalauncher.helper.ProductiveWidgetHostHelper
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.showKeyboard
@@ -48,9 +56,11 @@ import kotlin.math.abs
 class NotePanelFragment : Fragment() {
 
     private lateinit var store: NotePanelStore
+    private lateinit var widgetStore: ProductiveWidgetStore
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
     private lateinit var adapter: NotePanelAdapter
+    private var widgetHost: ProductiveWidgetHostHelper? = null
     private var mode: NotePanelMode = NotePanelMode.NOTES
     private var noteDraft: String = ""
     private var todoDraft: String = ""
@@ -60,10 +70,97 @@ class NotePanelFragment : Fragment() {
     private var timerRemainingMillis: Long = 0L
     private var timerRunning: Boolean = false
     private var selectedNoteIds: MutableSet<String> = mutableSetOf()
+    private var pendingWidgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
     private val smoothInterpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
 
     private var _binding: FragmentNotePanelBinding? = null
     private val binding get() = _binding!!
+
+    private val pickWidgetLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        clearSuppressHome()
+        ensureWidgetHost()
+        val host = widgetHost ?: return@registerForActivityResult
+        val id = result.data?.getIntExtra(
+            AppWidgetManager.EXTRA_APPWIDGET_ID,
+            pendingWidgetId,
+        ) ?: pendingWidgetId
+        if (id == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            return@registerForActivityResult
+        }
+        pendingWidgetId = id
+        // Prefer provider from the pick result when info is not ready yet (OEM race).
+        val providerFromIntent = readProviderExtra(result.data)
+        // ACTION_APPWIDGET_PICK often binds the id for our host already. If info is
+        // present, skip bind permission UI — launching it again can delete the id.
+        val info = host.providerInfo(id)
+        if (result.resultCode != Activity.RESULT_OK && info == null && providerFromIntent == null) {
+            host.deleteId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            return@registerForActivityResult
+        }
+        if (info != null) {
+            finishWidgetSetup(id, info.provider)
+            return@registerForActivityResult
+        }
+        val provider = providerFromIntent
+        if (provider == null) {
+            host.deleteId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            requireContext().showToast(getString(R.string.widget_add_failed))
+            return@registerForActivityResult
+        }
+        if (host.tryBind(id, provider)) {
+            finishWidgetSetup(id, provider)
+            return@registerForActivityResult
+        }
+        setSuppressHome()
+        bindWidgetLauncher.launch(host.createBindIntent(id, provider))
+    }
+
+    private val bindWidgetLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        clearSuppressHome()
+        ensureWidgetHost()
+        val host = widgetHost ?: return@registerForActivityResult
+        val id = pendingWidgetId
+        // If the system already bound the id (pick race) treat as success even when
+        // the bind activity returns a non-OK code.
+        val alreadyBound = id != AppWidgetManager.INVALID_APPWIDGET_ID &&
+            host.providerInfo(id) != null
+        if (result.resultCode != Activity.RESULT_OK && !alreadyBound) {
+            if (id != AppWidgetManager.INVALID_APPWIDGET_ID) host.deleteId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            requireContext().showToast(getString(R.string.widget_bind_denied))
+            return@registerForActivityResult
+        }
+        if (id == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            return@registerForActivityResult
+        }
+        finishWidgetSetup(id)
+    }
+
+    private val configureWidgetLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        clearSuppressHome()
+        ensureWidgetHost()
+        val host = widgetHost ?: return@registerForActivityResult
+        val id = pendingWidgetId
+        if (result.resultCode != Activity.RESULT_OK || id == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            if (id != AppWidgetManager.INVALID_APPWIDGET_ID) host.deleteId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            return@registerForActivityResult
+        }
+        host.persistBound(id)
+        pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+        if (mode != NotePanelMode.WIDGETS) mode = NotePanelMode.WIDGETS
+        render(animateIndicator = false)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -77,19 +174,22 @@ class NotePanelFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         store = NotePanelStore(requireContext())
+        widgetStore = ProductiveWidgetStore(requireContext())
         prefs = Prefs(requireContext())
+        widgetHost = ProductiveWidgetHostHelper(requireContext(), widgetStore)
         viewModel = activity?.run {
             ViewModelProvider(this)[MainViewModel::class.java]
         } ?: throw Exception("Invalid Activity")
         sourceDirection = savedInstanceState?.getString(KEY_SOURCE_DIRECTION)
             ?: arguments?.getString(Constants.Key.SWIPE_DIRECTION)
-        mode = readMode(savedInstanceState?.getString(KEY_MODE))
+        val requested = readMode(savedInstanceState?.getString(KEY_MODE))
             ?: readMode(arguments?.getString(Constants.Key.NOTE_PANEL_MODE))
-            ?: NotePanelMode.NOTES
+        mode = prefs.resolveProductiveOpenMode(requested)
         noteDraft = savedInstanceState?.getString(KEY_NOTE_DRAFT).orEmpty()
         todoDraft = savedInstanceState?.getString(KEY_TODO_DRAFT).orEmpty()
         restoreTimerState(savedInstanceState)
 
+        applyPanelSize()
         initAdapter()
         initSwipeFlow()
         initClickListeners()
@@ -99,16 +199,39 @@ class NotePanelFragment : Fragment() {
         binding.modeSwitch.post { positionSegmentIndicator(animate = false) }
     }
 
+    private fun applyPanelSize() {
+        val topWeight = Constants.ProductivePanelSize.topSpacerWeight(prefs.productivePanelSize)
+        val lp = binding.topSpacer.layoutParams as LinearLayout.LayoutParams
+        // Keep spacer tiny / gone so title sits like Muslim Center (top-leading).
+        lp.weight = topWeight.coerceAtLeast(0f)
+        lp.height = 0
+        binding.topSpacer.layoutParams = lp
+        binding.topSpacer.visibility =
+            if (topWeight <= 0f) View.GONE else View.VISIBLE
+        val margin = resources.getDimensionPixelSize(R.dimen.productive_edge_margin)
+        (binding.headerRow.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
+            marginStart = margin
+            marginEnd = margin
+            // 36dp matches Muslim Center root paddingTop (no double status padding).
+            topMargin = resources.getDimensionPixelSize(R.dimen.productive_header_top)
+        }
+        (binding.bottomChrome.layoutParams as? ViewGroup.MarginLayoutParams)?.apply {
+            marginStart = margin
+            marginEnd = margin
+        }
+        binding.widgetsLayout.setPadding(margin, 0, margin, 0)
+    }
+
     private fun initKeyboardInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
-            val navHeight = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
-            // Pad the panel by the keyboard height (minus the nav bar already
-            // accounted for) so the composer / action bar lift above the IME
-            // instead of being hidden behind it.
-            view.updatePadding(bottom = (imeHeight - navHeight).coerceAtLeast(0))
+            // Muslim Center does not pad status bars on the root — only IME/nav so
+            // the title shares the same top inset look (paddingTop 36dp on header).
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+            val nav = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+            view.updatePadding(top = 0, bottom = maxOf(ime, nav))
             insets
         }
+        ViewCompat.requestApplyInsets(binding.root)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -137,27 +260,21 @@ class NotePanelFragment : Fragment() {
         binding.notesTab.setOnClickListener { switchMode(NotePanelMode.NOTES) }
         binding.todoTab.setOnClickListener { switchMode(NotePanelMode.TODO) }
         binding.timerTab.setOnClickListener { switchMode(NotePanelMode.TIMER) }
+        binding.widgetsTab.setOnClickListener { switchMode(NotePanelMode.WIDGETS) }
         binding.timerValue.setOnClickListener { showDurationDialog() }
         binding.timerStart.setOnClickListener { startTimer() }
         binding.timerPause.setOnClickListener { togglePauseResume() }
         binding.timerReset.setOnClickListener { resetTimer() }
         binding.send.setOnClickListener { submitInput() }
+        binding.addWidgetButton.setOnClickListener { startAddWidget() }
         binding.noteActionDelete.setOnClickListener {
-            if (selectedNoteIds.size == 1) {
-                deleteSingleSelected()
-            } else {
-                deleteSelectedNotes()
-            }
+            if (selectedNoteIds.size == 1) deleteSingleSelected() else deleteSelectedNotes()
         }
         binding.noteActionEdit.setOnClickListener {
-            if (selectedNoteIds.size == 1) {
-                showEditNoteById(selectedNoteIds.first())
-            }
+            if (selectedNoteIds.size == 1) showEditNoteById(selectedNoteIds.first())
         }
         binding.noteActionCopy.setOnClickListener {
-            if (selectedNoteIds.size == 1) {
-                copySingleSelected()
-            }
+            if (selectedNoteIds.size == 1) copySingleSelected()
         }
         binding.noteActionDone.setOnClickListener {
             if (selectedNoteIds.size == 1) {
@@ -190,9 +307,9 @@ class NotePanelFragment : Fragment() {
         }
         binding.input.setOnKeyListener { _, keyCode, event ->
             val isSingleLineEnter = keyCode == KeyEvent.KEYCODE_ENTER &&
-                    event.action == KeyEvent.ACTION_DOWN &&
-                    event.isShiftPressed.not() &&
-                    binding.input.text?.contains('\n') != true
+                event.action == KeyEvent.ACTION_DOWN &&
+                event.isShiftPressed.not() &&
+                binding.input.text?.contains('\n') != true
             if (isSingleLineEnter) {
                 submitInput()
                 true
@@ -227,7 +344,7 @@ class NotePanelFragment : Fragment() {
                 val diffY = e2.y - start.y
                 if (abs(diffX) > abs(diffY) && abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                     handleHorizontalSwipe(
-                        if (diffX < 0) Constants.SwipeDirection.LEFT else Constants.SwipeDirection.RIGHT
+                        if (diffX < 0) Constants.SwipeDirection.LEFT else Constants.SwipeDirection.RIGHT,
                     )
                     return true
                 }
@@ -249,7 +366,7 @@ class NotePanelFragment : Fragment() {
                 context = requireContext(),
                 viewModel = viewModel,
                 prefs = prefs,
-                isLeft = direction == Constants.SwipeDirection.LEFT
+                isLeft = direction == Constants.SwipeDirection.LEFT,
             )
         } else {
             closePanel()
@@ -257,14 +374,14 @@ class NotePanelFragment : Fragment() {
     }
 
     private fun submitInput() {
-        if (mode == NotePanelMode.TIMER) return
+        if (mode == NotePanelMode.TIMER || mode == NotePanelMode.WIDGETS) return
         val text = binding.input.text?.toString()?.trim().orEmpty()
         if (text.isBlank()) {
             requireContext().showToast(
                 getString(
                     if (mode == NotePanelMode.NOTES) R.string.note_empty_message
-                    else R.string.todo_empty_message
-                )
+                    else R.string.todo_empty_message,
+                ),
             )
             return
         }
@@ -280,16 +397,26 @@ class NotePanelFragment : Fragment() {
         render(scrollToBottom = true)
     }
 
-    private fun render(scrollToBottom: Boolean = false) {
+    private fun render(scrollToBottom: Boolean = false, animateIndicator: Boolean = false) {
+        if (_binding == null) return
+        if (!prefs.isProductiveModeEnabled(mode)) {
+            mode = prefs.firstEnabledProductiveMode()
+        }
+        prefs.productiveLastMode = mode.name
+
+        updateModuleTabsVisibility()
+
         val notes = if (mode == NotePanelMode.NOTES) store.getNotes() else emptyList()
         val todos = if (mode == NotePanelMode.TODO) store.getTodos() else emptyList()
-        if (mode == NotePanelMode.TIMER && selectedNoteIds.isNotEmpty()) {
+        // Selection is list-mode state only; never carry ids across modules.
+        if (mode != NotePanelMode.NOTES && mode != NotePanelMode.TODO && selectedNoteIds.isNotEmpty()) {
             selectedNoteIds.clear()
         }
+        val labels = notePanelLabels()
         val rows = when (mode) {
-            NotePanelMode.NOTES -> NotePanelRows.noteRows(notes)
-            NotePanelMode.TODO -> NotePanelRows.todoRows(todos)
-            NotePanelMode.TIMER -> emptyList()
+            NotePanelMode.NOTES -> NotePanelRows.noteRows(notes, labels = labels)
+            NotePanelMode.TODO -> NotePanelRows.todoRows(todos, labels = labels)
+            NotePanelMode.TIMER, NotePanelMode.WIDGETS -> emptyList()
         }
         val hasSelection = selectedNoteIds.isNotEmpty()
 
@@ -298,51 +425,215 @@ class NotePanelFragment : Fragment() {
                 NotePanelMode.NOTES -> R.string.notes
                 NotePanelMode.TODO -> R.string.todo
                 NotePanelMode.TIMER -> R.string.timer
-            }
+                NotePanelMode.WIDGETS -> R.string.widgets
+            },
         )
         binding.input.hint = getString(if (mode == NotePanelMode.NOTES) R.string.write_note else R.string.write_todo)
         binding.send.contentDescription = getString(if (mode == NotePanelMode.NOTES) R.string.send else R.string.add)
-        // Selection is shown by the sliding pill indicator (segmentIndicator),
-        // so the individual tabs stay transparent and only adjust their alpha.
+
         binding.notesTab.alpha = if (mode == NotePanelMode.NOTES) 1.0f else 0.62f
         binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
         binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
-        binding.recyclerView.isVisible = mode != NotePanelMode.TIMER
-        binding.composer.isVisible = mode != NotePanelMode.TIMER && !hasSelection
+        binding.widgetsTab.alpha = if (mode == NotePanelMode.WIDGETS) 1.0f else 0.62f
+
+        val showList = mode == NotePanelMode.NOTES || mode == NotePanelMode.TODO
+        binding.recyclerView.isVisible = showList
+        // Collapse bottom chrome on Timer/Widgets so minHeight does not leave an empty strip.
+        binding.bottomChrome.isVisible = showList
+        binding.composer.isVisible = showList && !hasSelection
         binding.noteSelectionCount.text = selectedNoteIds.size.toString()
         val total = if (mode == NotePanelMode.NOTES) store.getNotes().size else store.getTodos().size
         val allSelected = total > 0 && selectedNoteIds.size >= total
         binding.noteActionSelectAll.alpha = if (allSelected) 1.0f else 0.7f
         renderNoteActionBar(hasSelection, selectedNoteIds.size > 1)
         binding.timerLayout.isVisible = mode == NotePanelMode.TIMER
-        binding.emptyState.text =
-            getString(if (mode == NotePanelMode.NOTES) R.string.no_notes_yet else R.string.no_todos_yet)
-        binding.emptyState.isVisible = rows.isEmpty() && mode != NotePanelMode.TIMER
+        binding.widgetsLayout.isVisible = mode == NotePanelMode.WIDGETS
+
+        binding.emptyState.text = getString(
+            when (mode) {
+                NotePanelMode.NOTES -> R.string.no_notes_yet
+                NotePanelMode.TODO -> R.string.no_todos_yet
+                else -> R.string.no_notes_yet
+            },
+        )
+        binding.emptyState.isVisible = rows.isEmpty() && showList
         adapter.setRows(rows, selectedNoteIds)
         renderTimer()
+
+        if (mode == NotePanelMode.WIDGETS) {
+            widgetHost?.startListening()
+            renderWidgets()
+        } else {
+            widgetHost?.stopListening()
+            binding.widgetsContainer.removeAllViews()
+        }
+
+        binding.modeSwitch.post { positionSegmentIndicator(animate = animateIndicator) }
 
         if (scrollToBottom && rows.isNotEmpty()) {
             binding.recyclerView.post { binding.recyclerView.scrollToPosition(rows.lastIndex) }
         }
     }
 
+    private fun updateModuleTabsVisibility() {
+        binding.notesTab.isVisible = prefs.productiveWidgetNotes
+        binding.todoTab.isVisible = prefs.productiveWidgetTodo
+        binding.timerTab.isVisible = prefs.productiveWidgetTimer
+        binding.widgetsTab.isVisible = prefs.productiveWidgetWidgets
+    }
+
+    private fun renderWidgets(retryPending: Boolean = false) {
+        ensureWidgetHost()
+        val host = widgetHost ?: return
+        // Re-adopt system-bound widgets that never made it into the store (e.g. after
+        // older builds popped this fragment during the pick flow).
+        host.reconcileStoreFromBoundProviders()
+        val hasWidgets = widgetStore.getWidgets().isNotEmpty()
+        binding.widgetsEmpty.isVisible = !hasWidgets
+        binding.widgetsScroll.isVisible = hasWidgets
+        binding.widgetsHint.isVisible = hasWidgets
+        binding.widgetsContainer.post {
+            if (_binding == null || mode != NotePanelMode.WIDGETS) return@post
+            host.inflateInto(binding.widgetsContainer) { id -> confirmRemoveWidget(id) }
+            val stillHas = widgetStore.getWidgets().isNotEmpty()
+            binding.widgetsEmpty.isVisible = !stillHas
+            binding.widgetsScroll.isVisible = stillHas
+            binding.widgetsHint.isVisible = stillHas
+            if (retryPending && stillHas) {
+                val needsRetry = widgetStore.getWidgets().any { bound ->
+                    host.providerInfo(bound.appWidgetId) == null
+                }
+                if (needsRetry) {
+                    binding.widgetsContainer.postDelayed({
+                        if (_binding != null && mode == NotePanelMode.WIDGETS) {
+                            renderWidgets(retryPending = false)
+                        }
+                    }, 350L)
+                }
+            }
+        }
+    }
+
+    private fun startAddWidget() {
+        ensureWidgetHost()
+        val host = widgetHost ?: return
+        val id = host.allocateId()
+        pendingWidgetId = id
+        setSuppressHome()
+        runCatching {
+            pickWidgetLauncher.launch(host.createPickIntent(id))
+        }.onFailure {
+            clearSuppressHome()
+            host.deleteId(id)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            requireContext().showToast(getString(R.string.widget_add_failed))
+        }
+    }
+
+    private fun finishWidgetSetup(appWidgetId: Int, knownProvider: ComponentName? = null) {
+        ensureWidgetHost()
+        val host = widgetHost ?: return
+        var info = host.providerInfo(appWidgetId)
+        if (info == null && knownProvider != null) {
+            // Bind may have succeeded; info can lag a frame on some OEMs.
+            host.tryBind(appWidgetId, knownProvider)
+            info = host.providerInfo(appWidgetId)
+        }
+        if (info == null) {
+            // Persist provider string if we know it so restore can rebind later.
+            if (knownProvider != null && host.persistBound(appWidgetId, knownProvider)) {
+                pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+                if (mode != NotePanelMode.WIDGETS) mode = NotePanelMode.WIDGETS
+                render(animateIndicator = false)
+                return
+            }
+            host.deleteId(appWidgetId)
+            pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+            requireContext().showToast(getString(R.string.widget_add_failed))
+            return
+        }
+        if (host.needsConfigure(info)) {
+            pendingWidgetId = appWidgetId
+            setSuppressHome()
+            runCatching {
+                configureWidgetLauncher.launch(host.createConfigureIntent(appWidgetId, info))
+            }.onFailure {
+                clearSuppressHome()
+                host.persistBound(appWidgetId, knownProvider ?: info.provider)
+                pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+                if (mode != NotePanelMode.WIDGETS) mode = NotePanelMode.WIDGETS
+                render(animateIndicator = false)
+            }
+            return
+        }
+        host.persistBound(appWidgetId, knownProvider ?: info.provider)
+        pendingWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+        if (mode != NotePanelMode.WIDGETS) mode = NotePanelMode.WIDGETS
+        render(animateIndicator = false)
+    }
+
+    private fun ensureWidgetHost() {
+        if (widgetHost == null && _binding != null) {
+            if (!::widgetStore.isInitialized) {
+                widgetStore = ProductiveWidgetStore(requireContext())
+            }
+            widgetHost = ProductiveWidgetHostHelper(requireContext(), widgetStore)
+        }
+    }
+
+    private fun setSuppressHome() {
+        (activity as? MainActivity)?.suppressHomeOnBackground = true
+    }
+
+    private fun clearSuppressHome() {
+        (activity as? MainActivity)?.suppressHomeOnBackground = false
+    }
+
+    @Suppress("DEPRECATION")
+    private fun readProviderExtra(data: android.content.Intent?): ComponentName? {
+        if (data == null) return null
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, ComponentName::class.java)
+        } else {
+            data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER) as? ComponentName
+        }
+    }
+
+    private fun confirmRemoveWidget(appWidgetId: Int) {
+        val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
+        view.findViewById<TextView>(R.id.dialogTitle).text = getString(R.string.remove_widget)
+        // No text field for confirm-only dialogs — hide empty input container.
+        view.findViewById<LinearLayout>(R.id.dialogInputContainer).isVisible = false
+        val positive = view.findViewById<TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<TextView>(R.id.dialogNegative)
+        positive.setText(R.string.remove)
+        negative.setText(R.string.close)
+        val dialog = AppDialog.create(requireContext(), view, widthScale = prefs.productiveDialogWidthScale)
+        negative.setOnClickListener { dialog.dismiss() }
+        positive.setOnClickListener {
+            widgetHost?.deleteId(appWidgetId)
+            requireContext().showToast(getString(R.string.widget_removed))
+            renderWidgets()
+            dialog.dismiss()
+        }
+        dialog.show()
+    }
+
     private fun renderNoteActionBar(isSelected: Boolean, isMultiSelect: Boolean) {
+        val bar = binding.noteActionBarScroll
         if (isSelected) {
-            // Delete must stay available in BOTH single and multi-select so the
-            // user can batch-delete selected notes/todos. Edit and copy only make
-            // sense for a single item, so they hide during multi-select.
             binding.noteActionDelete.isVisible = true
             binding.noteActionEdit.isVisible = !isMultiSelect
             binding.noteActionCopy.isVisible = !isMultiSelect
             binding.noteActionDone.isVisible = true
-            if (binding.noteActionBar.isVisible.not()) {
-                binding.noteActionBar.alpha = 0f
-                binding.noteActionBar.translationY = dp(18).toFloat()
-                binding.noteActionBar.scaleX = 0.96f
-                binding.noteActionBar.scaleY = 0.96f
-                binding.noteActionBar.isVisible = true
+            if (bar.isVisible.not()) {
+                bar.alpha = 0f
+                bar.translationY = dp(18).toFloat()
+                bar.scaleX = 0.96f
+                bar.scaleY = 0.96f
+                bar.isVisible = true
             }
-            binding.noteActionBar.animate()
+            bar.animate()
                 .alpha(1f)
                 .translationY(0f)
                 .scaleX(1f)
@@ -350,8 +641,8 @@ class NotePanelFragment : Fragment() {
                 .setDuration(190L)
                 .setInterpolator(smoothInterpolator)
                 .start()
-        } else if (binding.noteActionBar.isVisible) {
-            binding.noteActionBar.animate()
+        } else if (bar.isVisible) {
+            bar.animate()
                 .alpha(0f)
                 .translationY(dp(18).toFloat())
                 .scaleX(0.96f)
@@ -359,7 +650,7 @@ class NotePanelFragment : Fragment() {
                 .setDuration(150L)
                 .setInterpolator(smoothInterpolator)
                 .withEndAction {
-                    if (selectedNoteIds.isEmpty()) binding.noteActionBar.isVisible = false
+                    if (selectedNoteIds.isEmpty()) bar.isVisible = false
                 }
                 .start()
         }
@@ -382,11 +673,7 @@ class NotePanelFragment : Fragment() {
 
     private fun deleteSingleSelected() {
         val id = selectedNoteIds.first()
-        if (mode == NotePanelMode.TODO) {
-            store.deleteTodo(id)
-        } else {
-            store.deleteNote(id)
-        }
+        if (mode == NotePanelMode.TODO) store.deleteTodo(id) else store.deleteNote(id)
         selectedNoteIds.remove(id)
         render()
     }
@@ -462,15 +749,14 @@ class NotePanelFragment : Fragment() {
     }
 
     private fun switchMode(nextMode: NotePanelMode) {
+        if (!prefs.isProductiveModeEnabled(nextMode)) return
         if (mode == nextMode) return
         storeCurrentDraft()
         mode = nextMode
-        if (mode == NotePanelMode.TIMER) binding.input.hideKeyboard()
+        selectedNoteIds.clear()
+        if (mode == NotePanelMode.TIMER || mode == NotePanelMode.WIDGETS) binding.input.hideKeyboard()
         binding.input.setText(draftForMode())
         binding.input.setSelection(binding.input.text?.length ?: 0)
-        // Slide the selected pill indicator to the new segment.
-        positionSegmentIndicator(animate = true)
-        // Crossfade the content area so the new mode appears smoothly.
         val content = binding.contentFrame
         content.animate().cancel()
         content.animate()
@@ -479,7 +765,7 @@ class NotePanelFragment : Fragment() {
             .setInterpolator(smoothInterpolator)
             .withEndAction {
                 if (_binding == null) return@withEndAction
-                render()
+                render(animateIndicator = true)
                 content.alpha = 0f
                 content.animate()
                     .alpha(1f)
@@ -492,22 +778,40 @@ class NotePanelFragment : Fragment() {
 
     private fun positionSegmentIndicator(animate: Boolean) {
         if (_binding == null) return
-        val index = when (mode) {
-            NotePanelMode.NOTES -> 0
-            NotePanelMode.TODO -> 1
-            NotePanelMode.TIMER -> 2
+        val active = when (mode) {
+            NotePanelMode.NOTES -> binding.notesTab
+            NotePanelMode.TODO -> binding.todoTab
+            NotePanelMode.TIMER -> binding.timerTab
+            NotePanelMode.WIDGETS -> binding.widgetsTab
         }
-        val tabWidth = binding.notesTab.width.takeIf { it > 0 } ?: dp(66)
-        val target = (index * tabWidth).toFloat()
-        binding.segmentIndicator.animate().cancel()
-        if (animate) {
-            binding.segmentIndicator.animate()
-                .translationX(target)
-                .setDuration(200L)
-                .setInterpolator(smoothInterpolator)
-                .start()
+        if (!active.isVisible) return
+
+        fun applyPosition() {
+            if (_binding == null || !active.isVisible) return
+            val tabWidth = active.width.takeIf { it > 0 }
+                ?: resources.getDimensionPixelSize(R.dimen.productive_segment_tab_width)
+            binding.segmentIndicator.layoutParams = binding.segmentIndicator.layoutParams.apply {
+                width = tabWidth
+            }
+            // Use laid-out coordinates so LTR/RTL and hidden tabs stay correct
+            // without hand-rolled index math (translationX is always absolute).
+            val target = (binding.segmentTabs.left + active.left).toFloat()
+            binding.segmentIndicator.animate().cancel()
+            if (animate) {
+                binding.segmentIndicator.animate()
+                    .translationX(target)
+                    .setDuration(200L)
+                    .setInterpolator(smoothInterpolator)
+                    .start()
+            } else {
+                binding.segmentIndicator.translationX = target
+            }
+        }
+
+        if (active.width <= 0 || binding.segmentTabs.width <= 0) {
+            binding.modeSwitch.post { applyPosition() }
         } else {
-            binding.segmentIndicator.translationX = target
+            applyPosition()
         }
     }
 
@@ -516,7 +820,7 @@ class NotePanelFragment : Fragment() {
         when (mode) {
             NotePanelMode.NOTES -> noteDraft = text
             NotePanelMode.TODO -> todoDraft = text
-            NotePanelMode.TIMER -> Unit
+            NotePanelMode.TIMER, NotePanelMode.WIDGETS -> Unit
         }
     }
 
@@ -524,7 +828,7 @@ class NotePanelFragment : Fragment() {
         return when (mode) {
             NotePanelMode.NOTES -> noteDraft
             NotePanelMode.TODO -> todoDraft
-            NotePanelMode.TIMER -> ""
+            NotePanelMode.TIMER, NotePanelMode.WIDGETS -> ""
         }
     }
 
@@ -629,16 +933,21 @@ class NotePanelFragment : Fragment() {
         }
 
         val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
-        view.findViewById<android.widget.TextView>(R.id.dialogTitle).setText(R.string.duration)
+        view.findViewById<TextView>(R.id.dialogTitle).setText(R.string.duration)
         val container = view.findViewById<LinearLayout>(R.id.dialogInputContainer)
         container.addView(minutesInput)
         container.addView(secondsInput)
-        val positive = view.findViewById<android.widget.TextView>(R.id.dialogPositive)
-        val negative = view.findViewById<android.widget.TextView>(R.id.dialogNegative)
+        val positive = view.findViewById<TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<TextView>(R.id.dialogNegative)
         positive.setText(R.string.save)
         negative.setText(R.string.close)
 
-        val dialog = AppDialog.create(context, view)
+        val dialog = AppDialog.create(
+            context,
+            view,
+            widthScale = prefs.productiveDialogWidthScale,
+            onShow = { minutesInput.showKeyboard() },
+        )
         negative.setOnClickListener { dialog.dismiss() }
         positive.setOnClickListener {
             val minutes = minutesInput.text?.toString()?.toIntOrNull()?.coerceIn(0, 999) ?: 0
@@ -659,7 +968,6 @@ class NotePanelFragment : Fragment() {
             renderTimer()
             dialog.dismiss()
         }
-        dialog.setOnShowListener { minutesInput.showKeyboard() }
         dialog.show()
     }
 
@@ -667,6 +975,15 @@ class NotePanelFragment : Fragment() {
         val totalSeconds = ((millis.coerceAtLeast(0L) + 999L) / 1000L)
         return String.format(Locale.getDefault(), "%02d:%02d", totalSeconds / 60L, totalSeconds % 60L)
     }
+
+    private fun notePanelLabels(): NotePanelRows.Labels = NotePanelRows.Labels(
+        pinned = getString(R.string.notes_section_pinned),
+        active = getString(R.string.todo_section_active),
+        done = getString(R.string.todo_section_done),
+        today = getString(R.string.today),
+        yesterday = getString(R.string.yesterday),
+        lastFormat = getString(R.string.note_last_format),
+    )
 
     private fun readMode(value: String?): NotePanelMode? {
         return value?.let { runCatching { NotePanelMode.valueOf(it) }.getOrNull() }
@@ -707,20 +1024,29 @@ class NotePanelFragment : Fragment() {
             setText(initialText)
             setSelectAllOnFocus(true)
             maxLines = 4
+            minLines = 1
+            inputType = InputType.TYPE_CLASS_TEXT or
+                InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                InputType.TYPE_TEXT_FLAG_MULTI_LINE
             setBackgroundResource(R.drawable.bg_note_composer)
             val pad = dp(14)
             setPadding(pad, pad, pad, pad)
         }
 
         val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
-        view.findViewById<android.widget.TextView>(R.id.dialogTitle).text = title
+        view.findViewById<TextView>(R.id.dialogTitle).text = title
         view.findViewById<LinearLayout>(R.id.dialogInputContainer).addView(input)
-        val positive = view.findViewById<android.widget.TextView>(R.id.dialogPositive)
-        val negative = view.findViewById<android.widget.TextView>(R.id.dialogNegative)
+        val positive = view.findViewById<TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<TextView>(R.id.dialogNegative)
         positive.setText(R.string.save)
         negative.setText(R.string.close)
 
-        val dialog = AppDialog.create(requireContext(), view)
+        val dialog = AppDialog.create(
+            requireContext(),
+            view,
+            widthScale = prefs.productiveDialogWidthScale,
+            onShow = { input.showKeyboard() },
+        )
         negative.setOnClickListener { dialog.dismiss() }
         positive.setOnClickListener {
             val text = input.text?.toString()?.trim().orEmpty()
@@ -731,7 +1057,6 @@ class NotePanelFragment : Fragment() {
             onSave(text)
             dialog.dismiss()
         }
-        dialog.setOnShowListener { input.showKeyboard() }
         dialog.show()
     }
 
@@ -740,12 +1065,26 @@ class NotePanelFragment : Fragment() {
             prefs.pomodoroTimerRemainingMillis = timerRemainingMillis
         }
         binding.input.hideKeyboard()
+        widgetHost?.stopListening()
         super.onStop()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        applyPanelSize()
+        if (mode == NotePanelMode.WIDGETS) {
+            ensureWidgetHost()
+            widgetHost?.startListening()
+            renderWidgets(retryPending = true)
+        }
     }
 
     override fun onDestroyView() {
         timer?.cancel()
         timer = null
+        clearSuppressHome()
+        widgetHost?.stopListening()
+        widgetHost = null
         super.onDestroyView()
         _binding = null
     }

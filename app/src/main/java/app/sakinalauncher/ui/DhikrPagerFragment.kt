@@ -12,6 +12,7 @@ import app.sakinalauncher.data.muslim.DhikrContent
 import app.sakinalauncher.data.muslim.DhikrPeriod
 import app.sakinalauncher.databinding.FragmentDhikrPagerBinding
 import app.sakinalauncher.helper.addPressScale
+import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.listener.OnSwipeTouchListener
 
 class DhikrPagerFragment : Fragment() {
@@ -49,6 +50,7 @@ class DhikrPagerFragment : Fragment() {
         initTasbihCounter()
         initNavButtons()
         render()
+        binding.scrollView.addSystemBarInsetsPadding()
         app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
     }
 

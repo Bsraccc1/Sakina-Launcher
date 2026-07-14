@@ -61,6 +61,14 @@ class MainActivity : AppCompatActivity() {
     private var isResumed = false
     private var profileReceiver: BroadcastReceiver? = null
 
+    /**
+     * When true, [onStop]/[onUserLeaveHint] must not pop the nav stack back to home.
+     * Productive widget pick/bind/configure start another activity; without this the
+     * NotePanelFragment is destroyed before the activity result can be handled, so
+     * widgets bind at the system level but never appear in the Productive store.
+     */
+    var suppressHomeOnBackground: Boolean = false
+
     // Launcher to request READ_EXTERNAL_STORAGE (needed on API <= 32 to read the
     // user's wallpaper when we are not the default launcher).
     private val wallpaperPermissionLauncher =
@@ -149,17 +157,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         isResumed = false
-        backToHomeScreen()
+        if (!suppressHomeOnBackground) backToHomeScreen()
         super.onStop()
     }
 
     override fun onUserLeaveHint() {
-        backToHomeScreen()
+        if (!suppressHomeOnBackground) backToHomeScreen()
         super.onUserLeaveHint()
     }
 
     override fun onNewIntent(intent: Intent?) {
         val alreadyHome = navController.currentDestination?.id == R.id.mainFragment
+        // Home/recents button should still return home even during widget flow.
+        suppressHomeOnBackground = false
         backToHomeScreen()
         if (alreadyHome && isResumed && prefs.homeButtonShowRecents)
             viewModel.showRecentApps.call()

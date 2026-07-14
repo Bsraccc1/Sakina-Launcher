@@ -5,12 +5,12 @@
     android:clickable="true"
     android:focusable="true"
     android:orientation="vertical"
-    android:paddingHorizontal="30dp"
+    android:paddingHorizontal="@dimen/productive_edge_margin"
     android:paddingVertical="6dp">
 
     <LinearLayout
         android:id="@+id/messageBubble"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_note_bubble"
         android:minWidth="120dp"
@@ -22,10 +22,9 @@
         <TextView
             android:id="@+id/messageText"
             style="@style/TextMedium"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lineSpacingExtra="2dp"
-            android:maxWidth="292dp"
             android:text="@string/notes" />
 
         <TextView

@@ -21,6 +21,7 @@ import app.sakinalauncher.data.AppModel
 import app.sakinalauncher.data.Constants
 import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.databinding.FragmentAppDrawerBinding
+import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.helper.deletePinnedShortcut
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.isEinkDisplay
@@ -72,13 +73,14 @@ class AppDrawerFragment : Fragment() {
         initAdapter()
         initObservers()
         initClickListeners()
+        binding.root.addSystemBarInsetsPadding()
     }
 
     private fun initViews() {
         if (flag == Constants.FLAG_HIDDEN_APPS)
             binding.search.queryHint = getString(R.string.hidden_apps)
         else if (flag in Constants.FLAG_SET_HOME_APP_1..Constants.FLAG_SET_CALENDAR_APP)
-            binding.search.queryHint = "Please select an app"
+            binding.search.queryHint = getString(R.string.please_select_app)
         try {
             val searchTextView = binding.search.findViewById<TextView>(R.id.search_src_text)
             if (searchTextView != null) searchTextView.gravity = prefs.appLabelAlignment

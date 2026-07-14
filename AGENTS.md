@@ -1,101 +1,63 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+Guidance for coding agents working in this repository.
 
 ## Project Overview
 
-Olauncher is a minimal Android launcher app. "AF" = Ad-Free. Single-activity app with fragment navigation.
+**Sakinah Launcher** is a minimal Android home-screen replacement (launcher) with Muslim-focused features (prayer times, dhikr) and a Productive panel (notes, todo, timer, widgets). It is based on the open-source [Olauncher](https://github.com/tanujnotes/Olauncher) foundation, but this repo is **not** upstream Olauncher — app identity, package, and features are Sakinah’s.
 
-**Package**: `app.sakinalauncher`
-**Min SDK**: 24 (Android 7.0)
-**Target SDK**: 35 (Android 15)
-**Language**: Kotlin
-**Build**: Gradle with Java 17
+| | |
+|--|--|
+| **App name** | Sakinah Launcher |
+| **Package** | `app.sakinalauncher` |
+| **Min SDK** | 24 (Android 7.0) |
+| **Target SDK** | 35 (Android 15) |
+| **Language** | Kotlin |
+| **Build** | Gradle, Java 17+ (JDK 21 OK) |
 
 ## Build Commands
 
+From the **repo root** (`sakina-launcher` / `Sakina-Launcher`), not an `Olauncher` subfolder:
+
 ```bash
-# Build debug APK
-cd Olauncher
+# Windows
+.\gradlew.bat assembleDebug
+.\gradlew.bat assembleRelease
+.\gradlew.bat installDebug
+.\gradlew.bat clean
+.\gradlew.bat check
+
+# Unix
 ./gradlew assembleDebug
-
-# Build release APK
-./gradlew assembleRelease
-
-# Install debug to device
-./gradlew installDebug
-
-# Clean build
-./gradlew clean
-
-# Check for errors without building
-./gradlew check
 ```
 
-On Windows, use `gradlew.bat` instead of `./gradlew`.
+Requires `JAVA_HOME` and Android SDK (`local.properties` → `sdk.dir`, or `ANDROID_HOME`).
+
+Debug APK: `app/build/outputs/apk/debug/app-debug.apk`  
+Debug `applicationId` suffix: `.debug` (side-by-side with release).
 
 ## Project Structure
 
-### Architecture Pattern
-Single Activity (MainActivity) + 3 Fragments via Navigation Component:
-- `HomeFragment` - Main launcher screen with favorite apps and swipe gestures
-- `AppDrawerFragment` - Full app list with search
-- `SettingsFragment` - App configuration
+Single Activity (`MainActivity`) + Navigation Component fragments:
 
-### Key Components
+- `HomeFragment` — home screen, favourites, swipe gestures  
+- `AppDrawerFragment` — full app list + search  
+- `SettingsFragment` — configuration  
+- `NotePanelFragment` — **Productive** (Notes / Todo / Timer / Widgets)  
+- `MuslimCenterFragment` / `DhikrPagerFragment` — Islamic features  
 
-**Data Layer** (`data/`)
-- `Prefs.kt` - SharedPreferences wrapper for all app settings
-- `AppModel.kt` - App metadata model
-- `Constants.kt` - App-wide constants
+**Data:** `data/Prefs.kt`, `data/Constants.kt`, `data/NotePanel*`, `data/ProductiveWidgetStore.kt`, `data/muslim/`  
+**ViewModel:** `MainViewModel.kt`  
+**Helpers:** `helper/` (launcher utils, AppDialog, widget host, accessibility, etc.)
 
-**ViewModel**
-- `MainViewModel.kt` - Shared ViewModel managing app state, app list, usage stats, and wallpaper sync
+## Key features (short)
 
-**Helpers** (`helper/`)
-- `Utils.kt` - Utility functions for launcher operations
-- `Extensions.kt` - Kotlin extension functions
-- `AppUsageStats.kt` - Usage stats and screen time tracking
-- `WallpaperWorker.kt` - WorkManager for automatic wallpaper changes
-- `MyAccessibilityService.kt` - Accessibility service for automatic app opening/closing
-- `FakeHomeActivity.kt` - Temporary launcher for "Choose default launcher" flow
+- HOME intent launcher; `FakeHomeActivity` for default-launcher chooser  
+- Swipe targets: app, Productive, Muslim Center, OFF  
+- Productive: panel size + dialog width in Settings; module toggles; AppWidget host tab  
+- Hidden apps, usage stats, daily wallpaper, private space (API 35+)  
+- ViewBinding; ProGuard on release  
 
-**Usage Stats** (`helper/usageStats/`)
-- Custom implementation for tracking app foreground time
-- `EventLogWrapper.kt` - Wraps usage events with timing
+## Naming note
 
-**UI Adapters**
-- `AppDrawerAdapter.kt` - RecyclerView adapter for app drawer
-
-**Listeners**
-- `DeviceAdmin.kt` - Device admin receiver for screen lock gestures
-- `OnSwipeTouchListener.kt`, `ViewSwipeTouchListener.kt` - Gesture detection
-
-## Key Features Implementation
-
-### Launcher Setup
-MainActivity declares `HOME` category in AndroidManifest to act as launcher. FakeHomeActivity used temporarily to force launcher chooser dialog.
-
-### Swipe Gestures
-Home screen supports swipes in all directions to open configured apps. Implemented via `ViewSwipeTouchListener`.
-
-### App Hiding
-Hidden apps stored in Prefs, filtered out in MainViewModel when loading app list.
-
-### Usage Stats
-Requires `PACKAGE_USAGE_STATS` permission. Custom tracking in `helper/usageStats/` for accurate foreground time.
-
-### Auto Wallpaper
-WorkManager periodic task downloads and sets wallpapers. Configured via `WallpaperWorker`.
-
-### Private Space Support
-Android 15+ feature. Requires `ACCESS_HIDDEN_PROFILES` permission. Apps loaded via `getPrivateSpaceApps()`.
-
-## View Binding
-Enabled in build.gradle. All layouts use ViewBinding (no findViewById).
-
-## Proguard
-Release builds use minification with proguard-rules.pro.
-
-## Debugging
-Debug build uses `.debug` suffix for applicationId, allowing side-by-side install with release version.
+Older docs or tests may still mention “Olauncher” or package `app.olauncher` in unit-test folders. **Production code is `app.sakinalauncher`.** Prefer Sakinah naming in new code and docs.

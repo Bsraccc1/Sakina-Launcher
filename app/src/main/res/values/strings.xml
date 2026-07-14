@@ -135,31 +135,70 @@
     <string name="cheers">Cheers!</string>
     <string name="notification_bar">Notification bar</string>
     <string name="private_space" translatable="false">Private space</string>
-    <string name="notes" translatable="false">Notes</string>
-    <string name="todo" translatable="false">Todo</string>
-    <string name="timer" translatable="false">Timer</string>
-    <string name="productive" translatable="false">Productive</string>
-    <string name="write_note" translatable="false">Add a note...</string>
-    <string name="write_todo" translatable="false">Add a todo...</string>
-    <string name="send" translatable="false">Send</string>
-    <string name="add" translatable="false">Add</string>
-    <string name="save" translatable="false">Save</string>
-    <string name="edit_note" translatable="false">Edit note</string>
-    <string name="delete_note" translatable="false">Delete note</string>
-    <string name="note_done" translatable="false">Done</string>
-    <string name="no_notes_yet" translatable="false">No notes yet</string>
-    <string name="no_todos_yet" translatable="false">No todos yet</string>
-    <string name="note_empty_message" translatable="false">Note cannot be empty</string>
-    <string name="todo_empty_message" translatable="false">Todo cannot be empty</string>
-    <string name="start" translatable="false">Start</string>
-    <string name="pause" translatable="false">Pause</string>
-    <string name="resume" translatable="false">Resume</string>
-    <string name="reset" translatable="false">Reset</string>
-    <string name="duration" translatable="false">Duration</string>
-    <string name="minutes" translatable="false">Minutes</string>
-    <string name="seconds" translatable="false">Seconds</string>
-    <string name="tap_timer_to_set_duration" translatable="false">Tap time to set minutes and seconds</string>
-    <string name="timer_duration_empty" translatable="false">Timer must be at least one second</string>
+    <string name="notes">Notes</string>
+    <string name="todo">Todo</string>
+    <string name="timer">Timer</string>
+    <string name="productive">Productive</string>
+    <string name="write_note">Add a note…</string>
+    <string name="write_todo">Add a todo…</string>
+    <string name="send">Send</string>
+    <string name="add">Add</string>
+    <string name="save">Save</string>
+    <string name="edit_note">Edit note</string>
+    <string name="delete_note">Delete note</string>
+    <string name="note_done">Done</string>
+    <string name="no_notes_yet">No notes yet</string>
+    <string name="no_todos_yet">No todos yet</string>
+    <string name="note_empty_message">Note cannot be empty</string>
+    <string name="todo_empty_message">Todo cannot be empty</string>
+    <string name="start">Start</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="reset">Reset</string>
+    <string name="duration">Duration</string>
+    <string name="minutes">Minutes</string>
+    <string name="seconds">Seconds</string>
+    <string name="tap_timer_to_set_duration">Tap time to set minutes and seconds</string>
+    <string name="timer_duration_empty">Timer must be at least one second</string>
+    <string name="select_all">All</string>
+    <string name="notes_section_pinned">Pinned</string>
+    <string name="todo_section_active">Active</string>
+    <string name="todo_section_done">Done</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="note_last_format">Last: %s</string>
+    <string name="productive_panel_size">Panel size</string>
+    <string name="productive_panel_compact">Compact</string>
+    <string name="productive_panel_comfortable">Comfortable</string>
+    <string name="productive_panel_full">Full</string>
+    <string name="productive_widgets">Widgets</string>
+    <string name="productive_widget_notes">Notes</string>
+    <string name="productive_widget_todo">Todo</string>
+    <string name="productive_widget_timer">Timer</string>
+    <string name="productive_widget_widgets">Widgets</string>
+    <string name="widgets">Widgets</string>
+    <string name="please_select_app">Please select an app</string>
+    <string name="add_widget">Add widget</string>
+    <string name="no_widgets_yet">No widgets yet.\nTap Add widget to place one here.</string>
+    <string name="remove_widget">Remove widget</string>
+    <string name="remove">Remove</string>
+    <string name="widget_removed">Widget removed</string>
+    <string name="widget_add_failed">Could not add widget</string>
+    <string name="widget_bind_denied">Permission to bind widget was denied</string>
+    <string name="long_press_to_remove_widget">Long-press a widget to resize or remove</string>
+    <string name="resize_widget">Resize widget</string>
+    <string name="productive_dialog_width">Dialog width</string>
+    <string name="productive_dialog_width_preview">Dialog width: %1$d%%</string>
+    <string name="productive_keep_one_widget">Keep at least one module enabled</string>
+    <string name="dialog_width_70">70% — narrow</string>
+    <string name="dialog_width_80">80% — medium</string>
+    <string name="dialog_width_90">90% — wide</string>
+    <string name="dialog_width_100">100% — full</string>
+    <string name="widgets_not_supported">Home screen widgets are not supported yet</string>
+    <string name="pin_shortcuts_not_supported">Pin shortcuts are not supported</string>
+    <string name="shortcut_pinned">Shortcut pinned</string>
+    <string name="shortcut_pin_failed">Failed to pin shortcut</string>
+    <string name="invalid_pin_request">Invalid pin request</string>
     <string name="muslim_center">Muslim Center</string>
     <string name="prayer_times">Prayer times</string>
     <string name="next_prayer">Next prayer</string>

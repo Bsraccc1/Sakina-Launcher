@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:clickable="true"
     android:focusable="true"
-    android:paddingHorizontal="30dp"
+    android:paddingHorizontal="@dimen/productive_edge_margin"
     android:paddingVertical="6dp">
 
     <LinearLayout

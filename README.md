@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🕌 Sakina Launcher
+# 🕌 Sakinah Launcher
 
 ### A minimal, distraction-free Android launcher with a calm Islamic heart ☪️
 
@@ -8,7 +8,7 @@ Quiet home screen. Prayer times, dzikir, notes, todos and a focus timer — all 
 
 <br/>
 
-<img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" alt="Sakina Launcher icon" width="116" height="116">
+<img src="Assets/branding/ic_launcher.png" alt="Sakinah Launcher icon" width="128" height="128">
 
 <br/><br/>
 
@@ -40,23 +40,23 @@ Quiet home screen. Prayer times, dzikir, notes, todos and a focus timer — all 
 
 ## 📖 Introduction
 
-**Sakina Launcher** is a minimal Islamic Android launcher built on top of
+**Sakinah Launcher** is a minimal Islamic Android launcher built on top of
 [Olauncher](https://github.com/tanujnotes/Olauncher). It keeps the privacy-first,
 distraction-reducing home screen of Olauncher and layers a calmer set of daily utilities on
 top — a **Muslim Center** with prayer times and dzikir, plus notes, todos and a focus timer.
 
-The name *Sakina* (سَكِينَة) means tranquillity. The whole launcher is designed around that
+The name *Sakinah* (سَكِينَة) means tranquillity. The whole launcher is designed around that
 idea: a quiet text-only home screen, gestures instead of grids of icons, and the few tools
 you actually open every day kept a single swipe away.
 
 > [!NOTE]
-> Sakina is a fork-based project. The launcher foundation comes from
+> Sakinah is a fork-based project. The launcher foundation comes from
 > [Olauncher](https://github.com/tanujnotes/Olauncher) by
-> [@tanujnotes](https://github.com/tanujnotes). Sakina adds the Muslim Center, the productive
+> [@tanujnotes](https://github.com/tanujnotes). Sakinah adds the Muslim Center, the productive
 > panel, custom fonts (Poppins + Amiri Quran) and a refreshed UI.
 
 > [!TIP]
-> After installing, press **Home** and choose **Sakina Launcher** as your default launcher to
+> After installing, press **Home** and choose **Sakinah Launcher** as your default launcher to
 > get the full experience.
 
 ---
@@ -213,7 +213,10 @@ Sakina-Launcher/
 │       │   ├── MainActivity.kt  # single entry point / nav host
 │       │   └── MainViewModel.kt # shared ViewModel
 │       └── res/                 # layouts, drawables, fonts, strings, navigation, anims
-├── Assets/screenshots/          # README screenshots (WebP)
+├── Assets/
+│   ├── branding/ic_launcher.png # App logo (سكينة + crescent)
+│   └── screenshots/             # README screenshots (WebP)
+├── docs/branding/               # Logo source + PNG export
 ├── .github/workflows/           # CI + release-APK workflows
 ├── ARCHITECTURE_REVIEW.md       # architecture deepening notes
 ├── CONTEXT.md                   # domain glossary

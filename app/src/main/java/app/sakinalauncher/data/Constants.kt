@@ -72,6 +72,34 @@ object Constants {
         const val OUTFIT = 4
     }
 
+    /** Height of the Productive (notes/todo/timer) panel overlay. */
+    object ProductivePanelSize {
+        const val COMPACT = 0
+        const val COMFORTABLE = 1
+        const val FULL = 2
+
+        /**
+         * Fraction of screen height used by Productive content (header + body +
+         * composer). Remaining height becomes the top scrim gap — values are
+         * intentionally far apart so Compact / Comfortable / Full are obvious.
+         */
+        fun contentHeightFraction(size: Int): Float = when (size) {
+            COMPACT -> 0.72f
+            COMFORTABLE -> 0.90f
+            else -> 0.98f
+        }
+
+        /**
+         * Top scrim spacer weight for [fragment_note_panel].
+         *
+         * Always 0 so the Productive title sits at the same top inset as Muslim
+         * Center (header marginTop = productive_header_top / 36dp). Panel size
+         * no longer pushes the chrome down the screen.
+         */
+        @Suppress("UNUSED_PARAMETER")
+        fun topSpacerWeight(size: Int): Float = 0f
+    }
+
     object CharacterIndicator {
         const val SHOW = 102
         const val HIDE = 101

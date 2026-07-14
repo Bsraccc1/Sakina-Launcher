@@ -4,10 +4,10 @@
     android:layout_height="wrap_content">
 
     <LinearLayout
+        android:id="@+id/dialogCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginHorizontal="28dp"
         android:background="@drawable/bg_unified_dialog"
         android:orientation="vertical"
         android:paddingHorizontal="22dp"

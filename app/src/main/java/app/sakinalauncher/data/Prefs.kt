@@ -54,6 +54,13 @@ class Prefs(context: Context) {
     private val SHOWN_ON_DAY_OF_YEAR = "SHOWN_ON_DAY_OF_YEAR"
     private val HOME_BUTTON_SHOW_RECENTS = "HOME_BUTTON_SHOW_RECENTS"
     private val FONT_FAMILY = "FONT_FAMILY"
+    private val PRODUCTIVE_PANEL_SIZE = "PRODUCTIVE_PANEL_SIZE"
+    private val PRODUCTIVE_WIDGET_NOTES = "PRODUCTIVE_WIDGET_NOTES"
+    private val PRODUCTIVE_WIDGET_TODO = "PRODUCTIVE_WIDGET_TODO"
+    private val PRODUCTIVE_WIDGET_TIMER = "PRODUCTIVE_WIDGET_TIMER"
+    private val PRODUCTIVE_WIDGET_WIDGETS = "PRODUCTIVE_WIDGET_WIDGETS"
+    private val PRODUCTIVE_DIALOG_WIDTH_SCALE = "PRODUCTIVE_DIALOG_WIDTH_SCALE"
+    private val PRODUCTIVE_LAST_MODE = "PRODUCTIVE_LAST_MODE"
 
     private val APP_NAME_1 = "APP_NAME_1"
     private val APP_NAME_2 = "APP_NAME_2"
@@ -274,6 +281,72 @@ class Prefs(context: Context) {
     var shownOnDayOfYear: Int by intPref(SHOWN_ON_DAY_OF_YEAR, 0)
     var homeButtonShowRecents: Boolean by boolPref(HOME_BUTTON_SHOW_RECENTS, false)
     var fontFamily: Int by intPref(FONT_FAMILY, Constants.FontFamily.POPPINS)
+
+    /** [Constants.ProductivePanelSize] — compact / comfortable / full. */
+    var productivePanelSize: Int
+        get() = prefs.getInt(PRODUCTIVE_PANEL_SIZE, Constants.ProductivePanelSize.COMFORTABLE)
+            .coerceIn(Constants.ProductivePanelSize.COMPACT, Constants.ProductivePanelSize.FULL)
+        set(value) = prefs.edit {
+            putInt(
+                PRODUCTIVE_PANEL_SIZE,
+                value.coerceIn(Constants.ProductivePanelSize.COMPACT, Constants.ProductivePanelSize.FULL),
+            )
+        }
+
+    /** Which Productive modules are enabled. At least one stays enabled (enforced in UI). */
+    var productiveWidgetNotes: Boolean by boolPref(PRODUCTIVE_WIDGET_NOTES, true)
+    var productiveWidgetTodo: Boolean by boolPref(PRODUCTIVE_WIDGET_TODO, true)
+    var productiveWidgetTimer: Boolean by boolPref(PRODUCTIVE_WIDGET_TIMER, true)
+    var productiveWidgetWidgets: Boolean by boolPref(PRODUCTIVE_WIDGET_WIDGETS, true)
+
+    /**
+     * Width scale for Productive dialogs only (edit note, set duration, etc.), 0.70–1.0.
+     * Default 0.90 matches the Settings picker option "90%". Does not affect
+     * Settings / language / prayer list dialogs.
+     */
+    var productiveDialogWidthScale: Float
+        get() = prefs.getFloat(PRODUCTIVE_DIALOG_WIDTH_SCALE, 0.90f).coerceIn(0.70f, 1.0f)
+        set(value) = prefs.edit {
+            putFloat(PRODUCTIVE_DIALOG_WIDTH_SCALE, value.coerceIn(0.70f, 1.0f))
+        }
+
+    var productiveLastMode: String by stringPref(PRODUCTIVE_LAST_MODE, NotePanelMode.NOTES.name)
+
+    fun isProductiveModeEnabled(mode: NotePanelMode): Boolean = when (mode) {
+        NotePanelMode.NOTES -> productiveWidgetNotes
+        NotePanelMode.TODO -> productiveWidgetTodo
+        NotePanelMode.TIMER -> productiveWidgetTimer
+        NotePanelMode.WIDGETS -> productiveWidgetWidgets
+    }
+
+    fun firstEnabledProductiveMode(): NotePanelMode {
+        return NotePanelMode.entries.firstOrNull { isProductiveModeEnabled(it) } ?: NotePanelMode.NOTES
+    }
+
+    fun resolveProductiveOpenMode(requested: NotePanelMode? = null): NotePanelMode {
+        if (requested != null && isProductiveModeEnabled(requested)) return requested
+        val last = runCatching { NotePanelMode.valueOf(productiveLastMode) }.getOrNull()
+        if (last != null && isProductiveModeEnabled(last)) return last
+        return firstEnabledProductiveMode()
+    }
+
+    fun setProductiveModuleEnabled(mode: NotePanelMode, enabled: Boolean): Boolean {
+        val currentlyOn = listOf(
+            productiveWidgetNotes,
+            productiveWidgetTodo,
+            productiveWidgetTimer,
+            productiveWidgetWidgets,
+        ).count { it }
+        val thisOn = isProductiveModeEnabled(mode)
+        if (!enabled && thisOn && currentlyOn <= 1) return false
+        when (mode) {
+            NotePanelMode.NOTES -> productiveWidgetNotes = enabled
+            NotePanelMode.TODO -> productiveWidgetTodo = enabled
+            NotePanelMode.TIMER -> productiveWidgetTimer = enabled
+            NotePanelMode.WIDGETS -> productiveWidgetWidgets = enabled
+        }
+        return true
+    }
 
     var hiddenApps: MutableSet<String>
         get() = prefs.getStringSet(HIDDEN_APPS, emptySet()).orEmpty().toMutableSet()

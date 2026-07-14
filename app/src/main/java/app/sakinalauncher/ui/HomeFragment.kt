@@ -236,6 +236,12 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         val verticalGravity = if (prefs.homeBottomAlignment) Gravity.BOTTOM else Gravity.CENTER_VERTICAL
         binding.homeAppsLayout.gravity = horizontalGravity or verticalGravity
         binding.dateTimeLayout.gravity = horizontalGravity
+        // Landscape XML uses wrap_content + layout_gravity; update parent gravity so
+        // start/end alignment actually moves the clock block across the screen.
+        (binding.dateTimeLayout.layoutParams as? FrameLayout.LayoutParams)?.let { lp ->
+            lp.gravity = Gravity.TOP or horizontalGravity
+            binding.dateTimeLayout.layoutParams = lp
+        }
         binding.homeApp1.gravity = horizontalGravity
         binding.homeApp2.gravity = horizontalGravity
         binding.homeApp3.gravity = horizontalGravity
@@ -496,10 +502,10 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         when (if (isLeft) prefs.swipeLeftTarget else prefs.swipeRightTarget) {
             Constants.SwipeTarget.OFF -> return
             Constants.SwipeTarget.APP -> if (isLeft) openSwipeLeftApp() else openSwipeRightApp()
-            Constants.SwipeTarget.PRODUCTIVE -> openNotePanel(NotePanelMode.NOTES, isLeft)
-            Constants.SwipeTarget.NOTES -> openNotePanel(NotePanelMode.NOTES, isLeft)
-            Constants.SwipeTarget.TODO -> openNotePanel(NotePanelMode.TODO, isLeft)
-            Constants.SwipeTarget.TIMER -> openNotePanel(NotePanelMode.TIMER, isLeft)
+            Constants.SwipeTarget.PRODUCTIVE -> openNotePanel(prefs.resolveProductiveOpenMode(), isLeft)
+            Constants.SwipeTarget.NOTES -> openNotePanel(prefs.resolveProductiveOpenMode(NotePanelMode.NOTES), isLeft)
+            Constants.SwipeTarget.TODO -> openNotePanel(prefs.resolveProductiveOpenMode(NotePanelMode.TODO), isLeft)
+            Constants.SwipeTarget.TIMER -> openNotePanel(prefs.resolveProductiveOpenMode(NotePanelMode.TIMER), isLeft)
             Constants.SwipeTarget.MUSLIM_CENTER -> openMuslimCenter(isLeft)
         }
     }

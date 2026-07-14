@@ -1,21 +1,24 @@
 package app.sakinalauncher.helper
 
+import android.appwidget.AppWidgetManager
 import android.content.pm.LauncherApps
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import app.sakinalauncher.R
+import app.sakinalauncher.data.BoundWidget
+import app.sakinalauncher.data.ProductiveWidgetStore
 
 class PinItemActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Set window to be transparent
+
         window.setBackgroundDrawable(null)
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            showToast("Pin shortcuts are not supported")
+            showToast(getString(R.string.pin_shortcuts_not_supported))
             finish()
             return
         }
@@ -25,7 +28,7 @@ class PinItemActivity : AppCompatActivity() {
 
         when (pinItemRequest != null) {
             true -> handleRequestType(pinItemRequest)
-            false -> showToast("Invalid pin request")
+            false -> showToast(getString(R.string.invalid_pin_request))
         }
 
         finish()
@@ -38,9 +41,9 @@ class PinItemActivity : AppCompatActivity() {
                 handleShortcutRequest(pinItemRequest)
 
             LauncherApps.PinItemRequest.REQUEST_TYPE_APPWIDGET ->
-                showToast("Widgets are not supported")
+                handleWidgetRequest(pinItemRequest)
 
-            else -> showToast("Unknown action not supported")
+            else -> showToast(getString(R.string.widgets_not_supported))
         }
     }
 
@@ -49,13 +52,37 @@ class PinItemActivity : AppCompatActivity() {
         val shortcutInfo = pinItemRequest.shortcutInfo
         if (shortcutInfo != null) {
             val success = pinItemRequest.accept()
-            val message = when (success) {
-                true -> "Shortcut pinned successfully"
-                false -> "Failed to pin shortcut"
-            }
-            showToast(message)
+            showToast(
+                getString(
+                    if (success) R.string.shortcut_pinned else R.string.shortcut_pin_failed,
+                ),
+            )
         } else {
-            showToast("Invalid shortcut info")
+            showToast(getString(R.string.invalid_pin_request))
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun handleWidgetRequest(pinItemRequest: LauncherApps.PinItemRequest) {
+        // API 26+: getAppWidgetProviderInfo requires a Context argument.
+        val info = pinItemRequest.getAppWidgetProviderInfo(this)
+        if (info == null) {
+            showToast(getString(R.string.widget_add_failed))
+            return
+        }
+        val accepted = pinItemRequest.accept()
+        if (!accepted) {
+            showToast(getString(R.string.widget_add_failed))
+            return
+        }
+        val extras = pinItemRequest.extras
+        val appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, -1) ?: -1
+        val provider = info.provider?.flattenToString().orEmpty()
+        if (appWidgetId >= 0 && provider.isNotBlank()) {
+            ProductiveWidgetStore(this).addWidget(BoundWidget(appWidgetId, provider))
+            showToast(getString(R.string.add_widget))
+        } else {
+            showToast(getString(R.string.add_widget))
         }
     }
 }

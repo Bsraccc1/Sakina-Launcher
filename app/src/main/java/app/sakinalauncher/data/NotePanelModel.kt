@@ -26,6 +26,7 @@ enum class NotePanelMode {
     NOTES,
     TODO,
     TIMER,
+    WIDGETS,
 }
 
 sealed class NotePanelRow {
@@ -36,10 +37,25 @@ sealed class NotePanelRow {
 }
 
 object NotePanelRows {
+    /**
+     * Localized UI chrome for list separators. Defaults stay English for unit tests
+     * without Android resources; production passes [android.content.res.Resources] strings.
+     */
+    data class Labels(
+        val pinned: String = "Pinned",
+        val active: String = "Active",
+        val done: String = "Done",
+        val today: String = "Today",
+        val yesterday: String = "Yesterday",
+        /** Format with one arg: the previous occurrence label. */
+        val lastFormat: String = "Last: %s",
+    )
+
     fun noteRows(
         notes: List<NoteMessage>,
         nowMillis: Long = System.currentTimeMillis(),
         locale: Locale = Locale.getDefault(),
+        labels: Labels = Labels(),
     ): List<NotePanelRow> {
         val rows = mutableListOf<NotePanelRow>()
         var previousDayStart: Long? = null
@@ -51,7 +67,8 @@ object NotePanelRows {
             val key = note.text.normalizedNoteKey()
             val previous = previousByText[key]
             if (previous != null && dayStartMillis(previous.createdAtMillis) != dayStartMillis(note.createdAtMillis)) {
-                repeatLabelsById[note.id] = "Last: ${repeatLabel(previous.createdAtMillis, nowMillis, locale)}"
+                val previousWhen = repeatLabel(previous.createdAtMillis, nowMillis, locale, labels)
+                repeatLabelsById[note.id] = labels.lastFormat.format(previousWhen)
             }
             previousByText[key] = note
         }
@@ -59,7 +76,7 @@ object NotePanelRows {
         val pinnedNotes = sortedNotes.filter { it.isPinned }
         val regularNotes = sortedNotes.filterNot { it.isPinned }
         if (pinnedNotes.isNotEmpty()) {
-            rows.add(NotePanelRow.SectionSeparator("Pinned"))
+            rows.add(NotePanelRow.SectionSeparator(labels.pinned))
             pinnedNotes.forEach { note ->
                 rows.add(NotePanelRow.Message(note, repeatLabelsById[note.id]))
             }
@@ -68,7 +85,12 @@ object NotePanelRows {
         regularNotes.forEach { note ->
             val dayStart = dayStartMillis(note.createdAtMillis)
             if (dayStart != previousDayStart) {
-                rows.add(NotePanelRow.DaySeparator(formatDayLabel(dayStart, nowMillis, locale), dayStart))
+                rows.add(
+                    NotePanelRow.DaySeparator(
+                        formatDayLabel(dayStart, nowMillis, locale, labels),
+                        dayStart,
+                    ),
+                )
                 previousDayStart = dayStart
             }
             rows.add(NotePanelRow.Message(note, repeatLabelsById[note.id]))
@@ -76,16 +98,16 @@ object NotePanelRows {
         return rows
     }
 
-    fun todoRows(todos: List<TodoItem>): List<NotePanelRow> {
+    fun todoRows(todos: List<TodoItem>, labels: Labels = Labels()): List<NotePanelRow> {
         val rows = mutableListOf<NotePanelRow>()
         val activeTodos = todos.filterNot { it.isDone }.sortedBy { it.createdAtMillis }
         val doneTodos = todos.filter { it.isDone }.sortedBy { it.createdAtMillis }
         if (activeTodos.isNotEmpty()) {
-            rows.add(NotePanelRow.SectionSeparator("Active"))
+            rows.add(NotePanelRow.SectionSeparator(labels.active))
             rows.addAll(activeTodos.map { NotePanelRow.Todo(it) })
         }
         if (doneTodos.isNotEmpty()) {
-            rows.add(NotePanelRow.SectionSeparator("Done"))
+            rows.add(NotePanelRow.SectionSeparator(labels.done))
             rows.addAll(doneTodos.map { NotePanelRow.Todo(it) })
         }
         return rows
@@ -95,16 +117,26 @@ object NotePanelRows {
         return SimpleDateFormat("HH:mm", locale).format(Date(millis))
     }
 
-    private fun formatDayLabel(dayStartMillis: Long, nowMillis: Long, locale: Locale): String {
+    private fun formatDayLabel(
+        dayStartMillis: Long,
+        nowMillis: Long,
+        locale: Locale,
+        labels: Labels,
+    ): String {
         return when ((dayStartMillis(nowMillis) - dayStartMillis) / Constants.ONE_DAY_IN_MILLIS) {
-            0L -> "Today"
-            1L -> "Yesterday"
+            0L -> labels.today
+            1L -> labels.yesterday
             else -> SimpleDateFormat("EEE, d MMM", locale).format(Date(dayStartMillis))
         }
     }
 
-    private fun repeatLabel(millis: Long, nowMillis: Long, locale: Locale): String {
-        val dayLabel = formatDayLabel(dayStartMillis(millis), nowMillis, locale)
+    private fun repeatLabel(
+        millis: Long,
+        nowMillis: Long,
+        locale: Locale,
+        labels: Labels,
+    ): String {
+        val dayLabel = formatDayLabel(dayStartMillis(millis), nowMillis, locale, labels)
         return "$dayLabel ${timeLabel(millis, locale)}"
     }
 

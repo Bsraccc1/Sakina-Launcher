@@ -15,6 +15,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
+import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.appcompat.app.AppCompatDelegate
@@ -30,6 +32,7 @@ import app.sakinalauncher.MainActivity
 import app.sakinalauncher.MainViewModel
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
+import app.sakinalauncher.data.NotePanelMode
 import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.data.muslim.GlobalPrayerLocation
 import app.sakinalauncher.data.muslim.PrayerApiClient
@@ -39,6 +42,7 @@ import app.sakinalauncher.data.muslim.PrayerTimeRepository
 import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentSettingsBinding
 import app.sakinalauncher.helper.AppDialog
+import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.helper.animateAlpha
 import app.sakinalauncher.helper.appUsagePermissionGranted
 import app.sakinalauncher.helper.getColorFromAttr
@@ -110,8 +114,10 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         populatePrayerRegion()
         populateSwipeDownAction()
         populateActionHints()
+        populateProductiveSettings()
         initClickListeners()
         initObservers()
+        binding.scrollView.addSystemBarInsetsPadding()
 
         app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
 
@@ -213,6 +219,12 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
             R.id.prayerAutoDetect -> autoDetectPrayerRegion()
             R.id.languageText -> showLanguagePicker()
             R.id.fontText -> showFontPicker()
+            R.id.productivePanelSize -> showProductivePanelSizePicker()
+            R.id.productiveDialogWidth -> showProductiveDialogWidthPicker()
+            R.id.productiveModuleNotes -> toggleProductiveModule(NotePanelMode.NOTES)
+            R.id.productiveModuleTodo -> toggleProductiveModule(NotePanelMode.TODO)
+            R.id.productiveModuleTimer -> toggleProductiveModule(NotePanelMode.TIMER)
+            R.id.productiveModuleWidgets -> toggleProductiveModule(NotePanelMode.WIDGETS)
 
             R.id.aboutSakina -> {
                 prefs.aboutClicked = true
@@ -272,12 +284,19 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         binding.prayerRegion.setOnClickListener(this)
         binding.prayerProvider.setOnClickListener(this)
         binding.prayerAutoDetect.setOnClickListener(this)
+        binding.tvGestures.setOnClickListener(this)
         binding.swipeDownAction.setOnClickListener(this)
         binding.search.setOnClickListener(this)
         binding.notifications.setOnClickListener(this)
         binding.appThemeText.setOnClickListener(this)
         binding.languageText.setOnClickListener(this)
         binding.fontText.setOnClickListener(this)
+        binding.productivePanelSize.setOnClickListener(this)
+        binding.productiveDialogWidth.setOnClickListener(this)
+        binding.productiveModuleNotes.setOnClickListener(this)
+        binding.productiveModuleTodo.setOnClickListener(this)
+        binding.productiveModuleTimer.setOnClickListener(this)
+        binding.productiveModuleWidgets.setOnClickListener(this)
         binding.themeLight.setOnClickListener(this)
         binding.themeDark.setOnClickListener(this)
         binding.themeSystem.setOnClickListener(this)
@@ -585,6 +604,84 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateFontText() {
         binding.fontText.text = app.sakinalauncher.helper.FontHelper.labelFor(requireContext(), prefs.fontFamily)
+    }
+
+    private fun populateProductiveSettings() {
+        binding.productivePanelSizeValue.text = when (prefs.productivePanelSize) {
+            Constants.ProductivePanelSize.COMPACT -> getString(R.string.productive_panel_compact)
+            Constants.ProductivePanelSize.FULL -> getString(R.string.productive_panel_full)
+            else -> getString(R.string.productive_panel_comfortable)
+        }
+        binding.productiveDialogWidthValue.text = when {
+            prefs.productiveDialogWidthScale >= 0.995f -> getString(R.string.dialog_width_100)
+            prefs.productiveDialogWidthScale >= 0.85f -> getString(R.string.dialog_width_90)
+            prefs.productiveDialogWidthScale >= 0.75f -> getString(R.string.dialog_width_80)
+            else -> getString(R.string.dialog_width_70)
+        }
+        binding.productiveModuleNotesValue.text = onOff(prefs.productiveWidgetNotes)
+        binding.productiveModuleTodoValue.text = onOff(prefs.productiveWidgetTodo)
+        binding.productiveModuleTimerValue.text = onOff(prefs.productiveWidgetTimer)
+        binding.productiveModuleWidgetsValue.text = onOff(prefs.productiveWidgetWidgets)
+    }
+
+    private fun onOff(enabled: Boolean): String =
+        getString(if (enabled) R.string.on else R.string.off)
+
+    private fun showProductivePanelSizePicker() {
+        val values = intArrayOf(
+            Constants.ProductivePanelSize.COMPACT,
+            Constants.ProductivePanelSize.COMFORTABLE,
+            Constants.ProductivePanelSize.FULL,
+        )
+        val labels = listOf(
+            getString(R.string.productive_panel_compact),
+            getString(R.string.productive_panel_comfortable),
+            getString(R.string.productive_panel_full),
+        )
+        requireContext().showAppListDialog(getString(R.string.productive_panel_size), labels) { which ->
+            prefs.productivePanelSize = values[which]
+            populateProductiveSettings()
+        }
+    }
+
+    private fun showProductiveDialogWidthPicker() {
+        val scales = floatArrayOf(0.70f, 0.80f, 0.90f, 1.0f)
+        val labels = listOf(
+            getString(R.string.dialog_width_70),
+            getString(R.string.dialog_width_80),
+            getString(R.string.dialog_width_90),
+            getString(R.string.dialog_width_100),
+        )
+        requireContext().showAppListDialog(getString(R.string.productive_dialog_width), labels) { which ->
+            prefs.productiveDialogWidthScale = scales[which]
+            populateProductiveSettings()
+            // Immediate preview so the chosen % is obviously different.
+            previewProductiveDialogWidth(scales[which])
+        }
+    }
+
+    /** Opens a short-lived Productive-styled dialog at [scale] so width is visible. */
+    private fun previewProductiveDialogWidth(scale: Float) {
+        val view = layoutInflater.inflate(R.layout.dialog_app_input, null)
+        view.findViewById<TextView>(R.id.dialogTitle).text =
+            getString(R.string.productive_dialog_width_preview, (scale * 100).toInt())
+        view.findViewById<LinearLayout>(R.id.dialogInputContainer).isVisible = false
+        val positive = view.findViewById<TextView>(R.id.dialogPositive)
+        val negative = view.findViewById<TextView>(R.id.dialogNegative)
+        positive.setText(R.string.close)
+        negative.isVisible = false
+        val dialog = AppDialog.create(requireContext(), view, widthScale = scale)
+        positive.setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    private fun toggleProductiveModule(mode: NotePanelMode) {
+        val currently = prefs.isProductiveModeEnabled(mode)
+        if (!prefs.setProductiveModuleEnabled(mode, !currently)) {
+            requireContext().showToast(getString(R.string.productive_keep_one_widget))
+            return
+        }
+        populateProductiveSettings()
     }
 
     private fun showFontPicker() {
@@ -1042,7 +1139,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateActionHints() {
         if (prefs.aboutClicked.not())
-            binding.aboutSakina.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
+            binding.aboutSakina.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_info, 0)
     }
 
     private fun populateProMessage() {
