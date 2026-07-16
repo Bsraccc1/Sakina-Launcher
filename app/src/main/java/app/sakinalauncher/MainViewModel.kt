@@ -32,7 +32,10 @@ import app.sakinalauncher.helper.isPackageInstalled
 import app.sakinalauncher.helper.isPrivateSpaceLocked
 import app.sakinalauncher.helper.showToast
 import app.sakinalauncher.helper.usageStats.EventLogWrapper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -51,6 +54,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val launcherResetFailed = MutableLiveData<Boolean>()
     val homeAppAlignment = MutableLiveData<Int>()
     val screenTimeValue = MutableLiveData<String>()
+    private var screenTimeJob: Job? = null
+    private var appLoadJob: Job? = null
+    private var hiddenAppLoadJob: Job? = null
+    private var privateSpaceLoadJob: Job? = null
 
     val privateSpaceApps = MutableLiveData<List<AppModel>?>()
     val privateSpaceLocked = MutableLiveData<Boolean>()
@@ -394,7 +401,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getAppList(includeHiddenApps: Boolean = false) {
-        viewModelScope.launch {
+        appLoadJob?.cancel()
+        appLoadJob = viewModelScope.launch {
             val apps = getAppsList(appContext, prefs, includeRegularApps = true, includeHiddenApps)
             appList.value = apps
         }
@@ -402,14 +410,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getHiddenApps() {
-        viewModelScope.launch {
+        hiddenAppLoadJob?.cancel()
+        hiddenAppLoadJob = viewModelScope.launch {
             hiddenApps.value =
                 getAppsList(appContext, prefs, includeRegularApps = false, includeHiddenApps = true)
         }
     }
 
     fun isSakinaDefault() {
-        isSakinaDefault.value = isSakinaDefault(appContext)
+        viewModelScope.launch {
+            isSakinaDefault.value = withContext(Dispatchers.IO) { isSakinaDefault(appContext) }
+        }
     }
 
     fun setWallpaperWorker() {
@@ -441,42 +452,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun getTodaysScreenTime() {
-        if (prefs.screenTimeLastUpdated.hasBeenMinutes(1).not()) return
+        if (prefs.screenTimeLastUpdated.hasBeenMinutes(1).not() || screenTimeJob?.isActive == true) return
 
-        val eventLogWrapper = EventLogWrapper(
-            appContext
-        )
-        // Start of today in millis
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+        screenTimeJob = viewModelScope.launch {
+            val result = withContext(Dispatchers.Default) {
+                val eventLogWrapper = EventLogWrapper(appContext)
+                val calendar = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val endTime = System.currentTimeMillis()
+                val timeSpent = eventLogWrapper.aggregateSimpleUsageStats(
+                    eventLogWrapper.aggregateForegroundStats(
+                        eventLogWrapper.getForegroundStatsByTimestamps(calendar.timeInMillis, endTime)
+                    )
+                )
+                appContext.formattedTimeSpent(timeSpent) to endTime
+            }
+            screenTimeValue.value = result.first
+            prefs.screenTimeLastUpdated = result.second
         }
-        val startTime = calendar.timeInMillis
-        val endTime = System.currentTimeMillis()
-
-        val timeSpent = eventLogWrapper.aggregateSimpleUsageStats(
-            eventLogWrapper.aggregateForegroundStats(
-                eventLogWrapper.getForegroundStatsByTimestamps(startTime, endTime)
-            )
-        )
-        val viewTimeSpent = appContext.formattedTimeSpent(timeSpent)
-        screenTimeValue.postValue(viewTimeSpent)
-        prefs.screenTimeLastUpdated = endTime
     }
 
     fun getPrivateSpaceAppList() {
-        viewModelScope.launch {
-            val handle = getPrivateSpaceUserHandle(appContext)
-            privateSpaceAvailable.value = handle != null
-            if (handle != null) {
-                privateSpaceLocked.value = isPrivateSpaceLocked(appContext, handle)
-                privateSpaceApps.value = getPrivateSpaceApps(appContext, prefs)
-            } else {
-                privateSpaceLocked.value = true
-                privateSpaceApps.value = emptyList()
+        privateSpaceLoadJob?.cancel()
+        privateSpaceLoadJob = viewModelScope.launch {
+            val state = withContext(Dispatchers.IO) {
+                val handle = getPrivateSpaceUserHandle(appContext)
+                val locked = handle == null || isPrivateSpaceLocked(appContext, handle)
+                val apps = if (handle != null && !locked) getPrivateSpaceApps(appContext, prefs) else emptyList()
+                Triple(handle != null, locked, apps)
             }
+            privateSpaceAvailable.value = state.first
+            privateSpaceLocked.value = state.second
+            privateSpaceApps.value = state.third
         }
     }
 

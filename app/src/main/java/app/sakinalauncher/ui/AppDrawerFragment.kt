@@ -279,7 +279,9 @@ class AppDrawerFragment : Fragment() {
         }
 
         adapter.setAppList(combined)
-        adapter.filter.filter(binding.search.query)
+        if (binding.search.query.isNotEmpty()) {
+            adapter.filter.filter(binding.search.query)
+        }
     }
 
     private fun initClickListeners() {

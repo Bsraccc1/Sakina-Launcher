@@ -23,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.TextView
 import app.sakinalauncher.R
 import app.sakinalauncher.data.BoundWidget
 import app.sakinalauncher.data.ProductiveWidgetStore
@@ -51,9 +52,10 @@ class ProductiveWidgetHostHelper(
     private var listening = false
     private var activeEditFrame: ResizableWidgetFrame? = null
     private var flowLayout: WidgetFlowLayout? = null
+    private var observedContainer: ViewGroup? = null
+    private var containerLayoutListener: View.OnLayoutChangeListener? = null
     private var lastContainerWidthPx: Int = 0
-    private var lastDensity: Float = 1f
-    private var lastMaxWidthDp: Int = 200
+    private var storeReconciled = false
 
     fun startListening() {
         if (listening) return
@@ -72,7 +74,13 @@ class ProductiveWidgetHostHelper(
 
     fun destroy() {
         stopListening()
+        containerLayoutListener?.let { listener ->
+            observedContainer?.removeOnLayoutChangeListener(listener)
+        }
+        containerLayoutListener = null
+        observedContainer = null
         flowLayout = null
+        lastContainerWidthPx = 0
     }
 
     fun allocateId(): Int = host.allocateAppWidgetId()
@@ -137,6 +145,8 @@ class ProductiveWidgetHostHelper(
     }
 
     fun reconcileStoreFromBoundProviders() {
+        if (storeReconciled) return
+        storeReconciled = true
         val known = store.getWidgets().map { it.appWidgetId }.toMutableSet()
         val additions = mutableListOf<BoundWidget>()
         for (info in installedProviders()) {
@@ -177,17 +187,13 @@ class ProductiveWidgetHostHelper(
 
         val density = appContext.resources.displayMetrics.density
         val gapPx = appContext.resources.getDimensionPixelSize(R.dimen.productive_widget_gap)
-        val containerWidthPx = when {
-            container.width > 0 -> container.width
-            container.measuredWidth > 0 -> container.measuredWidth
-            else -> appContext.resources.displayMetrics.widthPixels -
-                (40 * density).roundToInt()
-        }.coerceAtLeast((200 * density).roundToInt())
-        val maxWidthDp = (containerWidthPx / density).roundToInt().coerceAtLeast(200)
+        val containerWidthPx = container.width.takeIf { it > 0 }
+            ?: container.measuredWidth.takeIf { it > 0 }
+            ?: return
+        val maxWidthDp = (containerWidthPx / density).roundToInt().coerceAtLeast(1)
 
+        observeContainerWidth(container, onRemove)
         lastContainerWidthPx = containerWidthPx
-        lastDensity = density
-        lastMaxWidthDp = maxWidthDp
 
         val flow = WidgetFlowLayout(appContext).apply {
             this.gapPx = gapPx
@@ -246,6 +252,38 @@ class ProductiveWidgetHostHelper(
         }
     }
 
+    private fun observeContainerWidth(container: ViewGroup, onRemove: (Int) -> Unit) {
+        if (observedContainer === container && containerLayoutListener != null) return
+        containerLayoutListener?.let { observedContainer?.removeOnLayoutChangeListener(it) }
+        val listener = View.OnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
+            val width = right - left
+            val oldWidth = oldRight - oldLeft
+            if (width > 0 && oldWidth > 0 && width != oldWidth && width != lastContainerWidthPx) {
+                view.post {
+                    if (view.isAttachedToWindow && view.width == width) {
+                        inflateInto(container, onRemove)
+                    }
+                }
+            }
+        }
+        observedContainer = container
+        containerLayoutListener = listener
+        container.addOnLayoutChangeListener(listener)
+    }
+
+    private fun moveCardBy(frame: ResizableWidgetFrame, offset: Int) {
+        val layout = flowLayout ?: return
+        val from = layout.indexOfChild(frame)
+        val target = (from + offset).coerceIn(0, layout.childCount - 1)
+        if (from < 0 || target == from) return
+        layout.removeViewAt(from)
+        layout.addView(frame, target)
+        val current = store.getWidgets().associateBy { it.appWidgetId }
+        store.setWidgets((0 until layout.childCount).mapNotNull {
+            (layout.getChildAt(it).tag as? Int)?.let(current::get)
+        })
+    }
+
     private fun createCard(
         bound: BoundWidget,
         info: AppWidgetProviderInfo,
@@ -260,22 +298,23 @@ class ProductiveWidgetHostHelper(
     ): ResizableWidgetFrame {
         val hostView = host.createView(appContext, bound.appWidgetId, info)
         hostView.setAppWidget(bound.appWidgetId, info)
-        applyWidgetOptions(hostView, bound.appWidgetId, widthDp, heightDp, maxWidthDp)
+        applyWidgetOptions(bound.appWidgetId, widthDp, heightDp, maxWidthDp)
 
-        val pad = (8 * density).roundToInt()
-        // Larger chrome so remove/resize are easy once edit mode is on.
-        val removeSize = (40 * density).roundToInt()
-        val handleSize = (36 * density).roundToInt()
+        val pad = (7 * density).roundToInt()
+        val removeSize = (32 * density).roundToInt()
+        val handleWidth = (52 * density).roundToInt()
+        val handleHeight = (24 * density).roundToInt()
+        val chromeColor = themedColor(R.attr.primaryColorInverseTrans80, Color.argb(190, 20, 20, 24))
 
         val wrap = ResizableWidgetFrame(appContext).apply {
             tag = bound.appWidgetId
             clipChildren = true
             clipToPadding = true
             this.hostView = hostView
-            minWidthPx = providerMinSizePx(info).first.coerceAtLeast((MIN_WIDTH_DP * density).roundToInt())
+            minWidthPx = providerResizeMinSizePx(info).first.coerceAtLeast((MIN_WIDTH_DP * density).roundToInt())
                 .coerceAtMost(containerWidthPx)
             maxWidthPx = containerWidthPx
-            minHeightPx = providerMinSizePx(info).second.coerceAtLeast((MIN_HEIGHT_DP * density).roundToInt())
+            minHeightPx = providerResizeMinSizePx(info).second.coerceAtLeast((MIN_HEIGHT_DP * density).roundToInt())
                 .coerceAtMost((MAX_HEIGHT_DP * density).roundToInt())
             maxHeightPx = (MAX_HEIGHT_DP * density).roundToInt()
             onEnterEdit = {
@@ -288,18 +327,13 @@ class ProductiveWidgetHostHelper(
             onExitEdit = {
                 if (activeEditFrame === this) activeEditFrame = null
             }
-            onSizeLive = { wPx, hPx ->
-                val wDp = (wPx / density).roundToInt().coerceIn(MIN_WIDTH_DP, maxWidthDp)
-                val hDp = (hPx / density).roundToInt().coerceIn(MIN_HEIGHT_DP, MAX_HEIGHT_DP)
-                applyWidgetOptions(hostView, bound.appWidgetId, wDp, hDp, maxWidthDp)
-                (parent as? View)?.requestLayout()
-            }
+            // Keep drag feedback local. Provider/Binder updates are sent once on commit.
+            onSizeLive = null
             onSizeCommitted = { wPx, hPx ->
-                val wDp = (wPx / density).roundToInt().coerceIn(MIN_WIDTH_DP, maxWidthDp)
+                val wDp = maxWidthDp
                 val hDp = (hPx / density).roundToInt().coerceIn(MIN_HEIGHT_DP, MAX_HEIGHT_DP)
                 store.updateSize(bound.appWidgetId, wDp, hDp)
-                applyWidgetOptions(hostView, bound.appWidgetId, wDp, hDp, maxWidthDp)
-                (parent as? View)?.requestLayout()
+                applyWidgetOptions(bound.appWidgetId, wDp, hDp, maxWidthDp)
             }
             addView(
                 hostView,
@@ -315,11 +349,11 @@ class ProductiveWidgetHostHelper(
             contentDescription = appContext.getString(R.string.remove_widget)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(Color.argb(220, 20, 20, 24))
+                setColor(chromeColor)
             }
             scaleType = android.widget.ImageView.ScaleType.CENTER_INSIDE
             setPadding(pad, pad, pad, pad)
-            elevation = 12 * density
+            elevation = 6 * density
             visibility = View.GONE
             // Keep clicks on the button; never fall through to the host.
             isClickable = true
@@ -330,36 +364,66 @@ class ProductiveWidgetHostHelper(
             }
         }
         wrap.removeButton = removeBtn
-        wrap.addView(
-            removeBtn,
-            FrameLayout.LayoutParams(removeSize, removeSize).apply {
-                gravity = Gravity.TOP or Gravity.END
-                topMargin = (4 * density).roundToInt()
-                marginEnd = (4 * density).roundToInt()
-            },
-        )
+        wrap.addView(removeBtn, FrameLayout.LayoutParams(removeSize, removeSize).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = (6 * density).roundToInt()
+            marginEnd = (6 * density).roundToInt()
+        })
+
+        fun moveButton(label: String, description: String, offset: Int): TextView = TextView(appContext).apply {
+            text = label
+            contentDescription = description
+            gravity = Gravity.CENTER
+            textSize = 16f
+            setTextColor(themedColor(R.attr.primaryColor, Color.WHITE))
+            background = GradientDrawable().apply {
+                cornerRadius = 10 * density
+                setColor(chromeColor)
+            }
+            elevation = 4 * density
+            visibility = View.GONE
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { moveCardBy(wrap, offset) }
+        }
+        val upButton = moveButton("↑", "Move widget up", -1)
+        val downButton = moveButton("↓", "Move widget down", 1)
+        wrap.addView(upButton, FrameLayout.LayoutParams(removeSize, removeSize).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = (6 * density).roundToInt()
+            marginEnd = (44 * density).roundToInt()
+        })
+        wrap.addView(downButton, FrameLayout.LayoutParams(removeSize, removeSize).apply {
+            gravity = Gravity.TOP or Gravity.END
+            topMargin = (6 * density).roundToInt()
+            marginEnd = (82 * density).roundToInt()
+        })
+        wrap.editButtons = listOf(removeBtn, upButton, downButton)
 
         val resizeHandle = ResizeHandleView(appContext).apply {
             contentDescription = appContext.getString(R.string.resize_widget)
-            elevation = 12 * density
+            elevation = 6 * density
             visibility = View.GONE
             isClickable = true
         }
         wrap.attachResizeHandle(resizeHandle)
         wrap.addView(
             resizeHandle,
-            FrameLayout.LayoutParams(handleSize, handleSize).apply {
-                gravity = Gravity.BOTTOM or Gravity.END
-                bottomMargin = (4 * density).roundToInt()
-                marginEnd = (4 * density).roundToInt()
+            FrameLayout.LayoutParams(handleWidth, handleHeight).apply {
+                gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+                bottomMargin = (6 * density).roundToInt()
             },
         )
 
         return wrap
     }
 
+    private fun themedColor(attribute: Int, fallback: Int): Int {
+        val value = TypedValue()
+        return if (context.theme.resolveAttribute(attribute, value, true)) value.data else fallback
+    }
+
     private fun applyWidgetOptions(
-        hostView: AppWidgetHostView,
         appWidgetId: Int,
         widthDp: Int,
         heightDp: Int,
@@ -381,10 +445,6 @@ class ProductiveWidgetHostHelper(
             }
         }
         runCatching { appWidgetManager.updateAppWidgetOptions(appWidgetId, options) }
-        @Suppress("DEPRECATION")
-        runCatching {
-            hostView.updateAppWidgetSize(options, w, h, w, h)
-        }
     }
 
     /**
@@ -417,6 +477,13 @@ class ProductiveWidgetHostHelper(
         return w to h
     }
 
+    private fun providerResizeMinSizePx(info: AppWidgetProviderInfo): Pair<Int, Int> {
+        val (defaultWidth, defaultHeight) = providerMinSizePx(info)
+        val resizeWidth = info.minResizeWidth.takeIf { it > 0 } ?: defaultWidth
+        val resizeHeight = info.minResizeHeight.takeIf { it > 0 } ?: defaultHeight
+        return resizeWidth to resizeHeight
+    }
+
     /**
      * Host frame size in **pixels**.
      * - User override: stored widthDp/heightDp.
@@ -433,12 +500,9 @@ class ProductiveWidgetHostHelper(
         val minHpx = (MIN_HEIGHT_DP * density).roundToInt()
 
         // Explicit user resize wins.
-        if (bound.widthDp > 0 && bound.heightDp > 0) {
-            val w = (bound.widthDp * density).roundToInt()
-                .coerceIn(minWpx, containerWidthPx)
-            val h = (bound.heightDp * density).roundToInt()
-                .coerceIn(minHpx, maxHpx)
-            return w to h
+        if (bound.heightDp > 0) {
+            val h = (bound.heightDp * density).roundToInt().coerceIn(minHpx, maxHpx)
+            return containerWidthPx to h
         }
 
         val (provW, provH) = providerMinSizePx(info)
@@ -453,17 +517,13 @@ class ProductiveWidgetHostHelper(
         val aspect = pH.toFloat() / pW.toFloat()
         val isWide = (pW.toFloat() / pH >= 2.0f) || (pW >= containerWidthPx * 0.55f)
 
-        return if (isWide) {
-            // Search bars / horizontal widgets: fill width, scale height by aspect.
-            val h = (containerWidthPx * aspect).roundToInt().coerceIn(minHpx, maxHpx)
-            containerWidthPx to h
+        // A single full-width column makes widgets easier to scan and reorder.
+        val h = if (isWide) {
+            (containerWidthPx * aspect).roundToInt()
         } else {
-            // Compact / square (e.g. Chrome Dino 110×110dp): keep provider size.
-            // Do NOT stretch to full width — that clips or letterboxes content.
-            val w = pW.coerceAtMost(containerWidthPx)
-            val h = pH.coerceAtMost(maxHpx)
-            w to h
-        }
+            pH
+        }.coerceIn(minHpx, maxHpx)
+        return containerWidthPx to h
     }
 
     /**
@@ -563,6 +623,7 @@ class ProductiveWidgetHostHelper(
         var minHeightPx: Int = 200
         var maxHeightPx: Int = 2000
         var removeButton: View? = null
+        var editButtons: List<View> = emptyList()
         var hostView: View? = null
 
         private var resizeHandle: View? = null
@@ -595,7 +656,7 @@ class ProductiveWidgetHostHelper(
 
         fun setEditMode(enabled: Boolean) {
             editing = enabled
-            removeButton?.visibility = if (enabled) View.VISIBLE else View.GONE
+            editButtons.forEach { it.visibility = if (enabled) View.VISIBLE else View.GONE }
             resizeHandle?.visibility = if (enabled) View.VISIBLE else View.GONE
             // Hard-block widget interaction while chrome is visible.
             hostView?.let { host ->
@@ -627,10 +688,14 @@ class ProductiveWidgetHostHelper(
         private fun isOnEditChrome(ev: MotionEvent): Boolean {
             val x = ev.x
             val y = ev.y
-            return listOfNotNull(removeButton, resizeHandle).any { chrome ->
-                if (chrome.visibility != View.VISIBLE) return@any false
-                x >= chrome.left && x < chrome.right && y >= chrome.top && y < chrome.bottom
+            for (chrome in editButtons) {
+                if (chrome.visibility == View.VISIBLE &&
+                    x >= chrome.left && x < chrome.right && y >= chrome.top && y < chrome.bottom
+                ) return true
             }
+            val handle = resizeHandle ?: return false
+            return handle.visibility == View.VISIBLE &&
+                x >= handle.left && x < handle.right && y >= handle.top && y < handle.bottom
         }
 
         private fun applyLiveSize(newW: Int, newH: Int) {
@@ -660,9 +725,8 @@ class ProductiveWidgetHostHelper(
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (!resizing) return false
-                    val dw = (event.rawX - startRawX).roundToInt()
                     val dh = (event.rawY - startRawY).roundToInt()
-                    val newW = (startW + dw).coerceIn(minWidthPx, maxWidthPx)
+                    val newW = maxWidthPx
                     val newH = (startH + dh).coerceIn(minHeightPx, maxHeightPx)
                     applyLiveSize(newW, newH)
                     return true
@@ -672,9 +736,13 @@ class ProductiveWidgetHostHelper(
                         resizing = false
                         parent?.requestDisallowInterceptTouchEvent(false)
                         (parent?.parent as? ViewGroup)?.requestDisallowInterceptTouchEvent(false)
-                        val lp = layoutParams
-                        if (lp != null && lp.width > 0 && lp.height > 0) {
-                            onSizeCommitted?.invoke(lp.width, lp.height)
+                        if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                            applyLiveSize(startW, startH)
+                        } else {
+                            val lp = layoutParams
+                            if (lp != null && lp.width > 0 && lp.height > 0) {
+                                onSizeCommitted?.invoke(lp.width, lp.height)
+                            }
                         }
                     }
                     return true
@@ -734,7 +802,8 @@ class ProductiveWidgetHostHelper(
 
         init {
             background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = 12f * resources.displayMetrics.density
                 setColor(Color.argb(180, 20, 20, 24))
             }
         }
@@ -742,9 +811,10 @@ class ProductiveWidgetHostHelper(
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
             val d = resources.displayMetrics.density
-            val pad = 8f * d
-            canvas.drawLine(pad, height - pad, width - pad, pad, paint)
-            canvas.drawLine(pad + 5 * d, height - pad, width - pad, pad + 5 * d, paint)
+            val centerY = height / 2f
+            val halfWidth = 12f * d
+            canvas.drawLine(width / 2f - halfWidth, centerY - 3f * d, width / 2f + halfWidth, centerY - 3f * d, paint)
+            canvas.drawLine(width / 2f - halfWidth, centerY + 3f * d, width / 2f + halfWidth, centerY + 3f * d, paint)
         }
     }
 

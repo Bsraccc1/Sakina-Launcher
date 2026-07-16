@@ -152,7 +152,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         isResumed = true
         viewModel.isPrivateSpaceToggling = false
-        applySolidBackground()
+        // Background is applied in onCreate and explicit preference/permission callbacks.
+        // Reloading WallpaperManager on every launcher resume causes visible Home jank.
     }
 
     override fun onStop() {
@@ -440,12 +441,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restartLauncherOrCheckTheme(forceRestart: Boolean = false) {
-        if (forceRestart || prefs.launcherRestartTimestamp.hasBeenHours(4)) {
-            prefs.launcherRestartTimestamp = System.currentTimeMillis()
-            cacheDir.deleteRecursively()
+        if (forceRestart) {
             recreate()
-        } else
+        } else {
             checkTheme()
+        }
     }
 
     private fun checkTheme() {

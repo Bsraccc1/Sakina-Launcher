@@ -72,6 +72,17 @@ class NotePanelAdapter(
         val oldRows = this.rows
         val oldSelectedIds = this.selectedNoteIds
         val nextSelectedIds = selectedNoteIds.toSet()
+        if (oldRows == rows) {
+            this.selectedNoteIds = nextSelectedIds
+            if (oldSelectedIds != nextSelectedIds) {
+                rows.forEachIndexed { index, row ->
+                    if (isSelected(row, oldSelectedIds) != isSelected(row, nextSelectedIds)) {
+                        notifyItemChanged(index)
+                    }
+                }
+            }
+            return
+        }
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
             override fun getOldListSize(): Int = oldRows.size
 

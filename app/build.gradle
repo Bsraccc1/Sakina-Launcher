@@ -1,6 +1,13 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+def releaseStoreFile = providers.gradleProperty("releaseStoreFile")
+def releaseStorePassword = providers.gradleProperty("releaseStorePassword")
+def releaseKeyAlias = providers.gradleProperty("releaseKeyAlias")
+def releaseKeyPassword = providers.gradleProperty("releaseKeyPassword")
+def hasReleaseSigning = releaseStoreFile.isPresent() &&
+        releaseStorePassword.isPresent() && releaseKeyAlias.isPresent() && releaseKeyPassword.isPresent()
+
 android {
     compileSdk 35
 
@@ -31,6 +38,14 @@ android {
             keyAlias "androiddebugkey"
             keyPassword "android"
         }
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile.get())
+                storePassword releaseStorePassword.get()
+                keyAlias releaseKeyAlias.get()
+                keyPassword releaseKeyPassword.get()
+            }
+        }
     }
 
     buildTypes {
@@ -38,7 +53,8 @@ android {
             debuggable false
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.debug
+            // Local builds remain installable; CI releases override this with a stable secret key.
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {

@@ -28,9 +28,9 @@
     <dimen name="productive_edge_margin">20dp</dimen>
     <dimen name="productive_edge_margin_compact">20dp</dimen>
     <dimen name="productive_header_top">36dp</dimen>
-    <dimen name="productive_widget_gap">10dp</dimen>
-    <dimen name="productive_segment_tab_width">66dp</dimen>
-    <dimen name="productive_segment_tab_height">34dp</dimen>
+    <dimen name="productive_widget_gap">12dp</dimen>
+    <dimen name="productive_segment_tab_width">60dp</dimen>
+    <dimen name="productive_segment_tab_height">30dp</dimen>
     <dimen name="productive_composer_min_height">48dp</dimen>
     <dimen name="productive_timer_ring">236dp</dimen>
 </resources>

@@ -1083,7 +1083,7 @@ class NotePanelFragment : Fragment() {
         timer?.cancel()
         timer = null
         clearSuppressHome()
-        widgetHost?.stopListening()
+        widgetHost?.destroy()
         widgetHost = null
         super.onDestroyView()
         _binding = null

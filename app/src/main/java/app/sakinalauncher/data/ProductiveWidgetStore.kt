@@ -54,6 +54,7 @@ class ProductiveWidgetStore(context: Context) {
 
     fun setWidgets(widgets: List<BoundWidget>) {
         val next = widgets.distinctBy { it.appWidgetId }
+        if (next == getWidgets()) return
         cache = next
         prefs.edit { putString(KEY_WIDGETS, encode(next)) }
     }
@@ -75,11 +76,12 @@ class ProductiveWidgetStore(context: Context) {
         var updated = false
         val next = getWidgets().map { widget ->
             if (widget.appWidgetId == appWidgetId) {
-                updated = true
-                widget.copy(
+                val resized = widget.copy(
                     widthDp = widthDp.coerceAtLeast(0),
                     heightDp = heightDp.coerceAtLeast(0),
                 )
+                updated = resized != widget
+                resized
             } else {
                 widget
             }
