@@ -143,13 +143,17 @@ class MuslimCenterFragment : Fragment() {
     }
 
     private suspend fun tryAutoDetectLocation() {
-        val cityQuery = PrayerLocationHelper.detectCityQuery(requireContext())
-        if (!cityQuery.isNullOrBlank()) {
-            val city = repository.searchCities(cityQuery).firstOrNull()
-            if (city != null) {
-                repository.selectCity(city)
-            }
-        }
+        val detected = PrayerLocationHelper.detectLocation(requireContext()) ?: return
+        // Coordinate-first: this works with no data connection at all. The old path
+        // needed the Kemenag search API just to turn a city name into an id, so a
+        // fresh install offline was left on the Jakarta default.
+        repository.adoptDetectedLocation(
+            label = detected.cityQuery,
+            country = detected.country,
+            latitude = detected.latitude,
+            longitude = detected.longitude,
+            timeZoneId = detected.timeZoneId,
+        )
     }
 
     private fun hasLocationPermission(): Boolean {

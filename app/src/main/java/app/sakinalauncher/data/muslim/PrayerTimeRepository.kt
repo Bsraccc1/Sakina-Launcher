@@ -42,6 +42,9 @@ class PrayerTimeRepository(
         store.cityId = city.id
         store.cityLabel = city.label
         store.cityQuery = city.label
+        // Lay down a year of offline days for the new location before touching the
+        // network, so the schedule survives even if this is the last time online.
+        warmOfflineYear()
         getOrFetchToday(forceRefresh = true)
     }
 
@@ -53,10 +56,62 @@ class PrayerTimeRepository(
         store.globalLongitude = location.longitude
         store.globalTimeZoneId = location.timeZoneId
         store.globalMethod = location.method
+        warmOfflineYear()
         getOrFetchToday(forceRefresh = true)
     }
 
     suspend fun refreshToday(): PrayerScheduleResult = getOrFetchToday(forceRefresh = true)
+
+    /**
+     * Adopt a coordinate straight from the device's location, without asking any
+     * server to name it first. This is what lets auto-detect work on a phone that
+     * has GPS but no data: the coordinate alone is enough to compute the schedule.
+     *
+     * [label] is only cosmetic (reverse geocoding may fail); the maths uses the
+     * coordinate.
+     */
+    suspend fun adoptDetectedLocation(
+        label: String,
+        country: String,
+        latitude: Double,
+        longitude: Double,
+        timeZoneId: String,
+    ): PrayerScheduleResult = withContext(ioDispatcher) {
+        // Inside Indonesia the published Bimas Islam schedule is what people expect
+        // to see, so prefer the named city when we can resolve one; otherwise fall
+        // back to computing from the raw coordinate.
+        val indonesianCity = PrayerOfflineLocations.match(label)
+            ?.takeIf { it.timeZoneId.startsWith("Asia/Jakarta") ||
+                it.timeZoneId.startsWith("Asia/Makassar") ||
+                it.timeZoneId.startsWith("Asia/Jayapura") }
+
+        if (indonesianCity != null) {
+            store.provider = PrayerProvider.KEMENAG
+            store.cityLabel = label
+            store.cityQuery = label
+        } else {
+            store.provider = PrayerProvider.GLOBAL
+            store.globalLocationLabel = label
+            store.globalCountry = country
+            store.globalLatitude = latitude
+            store.globalLongitude = longitude
+            store.globalTimeZoneId = timeZoneId
+        }
+        warmOfflineYear()
+        getOrFetchToday(forceRefresh = true)
+    }
+
+    /**
+     * Write a year of locally computed schedules to disk. Called after a location is
+     * chosen so the user is covered even if the launcher is never online again.
+     * Cheap: no network, pure arithmetic, and the store writes one batch.
+     */
+    suspend fun warmOfflineYear(days: Int = 365): Int = withContext(ioDispatcher) {
+        val schedules = scheduleForYear(days = days)
+        if (schedules.isEmpty()) return@withContext 0
+        store.saveSchedules(schedules.first().cacheKey, schedules)
+        schedules.size
+    }
 
     suspend fun getOrFetchToday(forceRefresh: Boolean = false): PrayerScheduleResult = withContext(ioDispatcher) {
         val timeZoneId = activeTimeZoneId()
@@ -83,9 +138,122 @@ class PrayerTimeRepository(
         val timeZoneId = activeTimeZoneId()
         val today = todayYmd(timeZoneId)
         store.getCachedScheduleForDate(store.activeCacheKey, today)
+            ?: computedScheduleFor(System.currentTimeMillis())
     }
 
-    fun cachedSchedule(): PrayerSchedule? = store.getCachedSchedule()
+    fun cachedSchedule(): PrayerSchedule? = store.getCachedSchedule() ?: computedScheduleFor(System.currentTimeMillis())
+
+    /**
+     * True once we know where the user is — either a picked city or a detected
+     * coordinate. From that moment on prayer times are always available, network
+     * or not, because they can be computed locally.
+     */
+    val hasLocation: Boolean
+        get() = when (store.provider) {
+            PrayerProvider.KEMENAG -> store.cityLabel.isNotBlank() || store.cityQuery.isNotBlank()
+            PrayerProvider.GLOBAL -> store.globalLatitude != 0.0 || store.globalLongitude != 0.0
+        }
+
+    /**
+     * Schedule for any date, computed on the device. This is the guarantee the user
+     * asked for: install the launcher, pick (or auto-detect) a location once, and
+     * the schedule works forever — a year ahead, abroad, in aeroplane mode.
+     *
+     * Returns null only when there is genuinely no location to compute for.
+     */
+    fun scheduleFor(dateMillis: Long): PrayerSchedule? = computedScheduleFor(dateMillis)
+
+    /**
+     * A full year of schedules starting at [startMillis], all computed locally.
+     * No network, no per-day API calls.
+     */
+    fun scheduleForYear(startMillis: Long = System.currentTimeMillis(), days: Int = 365): List<PrayerSchedule> {
+        val place = activePlace() ?: return emptyList()
+        val zone = TimeZone.getTimeZone(place.timeZoneId)
+        val cursor = Calendar.getInstance(zone).apply {
+            timeInMillis = startMillis
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return buildList(days) {
+            repeat(days) {
+                computedScheduleFor(cursor.timeInMillis)?.let { add(it) }
+                cursor.add(Calendar.DAY_OF_MONTH, 1)
+            }
+        }
+    }
+
+    /** Where the user is, as coordinates the calculator can use. */
+    private fun activePlace(): PrayerOfflineLocations.Place? = when (store.provider) {
+        PrayerProvider.GLOBAL -> {
+            if (store.globalLatitude == 0.0 && store.globalLongitude == 0.0) {
+                null
+            } else {
+                PrayerOfflineLocations.Place(
+                    name = store.globalLocationLabel,
+                    latitude = store.globalLatitude,
+                    longitude = store.globalLongitude,
+                    timeZoneId = store.globalTimeZoneId.ifBlank { TimeZone.getDefault().id },
+                )
+            }
+        }
+
+        PrayerProvider.KEMENAG -> {
+            val label = store.cityLabel.ifBlank { store.cityQuery }
+            if (label.isBlank()) null else PrayerOfflineLocations.matchOrJakarta(label)
+        }
+    }
+
+    /** Calculation convention that matches the active provider. */
+    private fun activeMethod(): PrayerTimeCalculator.Method = when (store.provider) {
+        PrayerProvider.KEMENAG -> PrayerTimeCalculator.Method.KEMENAG
+        PrayerProvider.GLOBAL -> when (store.globalMethod) {
+            4 -> PrayerTimeCalculator.Method.UMM_AL_QURA
+            5 -> PrayerTimeCalculator.Method.EGYPTIAN
+            2 -> PrayerTimeCalculator.Method.ISNA
+            else -> PrayerTimeCalculator.Method.MWL
+        }
+    }
+
+    private fun computedScheduleFor(dateMillis: Long): PrayerSchedule? {
+        val place = activePlace() ?: return null
+        val zone = runCatching { TimeZone.getTimeZone(place.timeZoneId) }.getOrDefault(TimeZone.getDefault())
+        val method = activeMethod()
+        val times = PrayerTimeCalculator.timesFor(
+            dateMillis = dateMillis,
+            latitude = place.latitude,
+            longitude = place.longitude,
+            timeZone = zone,
+            method = method,
+        )
+        val calendar = Calendar.getInstance(zone).apply { timeInMillis = dateMillis }
+        val ymdFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = zone }
+        val labelFormat = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.getDefault()).apply { timeZone = zone }
+        val cityLabel = when (store.provider) {
+            PrayerProvider.KEMENAG -> store.cityLabel.ifBlank { store.cityQuery }
+            PrayerProvider.GLOBAL -> store.globalLocationLabel
+        }
+        val province = when (store.provider) {
+            PrayerProvider.KEMENAG -> ""
+            PrayerProvider.GLOBAL -> store.globalCountry
+        }
+        return PrayerSchedule(
+            city = cityLabel,
+            province = province,
+            dateLabel = labelFormat.format(calendar.time),
+            // Computed schedules are always current for their date, so stamp them
+            // now: the UI's "is this today's data" check then passes offline too.
+            fetchedAtMillis = System.currentTimeMillis(),
+            times = times.toPrayerTimes(),
+            source = method.label,
+            provider = store.provider,
+            timeZoneId = place.timeZoneId,
+            cacheKey = store.activeCacheKey,
+            dateYmd = ymdFormat.format(calendar.time),
+        )
+    }
 
     private suspend fun refreshMonthBatch(
         year: Int,
@@ -251,10 +419,21 @@ class PrayerTimeRepository(
         return format.format(Date())
     }
 
+    /**
+     * Network failed. Prefer a cached day, then fall back to computing the day on
+     * the device. [PrayerScheduleResult.Error] is only for the one case that
+     * genuinely cannot be solved offline: we do not know where the user is.
+     */
     private fun fallbackForToday(error: String, cacheKey: String, today: String): PrayerScheduleResult {
-        val cached = store.getCachedScheduleForDate(cacheKey, today)
-            ?: store.getCachedSchedule()
-            ?: store.getStaleCachedSchedule()
+        store.getCachedScheduleForDate(cacheKey, today)?.let {
+            return PrayerScheduleResult.Cached(it, error)
+        }
+        computedScheduleFor(System.currentTimeMillis())?.let {
+            // Not an error state for the user: this schedule is correct, it just
+            // came from the device's own calculation instead of the network.
+            return PrayerScheduleResult.Fresh(it)
+        }
+        val cached = store.getCachedSchedule() ?: store.getStaleCachedSchedule()
         return if (cached != null) PrayerScheduleResult.Cached(cached, error)
         else PrayerScheduleResult.Error(error)
     }

@@ -51,8 +51,13 @@ class PrayerTimeStore(context: Context) : PrayerScheduleStore {
         get() = prefs.getString(KEY_CITY_LABEL, "").orEmpty()
         set(value) = prefs.edit { putString(KEY_CITY_LABEL, value) }
 
+    /**
+     * On by default: a fresh install should resolve the user's own city as soon as
+     * location permission allows, instead of silently sitting on the Jakarta
+     * default until they find this switch in Settings.
+     */
     override var autoDetectLocation: Boolean
-        get() = prefs.getBoolean(KEY_AUTO_DETECT_LOCATION, false)
+        get() = prefs.getBoolean(KEY_AUTO_DETECT_LOCATION, true)
         set(value) = prefs.edit { putBoolean(KEY_AUTO_DETECT_LOCATION, value) }
 
     override var globalLocationLabel: String
