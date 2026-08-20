@@ -145,7 +145,7 @@ class DhikrPagerFragment : Fragment() {
                     label.setShadowLayer(0f, 0f, 0f, 0)
                 } else {
                     label.setTextColor(themeColor(R.attr.primaryColor))
-                    label.setShadowLayer(3f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
+                    label.setShadowLayer(1.5f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
                 }
             }
             tab.alpha = if (selected) 1f else 0.62f

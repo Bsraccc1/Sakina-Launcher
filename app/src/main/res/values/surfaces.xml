@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Sakinah glass surface tokens. Alpha only, no gradients, no shadows. -->
-    <color name="glassRaisedOnLight">#14000000</color>
-    <color name="glassSunkenOnLight">#1F000000</color>
+    <!-- Sakinah glass surface tokens. Alpha only, no gradients, no shadows.
+         Opacity is high enough for each surface to be a readable canvas for its
+         ink, low enough to stay translucent over the wallpaper. Contrast should
+         come from these surfaces + ink colour, NOT from a text glow. -->
+    <color name="glassRaisedOnLight">#28000000</color>
+    <color name="glassSunkenOnLight">#33000000</color>
     <color name="glassActiveOnLight">#D9000000</color>
-    <color name="hairlineOnLight">#33000000</color>
-    <color name="scrimOnLight">#1F000000</color>
+    <color name="hairlineOnLight">#40000000</color>
+    <color name="scrimOnLight">#2E000000</color>
 
-    <color name="glassRaisedOnDark">#1AFFFFFF</color>
-    <color name="glassSunkenOnDark">#26FFFFFF</color>
+    <color name="glassRaisedOnDark">#2BFFFFFF</color>
+    <color name="glassSunkenOnDark">#38FFFFFF</color>
     <color name="glassActiveOnDark">#E6FFFFFF</color>
-    <color name="hairlineOnDark">#3DFFFFFF</color>
-    <color name="scrimOnDark">#33000000</color>
+    <color name="hairlineOnDark">#4DFFFFFF</color>
+    <color name="scrimOnDark">#40000000</color>
 </resources>

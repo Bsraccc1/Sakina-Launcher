@@ -35,7 +35,7 @@
 
         <item name="primaryColor">@color/white</item>
         <item name="primaryInverseColor">@color/whiteInverse</item>
-        <item name="primaryTextShadowColor">@color/whiteInverseTrans50</item>
+        <item name="primaryTextShadowColor">@color/whiteInverseTrans30</item>
         <item name="primaryColorTrans50">@color/whiteTrans50</item>
         <item name="primaryColorTrans80">@color/whiteTrans80</item>
         <item name="primaryColorInverseTrans50">@color/whiteInverseTrans50</item>
@@ -82,7 +82,7 @@
         <item name="android:shadowColor">?attr/primaryTextShadowColor</item>
         <item name="android:shadowDx">0</item>
         <item name="android:shadowDy">0</item>
-        <item name="android:shadowRadius">3</item>
+        <item name="android:shadowRadius">1.5</item>
     </style>
 
     <style name="TextLarge" parent="TextDefault">

@@ -9,6 +9,7 @@
     <color name="whiteInverse">#000000</color>
     <color name="whiteInverseTrans10">#1A000000</color>
     <color name="whiteInverseTrans25">#40000000</color>
+    <color name="whiteInverseTrans30">#4D000000</color>
     <color name="whiteInverseTrans50">#80000000</color>
     <color name="whiteInverseTrans80">#CC000000</color>
     <color name="whiteInverseTrans90">#E6000000</color>
@@ -20,6 +21,7 @@
     <color name="blackInverse">#FFFFFF</color>
     <color name="blackInverseTrans10">#1AFFFFFF</color>
     <color name="blackInverseTrans25">#40FFFFFF</color>
+    <color name="blackInverseTrans30">#4DFFFFFF</color>
     <color name="blackInverseTrans50">#80FFFFFF</color>
     <color name="blackInverseTrans80">#CCFFFFFF</color>
     <color name="blackInverseTrans90">#E6FFFFFF</color>

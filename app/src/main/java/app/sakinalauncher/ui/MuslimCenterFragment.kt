@@ -217,7 +217,7 @@ class MuslimCenterFragment : Fragment() {
             view.setShadowLayer(0f, 0f, 0f, 0)
         } else {
             view.setTextColor(themeColor(R.attr.primaryColor))
-            view.setShadowLayer(3f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
+            view.setShadowLayer(1.5f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
         }
         view.alpha = if (active) 1f else 0.82f
     }
