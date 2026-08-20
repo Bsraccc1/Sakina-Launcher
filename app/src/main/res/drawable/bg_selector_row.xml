@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Selectable row: glass card body with a ripple on top. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="?attr/primaryColorTrans50">
+    android:color="?attr/glassHairline">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="?attr/primaryShadeColor" />
+            <solid android:color="?attr/glassRaised" />
             <corners android:radius="14dp" />
             <stroke
-                android:width="0.5dp"
-                android:color="?attr/primaryColorInverseTrans50" />
+                android:width="1dp"
+                android:color="?attr/glassHairline" />
         </shape>
     </item>
 </ripple>

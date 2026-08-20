@@ -78,16 +78,23 @@ class MuslimCenterFragment : Fragment() {
         bindCachedContent()
         refreshPrayerTimes()
         initSwipe()
+        binding.source.text = getString(R.string.dzikir_source_combined)
         binding.source.setOnClickListener {
             requireContext().openUrl(Constants.URL_DZIKIR_ALMANHAJ)
+        }
+        binding.source.setOnLongClickListener {
+            requireContext().openUrl(Constants.URL_DZIKIR_AFTER_PRAYER)
+            true
         }
         binding.location.setOnClickListener { openSettings() }
         binding.prayerCard.setOnClickListener { openSettings() }
         binding.morningDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.MORNING) }
         binding.eveningDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.EVENING) }
+        binding.afterPrayerDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.AFTER_PRAYER) }
         binding.prayerCard.addPressScale()
         binding.morningDhikrCard.addPressScale(0.95f)
         binding.eveningDhikrCard.addPressScale(0.95f)
+        binding.afterPrayerDhikrCard.addPressScale(0.95f)
         startPrayerTicker()
     }
 
@@ -99,8 +106,9 @@ class MuslimCenterFragment : Fragment() {
     private fun bindCachedContent() {
         val cached = repository.cachedSchedule()
         if (cached == null) {
-            binding.nextPrayer.text = getString(R.string.loading_prayer_times)
+            binding.nextPrayer.text = "--:--"
             binding.nextPrayerName.text = getString(R.string.prayer_times)
+            binding.nextPrayerCountdown.text = getString(R.string.loading_prayer_times)
             clearPrayerChips()
             binding.prayerSource.text = getString(R.string.prayer_source)
         } else {
@@ -154,6 +162,7 @@ class MuslimCenterFragment : Fragment() {
         val nextPrayer = schedule.nextPrayer()
         binding.nextPrayerName.text = prayerNameLabel(nextPrayer.name)
         binding.nextPrayer.text = nextPrayer.time
+        binding.nextPrayerCountdown.text = countdownLabel(nextPrayer.time)
         binding.location.text = listOf(schedule.city, schedule.province, schedule.dateLabel)
             .filter { it.isNotBlank() }
             .joinToString(" - ")
@@ -165,8 +174,9 @@ class MuslimCenterFragment : Fragment() {
 
     private fun renderPrayerError(message: String) {
         currentSchedule = null
-        binding.nextPrayer.text = getString(R.string.unable_to_load_prayer_times)
+        binding.nextPrayer.text = "--:--"
         binding.nextPrayerName.text = getString(R.string.prayer_times)
+        binding.nextPrayerCountdown.text = getString(R.string.prayer_need_location)
         binding.location.text = message
         clearPrayerChips()
         binding.prayerSource.text = getString(R.string.prayer_source)
@@ -176,18 +186,43 @@ class MuslimCenterFragment : Fragment() {
         prayerChipViews().forEach { (name, view) ->
             val prayerTime = schedule.times.firstOrNull { it.name == name }
             view.text = getString(R.string.prayer_chip_value, prayerNameLabel(name), prayerTime?.time ?: "--:--")
-            view.setBackgroundResource(
-                if (name == activeName) R.drawable.bg_prayer_time_chip_active else R.drawable.bg_prayer_time_chip
-            )
-            view.alpha = if (name == activeName) 1f else 0.78f
+            styleChip(view, active = name == activeName)
         }
     }
 
     private fun clearPrayerChips() {
         prayerChipViews().forEach { (name, view) ->
             view.text = getString(R.string.prayer_chip_value, prayerNameLabel(name), "--:--")
-            view.setBackgroundResource(R.drawable.bg_prayer_time_chip)
-            view.alpha = 0.62f
+            styleChip(view, active = false)
+            view.alpha = 0.55f
+        }
+    }
+
+    /**
+     * The active chip is filled with inverted ink, so its label must flip colour and
+     * drop the legibility halo — a halo over a solid fill is what reads as "embossed".
+     */
+    private fun styleChip(view: TextView, active: Boolean) {
+        view.setBackgroundResource(
+            if (active) R.drawable.bg_prayer_time_chip_active else R.drawable.bg_prayer_time_chip
+        )
+        if (active) {
+            view.setTextColor(themeColor(R.attr.primaryInverseColor))
+            view.setShadowLayer(0f, 0f, 0f, 0)
+        } else {
+            view.setTextColor(themeColor(R.attr.primaryColor))
+            view.setShadowLayer(3f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
+        }
+        view.alpha = if (active) 1f else 0.82f
+    }
+
+    private fun themeColor(attr: Int): Int {
+        val value = android.util.TypedValue()
+        requireContext().theme.resolveAttribute(attr, value, true)
+        return if (value.resourceId != 0) {
+            androidx.core.content.ContextCompat.getColor(requireContext(), value.resourceId)
+        } else {
+            value.data
         }
     }
 
@@ -211,6 +246,29 @@ class MuslimCenterFragment : Fragment() {
                 PrayerName.ISHA -> R.string.prayer_isha
             }
         )
+    }
+
+    /**
+     * Minutes until [time] ("HH:mm"), rendered as a human countdown. Wraps past
+     * midnight so the label stays correct after Isha.
+     */
+    private fun countdownLabel(time: String): String {
+        val parts = time.split(":")
+        val hour = parts.getOrNull(0)?.trim()?.toIntOrNull()
+        val minute = parts.getOrNull(1)?.trim()?.take(2)?.toIntOrNull()
+        if (hour == null || minute == null) return getString(R.string.next_prayer)
+        val now = java.util.Calendar.getInstance()
+        val nowMinutes = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+        var delta = (hour * 60 + minute) - nowMinutes
+        if (delta < 0) delta += 24 * 60
+        val hours = delta / 60
+        val minutes = delta % 60
+        val duration = if (hours > 0) {
+            getString(R.string.duration_h_m, hours, minutes)
+        } else {
+            getString(R.string.duration_m, minutes)
+        }
+        return getString(R.string.next_prayer_in, duration)
     }
 
     private fun startPrayerTicker() {
@@ -241,6 +299,10 @@ class MuslimCenterFragment : Fragment() {
         binding.eveningDhikr.text = getString(
             R.string.dzikir_evening_summary,
             DhikrContent.cardsFor(DhikrPeriod.EVENING).size
+        )
+        binding.afterPrayerDhikr.text = getString(
+            R.string.dzikir_after_prayer_summary,
+            DhikrContent.cardsFor(DhikrPeriod.AFTER_PRAYER).size
         )
     }
 

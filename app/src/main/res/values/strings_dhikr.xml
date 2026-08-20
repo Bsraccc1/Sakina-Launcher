@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dhikr categories added by the "After Prayer" feature. Kept in a separate file so it can be
+         merged by AAPT without touching the main strings.xml. -->
+    <string name="dzikir_setelah_shalat">After prayer dhikr</string>
+    <string name="dhikr_tab_morning">Morning</string>
+    <string name="dhikr_tab_evening">Evening</string>
+    <string name="dhikr_tab_after_prayer">After Prayer</string>
+</resources>

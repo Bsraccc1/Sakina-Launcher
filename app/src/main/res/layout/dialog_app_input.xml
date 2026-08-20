@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="@drawable/bg_unified_dialog"
+        android:background="@drawable/bg_glass_sheet"
         android:orientation="vertical"
         android:paddingHorizontal="22dp"
         android:paddingTop="22dp"

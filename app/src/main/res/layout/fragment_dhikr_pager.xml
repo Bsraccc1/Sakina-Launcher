@@ -5,7 +5,7 @@
     android:id="@+id/scrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_note_panel_scrim"
+    android:background="@drawable/bg_glass_scrim"
     android:fillViewport="true"
     android:overScrollMode="never"
     android:paddingHorizontal="20dp"
@@ -43,13 +43,70 @@
                 style="@style/TextSmallBold"
                 android:layout_width="wrap_content"
                 android:layout_height="34dp"
-                android:background="@drawable/bg_note_composer"
+                android:background="@drawable/bg_glass_inset"
                 android:gravity="center"
                 android:letterSpacing="0.04"
                 android:minWidth="78dp"
                 android:paddingHorizontal="16dp"
                 android:textSize="13sp"
                 tools:text="1 of 24" />
+
+        </LinearLayout>
+
+        <!-- Period tabs: morning / evening / after prayer -->
+        <LinearLayout
+            android:id="@+id/tabBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_glass_inset"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/tabMorning"
+                style="@style/TextSmallBold"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxLines="1"
+                android:paddingHorizontal="6dp"
+                android:textColor="?attr/primaryColor"
+                android:textSize="12sp"
+                tools:text="Morning" />
+
+            <TextView
+                android:id="@+id/tabEvening"
+                style="@style/TextSmallBold"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxLines="1"
+                android:paddingHorizontal="6dp"
+                android:textColor="?attr/primaryColor"
+                android:textSize="12sp"
+                tools:text="Evening" />
+
+            <TextView
+                android:id="@+id/tabAfterPrayer"
+                style="@style/TextSmallBold"
+                android:layout_width="0dp"
+                android:layout_height="38dp"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:maxLines="1"
+                android:paddingHorizontal="6dp"
+                android:textColor="?attr/primaryColor"
+                android:textSize="12sp"
+                tools:text="After Prayer" />
 
         </LinearLayout>
 
@@ -60,7 +117,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
             android:minHeight="380dp"
-            android:background="@drawable/bg_unified_card"
+            android:background="@drawable/bg_glass_card"
             android:orientation="vertical"
             android:paddingHorizontal="22dp"
             android:paddingTop="20dp"
@@ -85,7 +142,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_dhikr_repeat_chip"
+                android:background="@drawable/bg_glass_inset"
                 android:letterSpacing="0.04"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="5dp"
@@ -195,7 +252,7 @@
                 android:id="@+id/btnPrev"
                 android:layout_width="54dp"
                 android:layout_height="54dp"
-                android:background="@drawable/bg_dhikr_nav_button"
+                android:background="@drawable/bg_glass_pill"
                 android:clickable="true"
                 android:contentDescription="@string/previous"
                 android:focusable="true"
@@ -215,7 +272,7 @@
                     style="@style/TextLarge"
                     android:layout_width="match_parent"
                     android:layout_height="62dp"
-                    android:background="@drawable/bg_tasbih_capsule"
+                    android:background="@drawable/bg_glass_active"
                     android:clickable="true"
                     android:focusable="true"
                     android:fontFamily="@font/poppins_semibold"
@@ -242,7 +299,7 @@
                 android:id="@+id/btnNext"
                 android:layout_width="54dp"
                 android:layout_height="54dp"
-                android:background="@drawable/bg_dhikr_nav_button"
+                android:background="@drawable/bg_glass_pill"
                 android:clickable="true"
                 android:contentDescription="@string/next"
                 android:focusable="true"

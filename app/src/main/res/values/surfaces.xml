@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sakinah glass surface tokens. Alpha only, no gradients, no shadows. -->
+    <color name="glassRaisedOnLight">#14000000</color>
+    <color name="glassSunkenOnLight">#1F000000</color>
+    <color name="glassActiveOnLight">#D9000000</color>
+    <color name="hairlineOnLight">#33000000</color>
+    <color name="scrimOnLight">#1F000000</color>
+
+    <color name="glassRaisedOnDark">#1AFFFFFF</color>
+    <color name="glassSunkenOnDark">#26FFFFFF</color>
+    <color name="glassActiveOnDark">#E6FFFFFF</color>
+    <color name="hairlineOnDark">#3DFFFFFF</color>
+    <color name="scrimOnDark">#33000000</color>
+</resources>

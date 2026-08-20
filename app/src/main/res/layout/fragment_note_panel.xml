@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_note_panel_scrim"
+    android:background="@drawable/bg_glass_scrim"
     android:orientation="vertical">
 
     <!-- Tiny optional gap for Compact panel size; weight applied in code. -->
@@ -45,7 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:background="@drawable/bg_note_composer"
+                android:background="@drawable/bg_glass_inset"
                 android:padding="3dp">
 
                 <View
@@ -205,7 +205,7 @@
                     style="@style/TextSmallBold"
                     android:layout_width="92dp"
                     android:layout_height="38dp"
-                    android:background="@drawable/bg_note_composer"
+                    android:background="@drawable/bg_glass_inset"
                     android:gravity="center"
                     android:text="@string/pause" />
 
@@ -215,7 +215,7 @@
                     android:layout_width="92dp"
                     android:layout_height="38dp"
                     android:layout_marginStart="12dp"
-                    android:background="@drawable/bg_note_composer"
+                    android:background="@drawable/bg_glass_inset"
                     android:gravity="center"
                     android:text="@string/reset" />
 
@@ -311,7 +311,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
-            android:background="@drawable/bg_note_composer"
+            android:background="@drawable/bg_glass_inset"
             android:gravity="center_vertical"
             android:minHeight="@dimen/productive_composer_min_height"
             android:orientation="horizontal">
@@ -353,7 +353,6 @@
             android:layout_height="66dp"
             android:layout_gravity="center_vertical"
             android:background="@drawable/bg_note_action_bar"
-            android:elevation="10dp"
             android:fillViewport="true"
             android:scrollbars="none"
             android:visibility="gone">

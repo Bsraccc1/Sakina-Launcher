@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="muslim_after_prayer_title">Setelah shalat</string>
+    <string name="dzikir_after_prayer_summary" formatted="false">%1$d bacaan</string>
+
+    <string name="next_prayer_in" formatted="false">%1$s lagi</string>
+    <string name="duration_h_m" formatted="false">%1$d jam %2$d menit</string>
+    <string name="duration_m" formatted="false">%1$d menit</string>
+
+    <string name="prayer_source_offline" formatted="false">Dihitung offline - %1$s</string>
+    <string name="prayer_need_location">Pilih lokasi untuk melihat waktu shalat</string>
+
+    <string name="dzikir_source_combined">Sumber: almanhaj.or.id - rumaysho.com</string>
+</resources>

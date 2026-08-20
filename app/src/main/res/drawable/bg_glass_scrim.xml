@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Prayer chip active: active ink. -->
+<!-- Glass scrim: flat wallpaper dim for full-screen panels. Single alpha, no gradient. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="?attr/glassActive" />
-    <corners android:radius="14dp" />
+    <solid android:color="?attr/glassScrim" />
 </shape>

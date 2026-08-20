@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Muslim Center strings owned by the layout redesign. Kept in its own file so
+     parallel work on strings.xml cannot conflict. -->
+<resources>
+    <string name="muslim_after_prayer_title">After prayer</string>
+    <string name="muslim_after_prayer_icon" translatable="false">۩</string>
+    <string name="dzikir_after_prayer_summary" formatted="false">%1$d readings</string>
+
+    <!-- Countdown under the hero time -->
+    <string name="next_prayer_in" formatted="false">In %1$s</string>
+    <string name="duration_h_m" formatted="false">%1$dh %2$dm</string>
+    <string name="duration_m" formatted="false">%1$dm</string>
+
+    <!-- Offline schedule provenance -->
+    <string name="prayer_source_offline" formatted="false">Calculated offline - %1$s</string>
+    <string name="prayer_need_location">Choose a location to see prayer times</string>
+
+    <!-- Morning/evening dhikr: almanhaj.or.id. After-prayer dhikr: Hishnul Muslim via rumaysho.com. -->
+    <string name="dzikir_source_combined">Sources: almanhaj.or.id - rumaysho.com</string>
+</resources>

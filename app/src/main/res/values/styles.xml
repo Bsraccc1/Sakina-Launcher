@@ -45,6 +45,13 @@
         <item name="primaryShadeDarkColor">@color/blackInverseTrans25</item>
         <item name="dialogShadeColor">@color/blackInverseTrans50</item>
 
+        <!-- Glass surface system (light wallpaper -> dark ink) -->
+        <item name="glassRaised">@color/glassRaisedOnLight</item>
+        <item name="glassSunken">@color/glassSunkenOnLight</item>
+        <item name="glassActive">@color/glassActiveOnLight</item>
+        <item name="glassHairline">@color/hairlineOnLight</item>
+        <item name="glassScrim">@color/scrimOnLight</item>
+
     </style>
 
     <style name="WindowAnimationTransition">
@@ -81,10 +88,15 @@
         <item name="android:textColor">@drawable/text_colors_default</item>
         <item name="android:textColorHint">?attr/primaryColorTrans80</item>
         <item name="android:fontFamily">@font/poppins_regular</item>
+        <!--
+          Legibility halo, not an emboss: offset 0 so text never looks stamped or
+          raised. A launcher draws over arbitrary wallpaper, so a soft same-axis
+          glow is what keeps text readable without faking depth.
+        -->
         <item name="android:shadowColor">?attr/primaryTextShadowColor</item>
         <item name="android:shadowDx">0</item>
-        <item name="android:shadowDy">2</item>
-        <item name="android:shadowRadius">4</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">3</item>
     </style>
 
     <style name="TextLarge" parent="TextDefault">

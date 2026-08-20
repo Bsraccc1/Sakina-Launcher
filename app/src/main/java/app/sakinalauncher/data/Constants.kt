@@ -166,6 +166,9 @@ object Constants {
     const val URL_DIGITAL_WELLBEING_LEARN_MORE = "https://github.com/Bsraccc1/Sakina-Launcher"
     const val URL_DZIKIR_ALMANHAJ = "https://almanhaj.or.id/11518-dzikir-pagi-dan-petang.html#_ftn21"
 
+    /** After-prayer dhikr reference (Hishnul Muslim, Syaikh Sa'ad bin Wahf al-Qahthani). */
+    const val URL_DZIKIR_AFTER_PRAYER = "https://rumaysho.com/1997-dzikir-setelah-shalat.html"
+
     const val DIGITAL_WELLBEING_PACKAGE_NAME = "com.google.android.apps.wellbeing"
     const val DIGITAL_WELLBEING_ACTIVITY = "com.google.android.apps.wellbeing.settings.TopLevelSettingsActivity"
     const val DIGITAL_WELLBEING_SAMSUNG_PACKAGE_NAME = "com.samsung.android.forest"

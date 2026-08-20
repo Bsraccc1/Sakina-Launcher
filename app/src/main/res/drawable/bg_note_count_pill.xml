@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Count pill: active ink, no hairline needed. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="?attr/primaryColor" />
-    <corners android:radius="18dp" />
+    <solid android:color="?attr/glassActive" />
+    <corners android:radius="16dp" />
 </shape>

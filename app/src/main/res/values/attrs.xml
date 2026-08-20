@@ -11,4 +11,11 @@
     <attr name="primaryShadeColor" format="color" />
     <attr name="dialogShadeColor" format="color" />
     <attr name="primaryShadeDarkColor" format="color" />
+
+    <!-- Sakinah glass surface system: alpha-only, no gradients, no shadows. -->
+    <attr name="glassRaised" format="color" />
+    <attr name="glassSunken" format="color" />
+    <attr name="glassActive" format="color" />
+    <attr name="glassHairline" format="color" />
+    <attr name="glassScrim" format="color" />
 </resources>

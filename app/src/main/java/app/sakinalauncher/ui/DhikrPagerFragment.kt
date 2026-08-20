@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
@@ -49,6 +50,7 @@ class DhikrPagerFragment : Fragment() {
         initSwipe()
         initTasbihCounter()
         initNavButtons()
+        initTabs()
         render()
         binding.scrollView.addSystemBarInsetsPadding()
         app.sakinalauncher.helper.FontHelper.applyFont(binding.root, prefs)
@@ -85,6 +87,71 @@ class DhikrPagerFragment : Fragment() {
         binding.btnNext.setOnClickListener { showNext() }
         binding.btnPrev.addPressScale(0.9f)
         binding.btnNext.addPressScale(0.9f)
+    }
+
+    private fun initTabs() {
+        binding.tabMorning.text = getString(R.string.dhikr_tab_morning)
+        binding.tabEvening.text = getString(R.string.dhikr_tab_evening)
+        binding.tabAfterPrayer.text = getString(R.string.dhikr_tab_after_prayer)
+        tabViews().forEach { (tabPeriod, tab) ->
+            tab.setOnClickListener { selectPeriod(tabPeriod) }
+            tab.addPressScale(0.95f)
+        }
+    }
+
+    private fun tabViews(): List<Pair<DhikrPeriod, View>> = listOf(
+        DhikrPeriod.MORNING to binding.tabMorning,
+        DhikrPeriod.EVENING to binding.tabEvening,
+        DhikrPeriod.AFTER_PRAYER to binding.tabAfterPrayer,
+    )
+
+    private fun selectPeriod(next: DhikrPeriod) {
+        if (next == period) return
+        flushCountProgress()
+        pendingAdvance?.let { _binding?.tasbihCounter?.removeCallbacks(it) }
+        pendingAdvance = null
+        period = next
+        index = 0
+        countMap.clear()
+        loadCountProgress()
+        render()
+        _binding?.scrollView?.smoothScrollTo(0, 0)
+    }
+
+    private fun renderTabs() {
+        tabViews().forEach { (tabPeriod, tab) ->
+            val selected = tabPeriod == period
+            tab.setBackgroundResource(if (selected) R.drawable.bg_glass_active else 0)
+            tab.isSelected = selected
+            (tab as? TextView)?.let { label ->
+                // Selected tab is filled with inverted ink: flip the text and drop the
+                // legibility halo, otherwise the fill reads as an embossed button.
+                if (selected) {
+                    label.setTextColor(themeColor(R.attr.primaryInverseColor))
+                    label.setShadowLayer(0f, 0f, 0f, 0)
+                } else {
+                    label.setTextColor(themeColor(R.attr.primaryColor))
+                    label.setShadowLayer(3f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
+                }
+            }
+            tab.alpha = if (selected) 1f else 0.62f
+        }
+    }
+
+    private fun themeColor(attr: Int): Int {
+        val value = android.util.TypedValue()
+        requireContext().theme.resolveAttribute(attr, value, true)
+        return if (value.resourceId != 0) {
+            androidx.core.content.ContextCompat.getColor(requireContext(), value.resourceId)
+        } else {
+            value.data
+        }
+    }
+
+    private fun periodTitleRes(): Int = when (period) {
+        DhikrPeriod.MORNING -> R.string.dzikir_pagi
+        DhikrPeriod.EVENING -> R.string.dzikir_petang
+        DhikrPeriod.AFTER_PRAYER -> R.string.dzikir_setelah_shalat
     }
     private fun incrementCounter() {
         val cards = DhikrContent.cardsFor(period)
@@ -154,10 +221,9 @@ class DhikrPagerFragment : Fragment() {
         if (cards.isEmpty()) return
         index = index.coerceIn(0, cards.lastIndex)
         val card = cards[index]
-        binding.title.text = getString(
-            if (period == DhikrPeriod.MORNING) R.string.dzikir_pagi else R.string.dzikir_petang
-        )
+        binding.title.text = getString(periodTitleRes())
         binding.counter.text = getString(R.string.dhikr_position, index + 1, cards.size)
+        renderTabs()
         binding.cardTitle.text = card.title()
         binding.arabic.text = card.arabic
         binding.latin.text = card.latin

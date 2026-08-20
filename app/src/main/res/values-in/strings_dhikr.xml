@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dzikir_setelah_shalat">Dzikir setelah shalat</string>
+    <string name="dhikr_tab_morning">Pagi</string>
+    <string name="dhikr_tab_evening">Petang</string>
+    <string name="dhikr_tab_after_prayer">Setelah Shalat</string>
+</resources>

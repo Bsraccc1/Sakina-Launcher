@@ -5,6 +5,7 @@ import java.util.Locale
 enum class DhikrPeriod {
     MORNING,
     EVENING,
+    AFTER_PRAYER,
 }
 
 data class DhikrCard(
@@ -30,7 +31,115 @@ object DhikrContent {
         return when (period) {
             DhikrPeriod.MORNING -> sharedCards.take(4) + morningOnlyCards + sharedCards.drop(4)
             DhikrPeriod.EVENING -> sharedCards.take(4) + eveningOnlyCards + sharedCards.drop(4) + eveningClosingCards
+            DhikrPeriod.AFTER_PRAYER -> afterPrayerCards
         }
+    }
+
+    /** Ayat Kursi and the three mu'awwidzot reused from [sharedCards] so the text stays identical. */
+    private fun sharedRecitation(titleId: String, noteId: String, noteEn: String): DhikrCard {
+        val base = sharedCards.first { it.titleId == titleId }
+        return base.copy(
+            meaningId = "${base.meaningId} $noteId",
+            meaningEn = "${base.meaningEn} $noteEn",
+            repetitionCount = 1,
+        )
+    }
+
+    private val afterPrayerCards: List<DhikrCard> by lazy {
+        listOf(
+            DhikrCard(
+                titleId = "Istighfar & Allahumma antas salaam",
+                titleEn = "Istighfar & Allahumma antas salaam",
+                arabic = "أَسْتَغْفِرُ اللَّهَ (٣×)\nاللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+                latin = "Astaghfirullah (3x). Allahumma antas salaam wa minkas salaam, tabaarokta yaa dzal jalaali wal ikrom.",
+                meaningId = "Aku minta ampun kepada Allah (3x). Ya Allah, Engkau pemberi keselamatan, dan dari-Mu keselamatan. Mahasuci Engkau, wahai Pemilik Keagungan dan Kemuliaan. (HR. Muslim no. 591)",
+                meaningEn = "I seek Allah's forgiveness (3x). O Allah, You are Peace and from You comes peace. Blessed are You, Owner of Majesty and Honor. (Muslim no. 591)",
+                repetitionCount = 3,
+            ),
+            DhikrCard(
+                titleId = "Tidak ada penghalang pemberian Allah",
+                titleEn = "None can withhold what Allah gives",
+                arabic = "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ",
+                latin = "Laa ilaha illallah wahdahu laa syarika lah, lahul mulku wa lahul hamdu wa huwa 'ala kulli syai-in qodiir. Allahumma laa maani'a limaa a'thoyta wa laa mu'thiya limaa mana'ta wa laa yanfa'u dzal jaddi minkal jaddu.",
+                meaningId = "Tidak ada sesembahan yang benar selain Allah semata, tidak ada sekutu bagi-Nya. Milik-Nya kerajaan dan pujian, dan Dia Mahakuasa atas segala sesuatu. Ya Allah, tidak ada yang mampu mencegah apa yang Engkau beri dan tidak ada yang mampu memberi apa yang Engkau cegah. Tidak berguna kekayaan dan kemuliaan seseorang di hadapan-Mu. (HR. Bukhari no. 844 dan Muslim no. 593)",
+                meaningEn = "There is no god but Allah alone, without partner. His is the dominion and the praise, and He has power over all things. O Allah, none can withhold what You give and none can give what You withhold, and no might or wealth avails anyone against You. (Bukhari no. 844, Muslim no. 593)",
+                repetitionCount = 1,
+            ),
+            DhikrCard(
+                titleId = "Laa hawla wa laa quwwata illa billah",
+                titleEn = "No power except with Allah",
+                arabic = "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَلَا نَعْبُدُ إِلَّا إِيَّاهُ، لَهُ النِّعْمَةُ وَلَهُ الْفَضْلُ وَلَهُ الثَّنَاءُ الْحَسَنُ، لَا إِلَهَ إِلَّا اللَّهُ مُخْلِصِينَ لَهُ الدِّينَ وَلَوْ كَرِهَ الْكَافِرُونَ",
+                latin = "Laa ilaha illallah wahdahu laa syarika lah, lahul mulku wa lahul hamdu wa huwa 'ala kulli syai-in qodiir. Laa hawla wa laa quwwata illa billah. Laa ilaha illallah wa laa na'budu illa iyyaah. Lahun ni'mah wa lahul fadhlu wa lahuts tsanaaul hasan. Laa ilaha illallah mukhlishiina lahud diin wa law karihal kaafiruun.",
+                meaningId = "Tidak ada sesembahan yang benar selain Allah semata, milik-Nya kerajaan dan pujian, dan Dia Mahakuasa atas segala sesuatu. Tidak ada daya dan kekuatan kecuali dengan pertolongan Allah. Tidak ada sesembahan yang benar selain Allah, dan kami tidak menyembah kecuali kepada-Nya. Milik-Nya segala nikmat, keutamaan, dan pujian yang baik. Tidak ada sesembahan yang benar selain Allah dengan memurnikan ketaatan kepada-Nya, walaupun orang-orang kafir membencinya. (HR. Muslim no. 594)",
+                meaningEn = "There is no god but Allah alone; His is the dominion and the praise, and He has power over all things. There is no strength except with Allah. There is no god but Allah and we worship none but Him. His are all favors, all bounty, and all beautiful praise. There is no god but Allah; we are sincere to Him in religion even if the disbelievers hate it. (Muslim no. 594)",
+                repetitionCount = 1,
+            ),
+            DhikrCard(
+                titleId = "Tasbih 33 kali",
+                titleEn = "Tasbih thirty-three times",
+                arabic = "سُبْحَانَ اللَّهِ",
+                latin = "Subhanallah.",
+                meaningId = "Mahasuci Allah. Dibaca 33 kali secara terpisah dari tahmid dan takbir, sebagaimana keterangan Imam Nawawi dalam Syarh Shahih Muslim 5:84. (HR. Muslim no. 597)",
+                meaningEn = "Glory be to Allah. Recited thirty-three times separately from the tahmid and takbir, as Imam an-Nawawi explained in Sharh Sahih Muslim 5:84. (Muslim no. 597)",
+                repetitionCount = 33,
+            ),
+            DhikrCard(
+                titleId = "Tahmid 33 kali",
+                titleEn = "Tahmid thirty-three times",
+                arabic = "الْحَمْدُ لِلَّهِ",
+                latin = "Alhamdulillah.",
+                meaningId = "Segala puji bagi Allah. Dibaca 33 kali secara terpisah setelah tasbih. (HR. Muslim no. 597)",
+                meaningEn = "All praise is due to Allah. Recited thirty-three times separately after the tasbih. (Muslim no. 597)",
+                repetitionCount = 33,
+            ),
+            DhikrCard(
+                titleId = "Takbir 33 kali",
+                titleEn = "Takbir thirty-three times",
+                arabic = "اللَّهُ أَكْبَرُ",
+                latin = "Allahu akbar.",
+                meaningId = "Allah Mahabesar. Dibaca 33 kali secara terpisah setelah tahmid. (HR. Muslim no. 597)",
+                meaningEn = "Allah is the Greatest. Recited thirty-three times separately after the tahmid. (Muslim no. 597)",
+                repetitionCount = 33,
+            ),
+            DhikrCard(
+                titleId = "Tahlil penutup tasbih",
+                titleEn = "Closing tahlil after the tasbihat",
+                arabic = "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+                latin = "Laa ilaha illallah wahdahu laa syarika lah, lahul mulku wa lahul hamdu wa huwa 'ala kulli syai-in qodiir.",
+                meaningId = "Tidak ada sesembahan yang benar selain Allah semata, tidak ada sekutu bagi-Nya. Milik-Nya kerajaan dan pujian, dan Dia Mahakuasa atas segala sesuatu. Dibaca sebagai penyempurna hitungan keseratus; dosanya diampuni walau sebanyak buih di lautan. (HR. Muslim no. 597)",
+                meaningEn = "There is no god but Allah alone, without partner. His is the dominion and the praise, and He has power over all things. Recited as the hundredth dhikr; the sins of the one who says it are forgiven even if they were as much as the foam of the sea. (Muslim no. 597)",
+                repetitionCount = 1,
+            ),
+            sharedRecitation(
+                titleId = "Ayat Kursi",
+                noteId = "Dibaca setiap selesai shalat fardhu; tidak ada yang menghalangi pembacanya masuk surga selain kematian. (HR. An-Nasai dalam Al-Kubro 9:44)",
+                noteEn = "Recited after every obligatory prayer; nothing keeps its reciter from Paradise except death. (an-Nasai, al-Kubra 9:44)",
+            ),
+            sharedRecitation(
+                titleId = "Surat Al-Ikhlas",
+                noteId = "Bagian dari mu'awwidzot yang dibaca setiap selesai shalat fardhu. (HR. Abu Daud no. 1523, An-Nasai no. 1337)",
+                noteEn = "One of the mu'awwidhat recited after every obligatory prayer. (Abu Dawud no. 1523, an-Nasai no. 1337)",
+            ),
+            sharedRecitation(
+                titleId = "Surat Al-Falaq",
+                noteId = "Bagian dari mu'awwidzot yang dibaca setiap selesai shalat fardhu. (HR. Abu Daud no. 1523, An-Nasai no. 1337)",
+                noteEn = "One of the mu'awwidhat recited after every obligatory prayer. (Abu Dawud no. 1523, an-Nasai no. 1337)",
+            ),
+            sharedRecitation(
+                titleId = "Surat An-Nas",
+                noteId = "Bagian dari mu'awwidzot yang dibaca setiap selesai shalat fardhu. (HR. Abu Daud no. 1523, An-Nasai no. 1337)",
+                noteEn = "One of the mu'awwidhat recited after every obligatory prayer. (Abu Dawud no. 1523, an-Nasai no. 1337)",
+            ),
+            DhikrCard(
+                titleId = "Setelah Shubuh: ilmu, rezeki, amal",
+                titleEn = "After Fajr: knowledge, provision, deeds",
+                arabic = "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا",
+                latin = "Allahumma inni as-aluka 'ilman naafi'a, wa rizqon thoyyiba, wa 'amalan mutaqobbala.",
+                meaningId = "Ya Allah, aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang halal, dan amal yang diterima. Dibaca khusus setelah salam shalat Shubuh. (HR. Ibnu Majah no. 925, Ahmad 6:305, 322)",
+                meaningEn = "O Allah, I ask You for beneficial knowledge, wholesome provision, and accepted deeds. Recited specifically after the salam of the Fajr prayer. (Ibn Majah no. 925, Ahmad 6:305, 322)",
+                repetitionCount = 1,
+            ),
+        )
     }
 
     private val sharedCards = listOf(
