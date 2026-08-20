@@ -9,7 +9,7 @@ def hasReleaseSigning = releaseStoreFile.isPresent() &&
         releaseStorePassword.isPresent() && releaseKeyAlias.isPresent() && releaseKeyPassword.isPresent()
 
 android {
-    compileSdk 35
+    compileSdk 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -23,9 +23,9 @@ android {
     defaultConfig {
         applicationId "app.sakinalauncher"
         minSdkVersion 24
-        targetSdkVersion 35
-        versionCode 110
-        versionName "v6.6.1"
+        targetSdkVersion 36
+        versionCode 111
+        versionName "v6.6.2"
 
         resourceConfigurations += ["en", "ar", "de", "es-rES", "es-rUS", "fr", "he", "hr", "hu", "in", "it", "ja", "nl", "pl", "pt-rBR", "ru-rRU", "sv", "tr", "uk", "zh"]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

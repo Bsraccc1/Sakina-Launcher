@@ -27,6 +27,7 @@ import android.widget.TextView
 import app.sakinalauncher.R
 import app.sakinalauncher.data.BoundWidget
 import app.sakinalauncher.data.ProductiveWidgetStore
+import app.sakinalauncher.data.WidgetSizeMath
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -183,13 +184,24 @@ class ProductiveWidgetHostHelper(
     fun inflateInto(container: ViewGroup, onRemove: (Int) -> Unit) {
         startListening()
         clearEditMode()
-        container.removeAllViews()
 
         val density = appContext.resources.displayMetrics.density
         val gapPx = appContext.resources.getDimensionPixelSize(R.dimen.productive_widget_gap)
+        // Resolve the width BEFORE tearing down existing views: bailing out after
+        // removeAllViews() used to leave the panel empty until the next re-render.
         val containerWidthPx = container.width.takeIf { it > 0 }
             ?: container.measuredWidth.takeIf { it > 0 }
-            ?: return
+        if (containerWidthPx == null) {
+            // Not measured yet — keep current views and retry once layout settles.
+            observeContainerWidth(container, onRemove)
+            container.post {
+                if (container.isAttachedToWindow && container.width > 0) {
+                    inflateInto(container, onRemove)
+                }
+            }
+            return
+        }
+        container.removeAllViews()
         val maxWidthDp = (containerWidthPx / density).roundToInt().coerceAtLeast(1)
 
         observeContainerWidth(container, onRemove)
@@ -258,7 +270,10 @@ class ProductiveWidgetHostHelper(
         val listener = View.OnLayoutChangeListener { view, left, _, right, _, oldLeft, _, oldRight, _ ->
             val width = right - left
             val oldWidth = oldRight - oldLeft
-            if (width > 0 && oldWidth > 0 && width != oldWidth && width != lastContainerWidthPx) {
+            // Height-only changes (what a resize produces) must NOT rebuild the cards.
+            if (oldWidth > 0 && WidgetSizeMath.shouldRebuildForWidth(width, lastContainerWidthPx) &&
+                width != oldWidth
+            ) {
                 view.post {
                     if (view.isAttachedToWindow && view.width == width) {
                         inflateInto(container, onRemove)
@@ -329,9 +344,9 @@ class ProductiveWidgetHostHelper(
             }
             // Keep drag feedback local. Provider/Binder updates are sent once on commit.
             onSizeLive = null
-            onSizeCommitted = { wPx, hPx ->
+            onSizeCommitted = { _, hPx ->
                 val wDp = maxWidthDp
-                val hDp = (hPx / density).roundToInt().coerceIn(MIN_HEIGHT_DP, MAX_HEIGHT_DP)
+                val hDp = WidgetSizeMath.commitHeightDp(hPx, density)
                 store.updateSize(bound.appWidgetId, wDp, hDp)
                 applyWidgetOptions(bound.appWidgetId, wDp, hDp, maxWidthDp)
             }
@@ -500,9 +515,8 @@ class ProductiveWidgetHostHelper(
         val minHpx = (MIN_HEIGHT_DP * density).roundToInt()
 
         // Explicit user resize wins.
-        if (bound.heightDp > 0) {
-            val h = (bound.heightDp * density).roundToInt().coerceIn(minHpx, maxHpx)
-            return containerWidthPx to h
+        WidgetSizeMath.resolveHeightPx(bound.heightDp, density)?.let { stored ->
+            return containerWidthPx to stored
         }
 
         val (provW, provH) = providerMinSizePx(info)
@@ -629,6 +643,13 @@ class ProductiveWidgetHostHelper(
         private var resizeHandle: View? = null
         private var editing = false
         private var resizing = false
+        /**
+         * Chrome view (✕ / ↑ / ↓ / resize handle) that captured the current gesture.
+         * Android delivers the whole gesture to the child that received ACTION_DOWN, so
+         * we must keep routing to it even after the finger leaves its bounds — otherwise
+         * the handle gets ACTION_CANCEL mid-drag and the resize is reverted.
+         */
+        private var chromeCapture: View? = null
         /** After long-press, swallow the rest of the gesture so the host never clicks. */
         private var blockHostUntilUp = false
         private var startRawX = 0f
@@ -685,18 +706,38 @@ class ProductiveWidgetHostHelper(
             cancel.recycle()
         }
 
-        private fun isOnEditChrome(ev: MotionEvent): Boolean {
+        private fun chromeAt(ev: MotionEvent): View? {
             val x = ev.x
             val y = ev.y
             for (chrome in editButtons) {
                 if (chrome.visibility == View.VISIBLE &&
                     x >= chrome.left && x < chrome.right && y >= chrome.top && y < chrome.bottom
-                ) return true
+                ) return chrome
             }
-            val handle = resizeHandle ?: return false
-            return handle.visibility == View.VISIBLE &&
+            val handle = resizeHandle
+            if (handle != null && handle.visibility == View.VISIBLE &&
                 x >= handle.left && x < handle.right && y >= handle.top && y < handle.bottom
+            ) return handle
+            return null
         }
+
+        /**
+         * Chrome that owns this gesture. Once a chrome child captured ACTION_DOWN it keeps
+         * the gesture until UP/CANCEL, even when the finger drags outside its bounds.
+         */
+        private fun chromeForGesture(ev: MotionEvent): View? {
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_DOWN -> chromeCapture = chromeAt(ev)
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val captured = chromeCapture
+                    chromeCapture = null
+                    return captured ?: chromeAt(ev)
+                }
+            }
+            return chromeCapture ?: if (resizing) resizeHandle else null
+        }
+
+        private fun isOnEditChrome(ev: MotionEvent): Boolean = chromeForGesture(ev) != null
 
         private fun applyLiveSize(newW: Int, newH: Int) {
             val lp = layoutParams ?: return
@@ -709,14 +750,22 @@ class ProductiveWidgetHostHelper(
             }
         }
 
+        /** Stop every scrolling ancestor (ScrollView, RecyclerView, pager) from stealing the drag. */
+        private fun lockAncestors(disallow: Boolean) {
+            var p = parent
+            while (p != null) {
+                (p as? ViewGroup)?.requestDisallowInterceptTouchEvent(disallow)
+                p = p.parent
+            }
+        }
+
         private fun handleResizeTouch(event: MotionEvent): Boolean {
             if (!editing) return false
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     resizing = true
                     blockHostUntilUp = true
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                    (parent?.parent as? ViewGroup)?.requestDisallowInterceptTouchEvent(true)
+                    lockAncestors(true)
                     startRawX = event.rawX
                     startRawY = event.rawY
                     startW = width.takeIf { it > 0 } ?: (layoutParams?.width ?: minWidthPx)
@@ -734,15 +783,15 @@ class ProductiveWidgetHostHelper(
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     if (resizing) {
                         resizing = false
-                        parent?.requestDisallowInterceptTouchEvent(false)
-                        (parent?.parent as? ViewGroup)?.requestDisallowInterceptTouchEvent(false)
-                        if (event.actionMasked == MotionEvent.ACTION_CANCEL) {
-                            applyLiveSize(startW, startH)
+                        lockAncestors(false)
+                        // Commit on UP **and** on CANCEL: a CANCEL here means an ancestor took
+                        // over the gesture, not that the user abandoned the resize. Reverting
+                        // on CANCEL is what made every resize snap back to its original size.
+                        val lp = layoutParams
+                        if (lp != null && lp.width > 0 && lp.height > 0) {
+                            onSizeCommitted?.invoke(lp.width, lp.height)
                         } else {
-                            val lp = layoutParams
-                            if (lp != null && lp.width > 0 && lp.height > 0) {
-                                onSizeCommitted?.invoke(lp.width, lp.height)
-                            }
+                            applyLiveSize(startW, startH)
                         }
                     }
                     return true

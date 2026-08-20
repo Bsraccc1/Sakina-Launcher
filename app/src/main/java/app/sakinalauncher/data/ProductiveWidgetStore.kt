@@ -27,9 +27,6 @@ class ProductiveWidgetStore(context: Context) {
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
 
-    @Volatile
-    private var cache: List<BoundWidget>? = null
-
     init {
         // One-time: drop host-forced sizes from older builds that ignored provider
         // minWidth/minHeight (double-scaled px-as-dp). Next inflate uses provider defaults.
@@ -37,8 +34,8 @@ class ProductiveWidgetStore(context: Context) {
             val migrated = decode(prefs.getString(KEY_WIDGETS, null)).map {
                 it.copy(widthDp = 0, heightDp = 0)
             }
-            cache = migrated
-            prefs.edit {
+            sharedCache = migrated
+            prefs.edit(commit = true) {
                 putString(KEY_WIDGETS, encode(migrated))
                 putBoolean(KEY_SIZE_PROVIDER_V2, true)
             }
@@ -46,17 +43,19 @@ class ProductiveWidgetStore(context: Context) {
     }
 
     fun getWidgets(): List<BoundWidget> {
-        cache?.let { return it }
+        sharedCache?.let { return it }
         val decoded = decode(prefs.getString(KEY_WIDGETS, null))
-        cache = decoded
+        sharedCache = decoded
         return decoded
     }
 
     fun setWidgets(widgets: List<BoundWidget>) {
         val next = widgets.distinctBy { it.appWidgetId }
         if (next == getWidgets()) return
-        cache = next
-        prefs.edit { putString(KEY_WIDGETS, encode(next)) }
+        sharedCache = next
+        // commit() (synchronous): the launcher process is routinely killed right after a
+        // resize, and apply() lost the new size before it reached disk.
+        prefs.edit(commit = true) { putString(KEY_WIDGETS, encode(next)) }
     }
 
     fun addWidget(widget: BoundWidget) {
@@ -108,6 +107,19 @@ class ProductiveWidgetStore(context: Context) {
         private const val PREFS_FILENAME = "app.sakinalauncher.productive_widgets"
         private const val KEY_WIDGETS = "BOUND_WIDGETS"
         private const val KEY_SIZE_PROVIDER_V2 = "SIZE_FROM_PROVIDER_V2"
+
+        /**
+         * Process-wide cache. Several instances exist at once (NotePanelFragment,
+         * PinItemActivity, the host helper); a per-instance cache let a stale copy
+         * overwrite a freshly committed resize.
+         */
+        @Volatile
+        private var sharedCache: List<BoundWidget>? = null
+
+        /** Test hook — drops the process-wide cache. */
+        fun clearCacheForTests() {
+            sharedCache = null
+        }
 
         fun encode(widgets: List<BoundWidget>): String {
             val array = JSONArray()

@@ -44,4 +44,16 @@ class ProductiveWidgetStoreTest {
         assertEquals(1, decoded.size)
         assertEquals(1, decoded[0].appWidgetId)
     }
+
+    /** A resized widget must keep its height after encode -> decode (process restart). */
+    @Test
+    fun resizedHeight_survivesEncodeDecodeRoundTrip() {
+        val original = BoundWidget(7, "pkg/.Widget", heightDp = 0, widthDp = 0)
+        val resized = original.copy(heightDp = 186, widthDp = 360)
+        val decoded = ProductiveWidgetStore.decode(ProductiveWidgetStore.encode(listOf(resized)))
+        assertEquals(1, decoded.size)
+        assertEquals(186, decoded[0].heightDp)
+        assertEquals(360, decoded[0].widthDp)
+        assertEquals(resized, decoded[0])
+    }
 }
