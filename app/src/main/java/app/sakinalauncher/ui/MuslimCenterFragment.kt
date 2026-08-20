@@ -86,6 +86,8 @@ class MuslimCenterFragment : Fragment() {
             requireContext().openUrl(Constants.URL_DZIKIR_AFTER_PRAYER)
             true
         }
+        binding.btnBack.setOnClickListener { closeCenter() }
+        binding.btnBack.addPressScale(0.9f)
         binding.location.setOnClickListener { openSettings() }
         binding.prayerCard.setOnClickListener { openSettings() }
         binding.morningDhikrCard.setOnClickListener { openDhikr(DhikrPeriod.MORNING) }

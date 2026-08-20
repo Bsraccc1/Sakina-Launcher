@@ -17,4 +17,6 @@
 
     <!-- Morning/evening dhikr: almanhaj.or.id. After-prayer dhikr: Hishnul Muslim via rumaysho.com. -->
     <string name="dzikir_source_combined">Sources: almanhaj.or.id - rumaysho.com</string>
+
+    <string name="nav_back">Back</string>
 </resources>

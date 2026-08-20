@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import app.sakinalauncher.R
 import app.sakinalauncher.data.Constants
 import app.sakinalauncher.data.muslim.DhikrContent
@@ -87,6 +88,19 @@ class DhikrPagerFragment : Fragment() {
         binding.btnNext.setOnClickListener { showNext() }
         binding.btnPrev.addPressScale(0.9f)
         binding.btnNext.addPressScale(0.9f)
+        // Before this there was no visible way out of the dhikr reader at all —
+        // only the system back gesture, which is invisible to a first-time user.
+        binding.btnBack.setOnClickListener { closeReader() }
+        binding.btnBack.addPressScale(0.9f)
+    }
+
+    private fun closeReader() {
+        flushCountProgress()
+        runCatching {
+            if (!findNavController().popBackStack()) {
+                findNavController().navigate(R.id.muslimCenterFragment)
+            }
+        }
     }
 
     private fun initTabs() {

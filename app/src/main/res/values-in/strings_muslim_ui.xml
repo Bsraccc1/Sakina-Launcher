@@ -11,4 +11,6 @@
     <string name="prayer_need_location">Pilih lokasi untuk melihat waktu shalat</string>
 
     <string name="dzikir_source_combined">Sumber: almanhaj.or.id - rumaysho.com</string>
+
+    <string name="nav_back">Kembali</string>
 </resources>
