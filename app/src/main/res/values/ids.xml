@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Tag key for the per-view ink animator in helper/GlassInk.kt. A View tag needs a
+      resource id as its key; using a plain Int would risk colliding with another
+      library's tag on the same view.
+    -->
+    <item name="glass_ink_animator" type="id" />
+</resources>

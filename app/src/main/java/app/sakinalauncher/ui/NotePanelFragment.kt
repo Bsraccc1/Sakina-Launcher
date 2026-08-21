@@ -45,10 +45,12 @@ import app.sakinalauncher.data.TodoItem
 import app.sakinalauncher.databinding.FragmentNotePanelBinding
 import app.sakinalauncher.helper.AppDialog
 import app.sakinalauncher.helper.ProductiveWidgetHostHelper
+import app.sakinalauncher.helper.applyGlassInk
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.showKeyboard
 import app.sakinalauncher.helper.showToast
+import app.sakinalauncher.helper.frostWallpaperWhileResumed
 import app.sakinalauncher.listener.OnSwipeTouchListener
 import java.util.Locale
 import kotlin.math.abs
@@ -173,6 +175,10 @@ class NotePanelFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Frost the wallpaper behind the panel. The alpha tokens already carry
+        // legibility, so this is pure depth: it is what separates "translucent panel"
+        // from "actual glass" when the wallpaper has no detail to show through.
+        frostWallpaperWhileResumed()
         store = NotePanelStore(requireContext())
         widgetStore = ProductiveWidgetStore(requireContext())
         prefs = Prefs(requireContext())
@@ -431,10 +437,12 @@ class NotePanelFragment : Fragment() {
         binding.input.hint = getString(if (mode == NotePanelMode.NOTES) R.string.write_note else R.string.write_todo)
         binding.send.contentDescription = getString(if (mode == NotePanelMode.NOTES) R.string.send else R.string.add)
 
-        binding.notesTab.alpha = if (mode == NotePanelMode.NOTES) 1.0f else 0.62f
-        binding.todoTab.alpha = if (mode == NotePanelMode.TODO) 1.0f else 0.62f
-        binding.timerTab.alpha = if (mode == NotePanelMode.TIMER) 1.0f else 0.62f
-        binding.widgetsTab.alpha = if (mode == NotePanelMode.WIDGETS) 1.0f else 0.62f
+        // The segment indicator is a near-opaque fill of the same ink as the labels,
+        // so the active tab must flip to inverse ink or it disappears into the pill.
+        binding.notesTab.applyGlassInk(mode == NotePanelMode.NOTES)
+        binding.todoTab.applyGlassInk(mode == NotePanelMode.TODO)
+        binding.timerTab.applyGlassInk(mode == NotePanelMode.TIMER)
+        binding.widgetsTab.applyGlassInk(mode == NotePanelMode.WIDGETS)
 
         val showList = mode == NotePanelMode.NOTES || mode == NotePanelMode.TODO
         binding.recyclerView.isVisible = showList
@@ -757,23 +765,46 @@ class NotePanelFragment : Fragment() {
         if (mode == NotePanelMode.TIMER || mode == NotePanelMode.WIDGETS) binding.input.hideKeyboard()
         binding.input.setText(draftForMode())
         binding.input.setSelection(binding.input.text?.length ?: 0)
+
+        // Move the indicator and the ink IMMEDIATELY, then cross-fade the body under it.
+        // The previous version fully faded the content out (90ms), re-rendered, and faded
+        // back in (150ms) — so the indicator did not start moving until 90ms after the
+        // tap, and the whole switch took 240ms of dead time. The chrome should respond on
+        // the same frame as the touch; only the content needs to cross-fade.
+        renderChromeForModeChange()
+
         val content = binding.contentFrame
         content.animate().cancel()
         content.animate()
             .alpha(0f)
-            .setDuration(90L)
+            .translationY(dp(6).toFloat())
+            .setDuration(80L)
             .setInterpolator(smoothInterpolator)
             .withEndAction {
                 if (_binding == null) return@withEndAction
-                render(animateIndicator = true)
+                render(animateIndicator = false)
                 content.alpha = 0f
+                content.translationY = dp(-6).toFloat()
                 content.animate()
                     .alpha(1f)
-                    .setDuration(150L)
+                    .translationY(0f)
+                    .setDuration(160L)
                     .setInterpolator(smoothInterpolator)
                     .start()
             }
             .start()
+    }
+
+    /**
+     * The parts of [render] that must land on the touch frame: the segment indicator and
+     * the tab ink. Everything else can wait for the content cross-fade.
+     */
+    private fun renderChromeForModeChange() {
+        binding.notesTab.applyGlassInk(mode == NotePanelMode.NOTES)
+        binding.todoTab.applyGlassInk(mode == NotePanelMode.TODO)
+        binding.timerTab.applyGlassInk(mode == NotePanelMode.TIMER)
+        binding.widgetsTab.applyGlassInk(mode == NotePanelMode.WIDGETS)
+        positionSegmentIndicator(animate = true)
     }
 
     private fun positionSegmentIndicator(animate: Boolean) {
@@ -793,18 +824,39 @@ class NotePanelFragment : Fragment() {
             binding.segmentIndicator.layoutParams = binding.segmentIndicator.layoutParams.apply {
                 width = tabWidth
             }
-            // Use laid-out coordinates so LTR/RTL and hidden tabs stay correct
-            // without hand-rolled index math (translationX is always absolute).
-            val target = (binding.segmentTabs.left + active.left).toFloat()
+            // translationX is a delta from the view's OWN laid-out position, not an
+            // absolute coordinate in the parent. The indicator and segmentTabs are both
+            // direct children of modeSwitch, so they already share its 4dp padding —
+            // adding segmentTabs.left on top of that pushed the capsule 4dp to the
+            // right of its label on every tab (measured: thumb at x=805 for a tab at
+            // x=794), which also clipped it against the track's right edge.
+            val target = (binding.segmentTabs.left + active.left - binding.segmentIndicator.left)
+                .toFloat()
             binding.segmentIndicator.animate().cancel()
             if (animate) {
+                // Squash along the travel axis and recover: the capsule reads as being
+                // carried across rather than teleported, which is what makes a slide
+                // feel like one gesture instead of two states. Kept subtle (4%) — this
+                // is a 200ms move over ~60dp, so anything larger looks like a wobble.
+                val distance = kotlin.math.abs(target - binding.segmentIndicator.translationX)
+                val stretch = if (distance > 1f) 1.04f else 1f
                 binding.segmentIndicator.animate()
                     .translationX(target)
-                    .setDuration(200L)
+                    .scaleX(stretch)
+                    .setDuration(180L)
                     .setInterpolator(smoothInterpolator)
+                    .withEndAction {
+                        if (_binding == null) return@withEndAction
+                        binding.segmentIndicator.animate()
+                            .scaleX(1f)
+                            .setDuration(120L)
+                            .setInterpolator(smoothInterpolator)
+                            .start()
+                    }
                     .start()
             } else {
                 binding.segmentIndicator.translationX = target
+                binding.segmentIndicator.scaleX = 1f
             }
         }
 

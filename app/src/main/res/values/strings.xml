@@ -62,6 +62,11 @@
     <string name="gestures">Gestures</string>
     <string name="theme_mode">Theme mode</string>
     <string name="system_default">System</string>
+    <!-- Theme mode option that tracks the OS dark-mode setting at runtime. -->
+    <string name="theme_automatic">Automatic</string>
+    <!-- %1$s is the theme Automatic currently resolves to, e.g. "Automatic (Dark)". -->
+    <string name="theme_automatic_resolved">Automatic (%1$s)</string>
+    <string name="theme_automatic_hint">Follows your system dark mode</string>
     <string name="dark">Dark</string>
     <string name="light">Light</string>
     <string name="welcome_to_sakina_settings">Welcome to the settings!
@@ -120,13 +125,13 @@
     <string name="are_you_using_your_phone_or_is_your_phone_using_you">Are you using your phone, or is your phone using you?</string>
     <string name="about_sakina">About and FAQs</string>
     <string name="about_title">About Sakinah Launcher</string>
-    <string name="about_message">Sakinah Launcher is a calm, minimal launcher with a built-in Muslim Center — prayer times, morning &amp; evening dhikr, and a tasbih counter.\n\nQuick FAQ:\n• Open Settings: long-press the home screen.\n• Lock the screen: double-tap home (enable the accessibility toggle in Settings first).\n• Notes, To-do &amp; Timer: swipe to open the note panel.\n• Hidden apps: long-press an app name in the app list.\n\nMade for focus, not distraction.</string>
+    <string name="about_message">Sakinah Launcher is a calm, minimal launcher with a built-in Muslim Center: prayer times, morning &amp; evening dhikr, and a tasbih counter.\n\nQuick FAQ:\n• Open Settings: long-press the home screen.\n• Lock the screen: double-tap home (enable the accessibility toggle in Settings first).\n• Notes, To-do &amp; Timer: swipe to open the note panel.\n• Hidden apps: long-press an app name in the app list.\n\nMade for focus, not distraction.</string>
     <string name="screen_time">Screen time</string>
     <string name="did_you_know">Did you know?</string>
     <string name="leave_a_review">Leave a review</string>
     <string name="review_message">Sakinah Launcher is free and always will be. It has no ads, collects no data, and reduces your screen time, resulting in a healthier life.
         \n\nWe hope you enjoy it. Tell us what you think.</string>
-    <string name="alignment_changed">Alignment changed ✅</string>
+    <string name="alignment_changed">Alignment changed</string>
     <string name="home_screen">Home screen</string>
     <string name="hey">Hey</string>
     <string name="more_features">More app</string>
@@ -190,10 +195,10 @@
     <string name="productive_dialog_width">Dialog width</string>
     <string name="productive_dialog_width_preview">Dialog width: %1$d%%</string>
     <string name="productive_keep_one_widget">Keep at least one module enabled</string>
-    <string name="dialog_width_70">70% — narrow</string>
-    <string name="dialog_width_80">80% — medium</string>
-    <string name="dialog_width_90">90% — wide</string>
-    <string name="dialog_width_100">100% — full</string>
+    <string name="dialog_width_70">Narrow</string>
+    <string name="dialog_width_80">Medium</string>
+    <string name="dialog_width_90">Wide</string>
+    <string name="dialog_width_100">Full</string>
     <string name="widgets_not_supported">Home screen widgets are not supported yet</string>
     <string name="pin_shortcuts_not_supported">Pin shortcuts are not supported</string>
     <string name="shortcut_pinned">Shortcut pinned</string>
@@ -205,7 +210,7 @@
     <string name="set_location_placeholder">Tap to change location</string>
     <string name="prayer_region">Prayer location</string>
     <string name="prayer_source_setting">Prayer source</string>
-    <string name="prayer_provider_kemenag">Kemenag/MyQuran</string>
+    <string name="prayer_provider_kemenag">Kemenag</string>
     <string name="prayer_provider_global">Aladhan Global</string>
     <string name="auto_detect_region">Auto detect location</string>
     <string name="location_not_found">Location not found</string>

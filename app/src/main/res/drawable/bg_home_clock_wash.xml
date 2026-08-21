@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Legibility band behind the home clock and date only.
+
+  Sized to the clock block (see fragment_home.xml), not to the screen, so the strong end
+  of the ramp lands where the text is and the wallpaper below it is untouched. Fades to
+  fully transparent at the bottom, where bg_home_wash.xml's flat floor takes over.
+
+  Two stops, not three: over a ~200dp band there is no visible seam to ease out, and the
+  extra stop only shifted where the falloff bunched up.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="270"
+        android:startColor="?attr/homeWashTop"
+        android:endColor="@android:color/transparent"
+        android:type="linear"
+        android:useLevel="false" />
+</shape>

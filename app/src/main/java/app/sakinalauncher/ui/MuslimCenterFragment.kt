@@ -28,9 +28,11 @@ import app.sakinalauncher.data.muslim.PrayerTimeStore
 import app.sakinalauncher.databinding.FragmentMuslimCenterBinding
 import app.sakinalauncher.helper.addPressScale
 import app.sakinalauncher.helper.addSystemBarInsetsPadding
+import app.sakinalauncher.helper.applyGlassInk
 import app.sakinalauncher.helper.launchSwipeApp
 import app.sakinalauncher.helper.openUrl
 import app.sakinalauncher.helper.PrayerLocationHelper
+import app.sakinalauncher.helper.frostWallpaperWhileResumed
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -62,6 +64,7 @@ class MuslimCenterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        frostWallpaperWhileResumed()
         prefs = Prefs(requireContext())
         prayerStore = PrayerTimeStore(requireContext())
         repository = PrayerTimeRepository(
@@ -212,14 +215,7 @@ class MuslimCenterFragment : Fragment() {
         view.setBackgroundResource(
             if (active) R.drawable.bg_prayer_time_chip_active else R.drawable.bg_prayer_time_chip
         )
-        if (active) {
-            view.setTextColor(themeColor(R.attr.primaryInverseColor))
-            view.setShadowLayer(0f, 0f, 0f, 0)
-        } else {
-            view.setTextColor(themeColor(R.attr.primaryColor))
-            view.setShadowLayer(1.5f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
-        }
-        view.alpha = if (active) 1f else 0.82f
+        view.applyGlassInk(active, inactiveAlpha = 0.82f)
     }
 
     private fun themeColor(attr: Int): Int {

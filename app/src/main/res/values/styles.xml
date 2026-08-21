@@ -45,12 +45,14 @@
         <item name="primaryShadeDarkColor">@color/blackInverseTrans25</item>
         <item name="dialogShadeColor">@color/blackInverseTrans50</item>
 
-        <!-- Glass surface system (light wallpaper -> dark ink) -->
-        <item name="glassRaised">@color/glassRaisedOnLight</item>
+        <!-- Frosted glass surfaces (light wallpaper -> dark ink) -->
+        <item name="glassScrim">@color/scrimOnLight</item>
+        <item name="homeWashTop">@color/homeWashTopOnLight</item>
+        <item name="homeWashFloor">@color/homeWashFloorOnLight</item>
         <item name="glassSunken">@color/glassSunkenOnLight</item>
+        <item name="glassRaised">@color/glassRaisedOnLight</item>
         <item name="glassActive">@color/glassActiveOnLight</item>
         <item name="glassHairline">@color/hairlineOnLight</item>
-        <item name="glassScrim">@color/scrimOnLight</item>
 
     </style>
 
@@ -115,6 +117,65 @@
 
     <style name="TextSmallBold" parent="TextSmall">
         <item name="android:fontFamily">@font/poppins_semibold</item>
+    </style>
+
+    <!--
+      Text that sits on an ?attr/glassActive fill. glassActive is near-opaque ink of
+      the SAME hue as primaryColor, so a label left at primaryColor is invisible
+      (white on white in dark mode, black on black in light mode). Flip to inverse
+      ink and drop the legibility halo — a halo over a solid fill reads as an emboss.
+    -->
+    <style name="TextOnGlassActive" parent="TextSmallBold">
+        <item name="android:textColor">?attr/primaryInverseColor</item>
+        <item name="android:shadowRadius">0</item>
+        <item name="android:shadowColor">@android:color/transparent</item>
+    </style>
+
+    <style name="TextLargeOnGlassActive" parent="TextLarge">
+        <item name="android:textColor">?attr/primaryInverseColor</item>
+        <item name="android:shadowRadius">0</item>
+        <item name="android:shadowColor">@android:color/transparent</item>
+    </style>
+
+    <!--
+      Home-screen text: the app labels, screen time, and anything else drawn straight
+      onto the user's wallpaper below the clock scrim.
+
+      These get a much stronger legibility halo than @style/TextDefault. The base halo
+      (radius 1.5, inverse ink at 30%) is tuned for text on a glass panel, where the
+      panel already carries the contrast. On the home screen there is no panel, and a
+      wallpaper that fights the theme takes the labels to 1.30:1 — measured, light theme
+      over a dark wallpaper. A wider, denser halo is what Android and iOS both use for
+      home-screen icon labels, and it costs nothing when the wallpaper is friendly.
+
+      This is a halo, not an emboss: offset stays 0 on both axes.
+    -->
+    <style name="TextHomeLabel" parent="TextLarge">
+        <item name="android:shadowColor">?attr/primaryColorInverseTrans80</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">6</item>
+    </style>
+
+    <style name="TextHomeMeta" parent="TextSmall">
+        <item name="android:shadowColor">?attr/primaryColorInverseTrans80</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">6</item>
+    </style>
+
+    <!--
+      The home clock and date. Same halo as the app labels, for the same reason: they sit
+      on bare wallpaper. The clock is 60sp so it only needs 3:1, but on this wallpaper's
+      bright upper third it measured 3.94:1 on tint alone and looked washed out — the
+      halo takes it clear without thickening the wash, which is what was crushing the
+      wallpaper's texture in earlier iterations.
+    -->
+    <style name="TextHomeClock" parent="TextDefault">
+        <item name="android:shadowColor">?attr/primaryColorInverseTrans80</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">8</item>
     </style>
 
     <!-- Subtle section header for Settings cards: smaller, semibold, spaced -->

@@ -12,10 +12,51 @@
     <attr name="dialogShadeColor" format="color" />
     <attr name="primaryShadeDarkColor" format="color" />
 
-    <!-- Sakinah glass surface system: alpha-only, no gradients, no shadows. -->
-    <attr name="glassRaised" format="color" />
+    <!--
+      Sakinah frosted-glass surface system.
+
+      Five tokens, one job each. Depth comes from the real window blur
+      (helper/GlassBlur.kt) plus one step of tint between levels — not from painted
+      highlights, gradients or shadows.
+
+      An earlier iteration grew to twenty tokens (inner shade falloff bands, recess
+      floor gradients, thumb contact/ambient shadows, rim lights). Every one of them
+      measured correctly and still read as embossed plastic, because a shape drawable
+      cannot blur and a hard-edged band is a border however it is stacked. They are gone.
+
+      LEVELS, darkest surface to brightest ink:
+        glassScrim   - the wallpaper dim a full-screen panel sits on
+        glassSunken  - a well cut into the panel (segment track, input rows)
+        glassRaised  - a card lifted off the panel
+        glassActive  - a selected fill; ink on it MUST flip (see GlassInk.kt)
+        glassHairline- the edge that defines any of the above
+    -->
+    <attr name="glassScrim" format="color" />
     <attr name="glassSunken" format="color" />
+    <attr name="glassRaised" format="color" />
     <attr name="glassActive" format="color" />
     <attr name="glassHairline" format="color" />
-    <attr name="glassScrim" format="color" />
+
+    <!--
+      HOME WASH — a separate ramp from glassScrim, on purpose.
+
+      The panel scrim exists to turn the wallpaper into a canvas you can put a whole
+      sheet of glass on, so it is heavy and flat. The home screen has no panel: the
+      clock, date and app labels are drawn straight onto the user's wallpaper, and the
+      wallpaper is the point of the screen. Reusing the panel scrim there crushed the
+      lower two thirds of the wallpaper to black for no benefit — nothing down there
+      needed that much help.
+
+      So: two surfaces, not one ramp. A band sized to the clock block carries the clock
+      and date; a flat, very light floor carries the app labels in the middle of the
+      screen. Trying to serve both from one full-height gradient does not work — a linear
+      gradient's middle stop is pinned to the middle of the VIEW, so a band strong enough
+      for the clock dims the entire top half. See drawable/bg_home_wash.xml.
+
+      The floor is deliberately not transparent (labels measured 2.99:1 with the wash
+      faded out) but at 20% it barely touches the wallpaper; @style/TextHomeLabel's halo
+      does the rest.
+    -->
+    <attr name="homeWashTop" format="color" />
+    <attr name="homeWashFloor" format="color" />
 </resources>

@@ -45,14 +45,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
-                android:background="@drawable/bg_glass_inset"
-                android:padding="3dp">
+                android:background="@drawable/bg_segment_track"
+                android:padding="4dp">
 
                 <View
                     android:id="@+id/segmentIndicator"
                     android:layout_width="@dimen/productive_segment_tab_width"
                     android:layout_height="@dimen/productive_segment_tab_height"
-                    android:background="@drawable/bg_note_segment_selected" />
+                    android:background="@drawable/bg_segment_thumb" />
 
                 <LinearLayout
                     android:id="@+id/segmentTabs"
@@ -132,7 +132,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:alpha="0.55"
+            android:alpha="0.78"
             android:gravity="center"
             android:paddingHorizontal="24dp"
             android:text="@string/no_notes_yet"
@@ -173,7 +173,7 @@
 
                     <TextView
                         android:id="@+id/timerStart"
-                        style="@style/TextSmallBold"
+                        style="@style/TextOnGlassActive"
                         android:layout_width="112dp"
                         android:layout_height="42dp"
                         android:layout_marginTop="14dp"
@@ -183,9 +183,8 @@
                         android:gravity="center"
                         android:paddingHorizontal="14dp"
                         android:text="@string/start"
-                        android:textColor="?attr/primaryColor"
                         app:drawableStartCompat="@drawable/ic_play"
-                        app:drawableTint="?attr/primaryColor" />
+                        app:drawableTint="?attr/primaryInverseColor" />
 
                 </LinearLayout>
 
@@ -243,15 +242,14 @@
 
             <TextView
                 android:id="@+id/addWidgetButton"
-                style="@style/TextSmallBold"
+                style="@style/TextOnGlassActive"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_timer_start_button"
                 android:foreground="?android:attr/selectableItemBackground"
                 android:gravity="center"
-                android:text="@string/add_widget"
-                android:textColor="?attr/primaryColor" />
+                android:text="@string/add_widget" />
 
             <TextView
                 android:id="@+id/widgetsHint"
@@ -288,7 +286,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:alpha="0.55"
+                android:alpha="0.78"
                 android:gravity="center"
                 android:paddingHorizontal="16dp"
                 android:text="@string/no_widgets_yet"

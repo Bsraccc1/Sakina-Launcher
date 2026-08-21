@@ -62,6 +62,13 @@ class MainActivity : AppCompatActivity() {
     private var profileReceiver: BroadcastReceiver? = null
 
     /**
+     * Last observed system night-mode bit. Needed because by the time
+     * [onConfigurationChanged] runs, `resources.configuration` already holds the NEW
+     * value, so it cannot tell us what changed.
+     */
+    private var lastNightMode: Boolean = false
+
+    /**
      * When true, [onStop]/[onUserLeaveHint] must not pop the nav stack back to home.
      * Productive widget pick/bind/configure start another activity; without this the
      * NotePanelFragment is destroyed before the activity result can be handled, so
@@ -89,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         prefs = Prefs(this)
         if (isEinkDisplay()) prefs.appTheme = AppCompatDelegate.MODE_NIGHT_NO
         AppCompatDelegate.setDefaultNightMode(prefs.appTheme)
+        lastNightMode = isNightConfig(resources.configuration)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -181,11 +189,28 @@ class MainActivity : AppCompatActivity() {
         super.onConfigurationChanged(newConfig)
         AppCompatDelegate.setDefaultNightMode(prefs.appTheme)
         applySolidBackground()
-        if (prefs.dailyWallpaper && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
-            viewModel.setWallpaperWorker()
+
+        // MainActivity declares configChanges="uiMode" (so a system dark-mode flip does
+        // not tear down the launcher), which means Android will NOT recreate us and the
+        // themed drawables keep their old, stale colours. On Automatic that is the whole
+        // feature broken: the OS flips to dark and the launcher stays light. Recreate
+        // ourselves, but only when the night bit actually changed and only when the user
+        // asked to follow the system — otherwise every rotation would restart the panel.
+        //
+        // The previous value is tracked in a field rather than read from
+        // resources.configuration, which is already updated by the time this runs.
+        val isNight = isNightConfig(newConfig)
+        val wasNight = lastNightMode
+        lastNightMode = isNight
+        val followsSystem = prefs.appTheme == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        if (followsSystem && isNight != wasNight) {
+            if (prefs.dailyWallpaper) viewModel.setWallpaperWorker()
             recreate()
         }
     }
+
+    private fun isNightConfig(config: Configuration): Boolean =
+        config.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
 
     private fun initClickListeners() {
         binding.ivClose.setOnClickListener {

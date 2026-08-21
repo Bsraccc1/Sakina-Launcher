@@ -65,6 +65,11 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
+        // Legibility treatment for text drawn straight on the wallpaper. Pointless when
+        // the user has chosen a solid background — there is no wallpaper to fight.
+        val wantWash = !prefs.solidBackground
+        binding.homeWash.isVisible = wantWash
+        binding.homeClockWash.isVisible = wantWash
         viewModel = activity?.run {
             ViewModelProvider(this)[MainViewModel::class.java]
         } ?: throw Exception("Invalid Activity")

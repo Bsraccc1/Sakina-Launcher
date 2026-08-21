@@ -45,12 +45,14 @@
         <item name="primaryShadeDarkColor">@color/whiteInverseTrans25</item>
         <item name="dialogShadeColor">@color/whiteInverseTrans50</item>
 
-        <!-- Glass surface system (dark wallpaper -> light ink) -->
-        <item name="glassRaised">@color/glassRaisedOnDark</item>
+        <!-- Frosted glass surfaces (dark wallpaper -> light ink) -->
+        <item name="glassScrim">@color/scrimOnDark</item>
+        <item name="homeWashTop">@color/homeWashTopOnDark</item>
+        <item name="homeWashFloor">@color/homeWashFloorOnDark</item>
         <item name="glassSunken">@color/glassSunkenOnDark</item>
+        <item name="glassRaised">@color/glassRaisedOnDark</item>
         <item name="glassActive">@color/glassActiveOnDark</item>
         <item name="glassHairline">@color/hairlineOnDark</item>
-        <item name="glassScrim">@color/scrimOnDark</item>
 
     </style>
 

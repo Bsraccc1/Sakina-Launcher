@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Glass scrim: flat wallpaper dim for full-screen panels. Single alpha, no gradient. -->
+<!--
+  Panel scrim: the sheet of frosted glass a full-screen panel is drawn on.
+
+  Just the dim. The real frosting is the window blur in helper/GlassBlur.kt; this layer
+  only tames the wallpaper enough for ink to sit on it.
+
+  A previous version added a "pane lift" wash and a top edge highlight to force a glassy
+  look. With the blur actually working those were redundant, and on the light theme the
+  lift fought the scrim. One layer, one job.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="?attr/glassScrim" />

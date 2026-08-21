@@ -23,6 +23,7 @@ import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.databinding.FragmentAppDrawerBinding
 import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.helper.deletePinnedShortcut
+import app.sakinalauncher.helper.frostWallpaperWhileResumed
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.isEinkDisplay
 import app.sakinalauncher.helper.isPrivateSpaceProfile
@@ -62,6 +63,9 @@ class AppDrawerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Same frosted pane as the other full-screen surfaces. The drawer used to paint
+        // a flat 25% shade, which measured 2.79:1 for a partly-transparent app icon.
+        frostWallpaperWhileResumed()
         prefs = Prefs(requireContext())
         arguments?.let {
             flag = it.getInt(Constants.Key.FLAG, Constants.FLAG_LAUNCH_APP)

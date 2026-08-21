@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Legibility floor for the home-screen app labels.
+
+  Flat, and deliberately weak. The labels sit in the middle of the screen, so this has to
+  cover the whole height — but at 20% it barely touches the wallpaper. The labels' own
+  halo (@style/TextHomeLabel) does most of the work: measured 12.5:1 dark, 4.4:1 light.
+
+  The clock gets its own, much stronger band instead — see bg_home_clock_wash.xml. An
+  earlier version tried to serve both from one full-height 3-stop gradient, and the
+  geometry defeats it: a linear gradient's middle stop is pinned to the middle of the
+  VIEW, so making the clock's band strong enough dimmed the entire top half of the
+  screen. Measured on that build: 62% at the top decaying to 45% at y=50%, while the
+  clock only occupies 6-17% of the height.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="?attr/homeWashFloor" />
+</shape>

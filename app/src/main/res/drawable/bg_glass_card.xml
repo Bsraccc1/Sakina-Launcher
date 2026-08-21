@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Glass card: raised surface + hairline. No gradient, no shadow, no emboss. -->
+<!--
+  Glass card: one translucent fill + one hairline. Nothing else.
+
+  The frosted read comes from the WINDOW BLUR (helper/GlassBlur.kt), not from painted
+  highlights. An earlier version stacked a gradient fill, a lit top rim, a bottom lip
+  and two shadow layers to fake depth; it measured well but read as embossed plastic.
+  With a real backdrop blur behind it, a flat tint plus an edge is enough — and it is
+  the only version that still looks right on any wallpaper.
+
+  The fill must be opaque enough to dominate whatever the blur leaves behind it, since
+  that decides whether the ink on top stays legible. See values/surfaces.xml.
+-->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="?attr/glassRaised" />

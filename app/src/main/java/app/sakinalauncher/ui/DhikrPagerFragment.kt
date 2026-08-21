@@ -15,6 +15,8 @@ import app.sakinalauncher.data.muslim.DhikrPeriod
 import app.sakinalauncher.databinding.FragmentDhikrPagerBinding
 import app.sakinalauncher.helper.addPressScale
 import app.sakinalauncher.helper.addSystemBarInsetsPadding
+import app.sakinalauncher.helper.applyGlassInk
+import app.sakinalauncher.helper.frostWallpaperWhileResumed
 import app.sakinalauncher.listener.OnSwipeTouchListener
 
 class DhikrPagerFragment : Fragment() {
@@ -41,6 +43,7 @@ class DhikrPagerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        frostWallpaperWhileResumed()
         period = readPeriod(
             savedInstanceState?.getString(KEY_PERIOD)
                 ?: arguments?.getString(Constants.Key.DHIKR_PERIOD)
@@ -135,20 +138,8 @@ class DhikrPagerFragment : Fragment() {
     private fun renderTabs() {
         tabViews().forEach { (tabPeriod, tab) ->
             val selected = tabPeriod == period
-            tab.setBackgroundResource(if (selected) R.drawable.bg_glass_active else 0)
-            tab.isSelected = selected
-            (tab as? TextView)?.let { label ->
-                // Selected tab is filled with inverted ink: flip the text and drop the
-                // legibility halo, otherwise the fill reads as an embossed button.
-                if (selected) {
-                    label.setTextColor(themeColor(R.attr.primaryInverseColor))
-                    label.setShadowLayer(0f, 0f, 0f, 0)
-                } else {
-                    label.setTextColor(themeColor(R.attr.primaryColor))
-                    label.setShadowLayer(1.5f, 0f, 0f, themeColor(R.attr.primaryTextShadowColor))
-                }
-            }
-            tab.alpha = if (selected) 1f else 0.62f
+            tab.setBackgroundResource(if (selected) R.drawable.bg_segment_thumb else 0)
+            (tab as? TextView)?.applyGlassInk(selected)
         }
     }
 

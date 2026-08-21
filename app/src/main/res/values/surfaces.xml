@@ -1,18 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Sakinah glass surface tokens. Alpha only, no gradients, no shadows.
-         Opacity is high enough for each surface to be a readable canvas for its
-         ink, low enough to stay translucent over the wallpaper. Contrast should
-         come from these surfaces + ink colour, NOT from a text glow. -->
-    <color name="glassRaisedOnLight">#28000000</color>
-    <color name="glassSunkenOnLight">#33000000</color>
-    <color name="glassActiveOnLight">#D9000000</color>
-    <color name="hairlineOnLight">#40000000</color>
-    <color name="scrimOnLight">#2E000000</color>
+    <!--
+      Sakinah frosted-glass surface tokens.
 
-    <color name="glassRaisedOnDark">#2BFFFFFF</color>
-    <color name="glassSunkenOnDark">#38FFFFFF</color>
+      Alpha only. No gradients, no shadows, no rim lights. Depth is the real window
+      blur (helper/GlassBlur.kt) plus one step of tint per level, and that is all.
+
+      WHY PURE ALPHA, NOT FIXED COLOURS
+      A launcher draws over an arbitrary wallpaper, so any token pinned to a specific
+      hex is only correct for one wallpaper. Every value here is a translucent
+      black-or-white wash, which means each level is defined by its RELATIONSHIP to
+      whatever is behind it. The previous iteration used absolute values (#26262E,
+      #33333D...) tuned against one emulator wallpaper; they measured beautifully there
+      and inverted on a bright wallpaper.
+
+      THE RULE
+      A panel is tinted with the INVERSE of its ink, and each level moves one step
+      further from the ink:
+        dark theme  = white ink -> scrim darkens, wells darken more, cards lift slightly
+        light theme = black ink -> scrim lightens, wells darken, cards lighten more
+      Getting this backwards is what made "glass" panels invisible: a white-tinted
+      panel under white text has no contrast to give.
+
+      VERIFIED (uitest/contrast_probe.py, uitest/depth_probe.py, both themes, on-device)
+      Worst case is the wallpaper that fights the theme — pure white behind a dark
+      theme, pure black behind a light one — and, for the light theme, also pure white,
+      where a white scrim saturates:
+        dark  : ink on well 10.7:1, ink on card 4.7:1, card/pane 1.32, well/pane 1.72
+        light : ink on well  8.1:1, ink on card 13.6:1, card/pane 1.36, well/pane 1.23
+    -->
+
+    <!-- Light theme: black ink -> light panels.
+
+         The scrim and cards are WHITE washes; the well is a light BLACK wash. That
+         asymmetry is deliberate and both alternatives were measured and rejected:
+
+           * all-white ladder (well also white, just less of it) SATURATES. On a white
+             wallpaper the scrim already reaches 255, so pane, well and card all land on
+             the same value and nothing separates but the hairline.
+           * a heavy black well (the mirror of the dark theme) reads as a grubby grey
+             patch on an otherwise clean panel, not as depth.
+
+         10% black keeps the well 1.23-1.25:1 below both the pane and any card it sits
+         inside, on every wallpaper from black to white, while black ink on it still
+         scores at least 9.0:1.
+
+         The scrim is heavier than the dark theme's (86% vs 62%) and that asymmetry is
+         the point. Behind a panel the wallpaper is blurred and crushed towards mid-grey,
+         so at 70% the "light" pane measured luminance 0.475 on device: a grey card, not
+         a light sheet. 86% brings it to 0.69, which reads as paper. A dark theme has no
+         equivalent problem because crushing towards grey is already halfway to where it
+         wants to be. -->
+    <color name="scrimOnLight">#DBFFFFFF</color>
+    <color name="glassSunkenOnLight">#1A000000</color>
+    <color name="glassRaisedOnLight">#61FFFFFF</color>
+    <!-- Near-opaque ink. Anything drawn on this MUST flip to primaryInverseColor:
+         see helper/GlassInk.kt and @style/TextOnGlassActive. Not pure black: at full
+         strength the selected chip was the only hard-edged element on an otherwise
+         soft panel and read as a hole. -->
+    <color name="glassActiveOnLight">#CC000000</color>
+    <color name="hairlineOnLight">#3D000000</color>
+
+    <!-- Dark theme: white ink -> dark panels. -->
+    <color name="scrimOnDark">#9E000000</color>
+    <color name="glassSunkenOnDark">#5B000000</color>
+    <color name="glassRaisedOnDark">#1EFFFFFF</color>
     <color name="glassActiveOnDark">#E6FFFFFF</color>
-    <color name="hairlineOnDark">#4DFFFFFF</color>
-    <color name="scrimOnDark">#40000000</color>
+    <color name="hairlineOnDark">#3DFFFFFF</color>
+
+    <!--
+      HOME LEGIBILITY — for text drawn straight on the wallpaper. Separate from the panel
+      scrim; see values/attrs.xml for why.
+
+      Split into two surfaces because the clock and the app labels want opposite things:
+
+        homeWashTop   62%  the clock band (drawable/bg_home_clock_wash.xml), 220dp tall,
+                           fading to transparent. Sized to the text, so the wallpaper
+                           below is untouched. At a flatter 45% the clock measured
+                           3.94:1 on this wallpaper and looked washed out.
+        homeWashFloor 45%  flat, full-height (drawable/bg_home_wash.xml), for the app
+                           labels in the middle of the screen. This is the floor, chosen
+                           by arithmetic rather than by eye: against a wallpaper that
+                           fights the theme, the wash is the ONLY thing separating a
+                           label from its background. An idealised calculation said 35%
+                           was enough, but measuring a real glyph on device gave a core
+                           luminance of 0.016 rather than 0 (antialiasing never reaches
+                           the pure ink colour), and at that value 35% is 2.28:1. 45%
+                           measures 3.34:1 on both sides. @style/TextHomeLabel's halo is
+                           on top of that, not instead of it.
+
+      Measured on this wallpaper (uitest/out/hw5_yes.png): luminance is ~0.22 across the
+      top third and 0.003 below it, so the bright region worth defending against really
+      is the clock's own band. An earlier attempt served both from ONE full-height 3-stop
+      gradient and the geometry defeats it — a linear gradient's middle stop sits at the
+      middle of the VIEW, so the clock's band ended up dimming the whole top half.
+
+      KNOWN TRADE-OFF, settled by arithmetic. On a wallpaper whose lower half is already
+      dark — like the emulator's — the 35% floor is doing nothing visible except muting
+      faint texture, and it is tempting to drop it to 20%. Don't: the floor exists for the
+      wallpaper that FIGHTS the theme (a white photo under the dark theme), where it is
+      the only thing holding the labels above 3:1. 20% measures 1.61:1 there. The cost is
+      paid on friendly wallpapers so the app is never unreadable on a hostile one.
+    -->
+    <color name="homeWashTopOnLight">#9EFFFFFF</color>
+    <color name="homeWashFloorOnLight">#72FFFFFF</color>
+
+    <color name="homeWashTopOnDark">#9E000000</color>
+    <color name="homeWashFloorOnDark">#72000000</color>
 </resources>

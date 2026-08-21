@@ -13,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:alpha="0"
-        android:background="@color/settingsDimScrim" />
+        android:background="@drawable/bg_glass_scrim" />
 
     <ScrollView
         android:id="@+id/scrollView"
@@ -291,13 +291,18 @@
                         android:padding="8dp" />
                 </LinearLayout>
 
+                <!--
+                  Sub-header for the module toggles below it. It used to be
+                  TextSmallLight at alpha 0.7 in mixed case, which made it look exactly
+                  like a setting row whose value had failed to render. Same treatment as
+                  the MUSLIM CENTER / PRODUCTIVE headers, so its role is unambiguous.
+                -->
                 <TextView
-                    style="@style/TextSmallLight"
+                    style="@style/TextSectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="14dp"
-                    android:alpha="0.7"
                     android:text="@string/productive_widgets" />
 
                 <LinearLayout
@@ -462,7 +467,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:visibility="gone"
                         tools:ignore="UnusedAttribute">
@@ -618,7 +623,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="2dp"
@@ -697,7 +702,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:fadingEdgeLength="8dp"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="2dp"
@@ -957,7 +962,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="2dp"
@@ -977,7 +982,7 @@
                             android:layout_marginEnd="24dp"
                             android:gravity="center"
                             android:paddingVertical="6dp"
-                            android:text="@string/system_default" />
+                            android:text="@string/theme_automatic" />
 
                         <TextView
                             android:id="@+id/themeLight"
@@ -1064,7 +1069,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:gravity="center"
                         android:orientation="horizontal"
                         android:visibility="gone"
@@ -1222,7 +1227,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:animateLayoutChanges="true"
-                        android:background="@drawable/rounded_primary_gradient"
+                        android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="2dp"

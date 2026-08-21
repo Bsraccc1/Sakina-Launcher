@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
@@ -45,6 +46,7 @@ import app.sakinalauncher.helper.AppDialog
 import app.sakinalauncher.helper.addSystemBarInsetsPadding
 import app.sakinalauncher.helper.animateAlpha
 import app.sakinalauncher.helper.appUsagePermissionGranted
+import app.sakinalauncher.helper.frostWallpaperWhileResumed
 import app.sakinalauncher.helper.getColorFromAttr
 import app.sakinalauncher.helper.isAccessServiceEnabled
 import app.sakinalauncher.helper.isEinkDisplay
@@ -79,6 +81,7 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        frostWallpaperWhileResumed()
         prefs = Prefs(requireContext())
         prayerStore = PrayerTimeStore(requireContext())
         prayerRepository = PrayerTimeRepository(PrayerApiClient.api, PrayerApiClient.aladhanApi, prayerStore)
@@ -576,10 +579,20 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun populateAppThemeText(appTheme: Int = prefs.appTheme) {
-        when (appTheme) {
-            AppCompatDelegate.MODE_NIGHT_YES -> binding.appThemeText.text = getString(R.string.dark)
-            AppCompatDelegate.MODE_NIGHT_NO -> binding.appThemeText.text = getString(R.string.light)
-            else -> binding.appThemeText.text = getString(R.string.system_default)
+        binding.appThemeText.text = when (appTheme) {
+            AppCompatDelegate.MODE_NIGHT_YES -> getString(R.string.dark)
+            AppCompatDelegate.MODE_NIGHT_NO -> getString(R.string.light)
+            // "Automatic" alone does not tell the user which theme is actually in effect,
+            // so the resolved one is named too. Read from the live configuration rather
+            // than the pref, because that is what the user is looking at.
+            else -> {
+                val night = resources.configuration.uiMode and
+                    Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+                getString(
+                    R.string.theme_automatic_resolved,
+                    getString(if (night) R.string.dark else R.string.light),
+                )
+            }
         }
     }
 

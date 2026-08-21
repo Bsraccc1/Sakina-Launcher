@@ -87,7 +87,7 @@
                 style="@style/TextSmallLight"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:alpha="0.62"
+                android:alpha="0.8"
                 android:gravity="center"
                 android:letterSpacing="0.18"
                 android:text="@string/prayer_times"
@@ -134,7 +134,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.62"
+                    android:alpha="0.8"
                     android:gravity="center"
                     android:letterSpacing="0.14"
                     android:maxLines="1"
@@ -255,10 +255,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:alpha="0.5"
                 android:gravity="center"
                 android:maxLines="2"
-                android:textSize="10sp"
+                android:alpha="0.75"
+                android:textSize="12sp"
                 tools:text="Calculated offline - MWL" />
 
         </LinearLayout>
@@ -290,8 +290,9 @@
 
                 <TextView
                     style="@style/TextLarge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/muslim_dhikr_icon_slot"
+                    android:gravity="center"
                     android:includeFontPadding="false"
                     android:text="@string/dzikir_pagi_icon"
                     android:textSize="26sp" />
@@ -312,7 +313,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.62"
+                    android:alpha="0.8"
                     android:gravity="center"
                     android:maxLines="1"
                     android:textSize="11sp" />
@@ -337,8 +338,9 @@
 
                 <TextView
                     style="@style/TextLarge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/muslim_dhikr_icon_slot"
+                    android:gravity="center"
                     android:includeFontPadding="false"
                     android:text="@string/dzikir_petang_icon"
                     android:textSize="26sp" />
@@ -359,7 +361,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.62"
+                    android:alpha="0.8"
                     android:gravity="center"
                     android:maxLines="1"
                     android:textSize="11sp" />
@@ -384,8 +386,9 @@
 
                 <TextView
                     style="@style/TextLarge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/muslim_dhikr_icon_slot"
+                    android:gravity="center"
                     android:includeFontPadding="false"
                     android:text="@string/muslim_after_prayer_icon"
                     android:textSize="26sp" />
@@ -406,7 +409,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:alpha="0.62"
+                    android:alpha="0.8"
                     android:gravity="center"
                     android:maxLines="1"
                     android:textSize="11sp" />
@@ -417,15 +420,15 @@
 
         <TextView
             android:id="@+id/source"
-            style="@style/TextSmallBold"
+            style="@style/TextSmallLight"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:alpha="0.6"
+            android:alpha="0.8"
             android:gravity="center"
             android:padding="10dp"
             android:text="@string/dzikir_source"
-            android:textSize="11sp" />
+            android:textSize="12sp" />
 
     </LinearLayout>
 

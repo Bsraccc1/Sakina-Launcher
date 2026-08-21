@@ -96,7 +96,7 @@
     <string name="review_message">Sakinah Launcher هو وسيظل دائمًا مجانيًا تمامًا. ليس لديها إعلانات. لا يجمع أي بيانات. والأهم من ذلك أنه يساعدك على تقليل وقت الشاشة والعيش حياة رقمية أكثر صحة.
         \n\nنحن نعتقد أن التحول إلى الحد الأدنى من المشغل هو قرار ممتاز. على الرغم من أننا متحيزون بشكل واضح، إلا أننا نأمل أن تستمتع بالتجربة. لا تتردد في مشاركة أفكارك معنا!</string>
     <string name="screen_time">وقت الشاشة</string>
-    <string name="alignment_changed">تم تغيير المحاذاة ✅</string>
+    <string name="alignment_changed">تم تغيير المحاذاة</string>
     <string name="home_screen">الشاشة الرئيسية</string>
     <string name="hey">مرحبا</string>
     <string name="more_features">مزايا إضافية…</string>
