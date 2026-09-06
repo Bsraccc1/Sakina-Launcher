@@ -27,12 +27,31 @@ data class DhikrCard(
 }
 
 object DhikrContent {
+    /**
+     * Cards for a period, composed once and cached.
+     *
+     * The composition (`take(4) + only + drop(4)`) allocated four or five ArrayLists per
+     * call, and `cardsFor` is called from the counter tap handler — a card completion ran
+     * it four times. The underlying cards are immutable `object` state, so the composed
+     * list is safe to share.
+     */
     fun cardsFor(period: DhikrPeriod): List<DhikrCard> {
         return when (period) {
-            DhikrPeriod.MORNING -> sharedCards.take(4) + morningOnlyCards + sharedCards.drop(4)
-            DhikrPeriod.EVENING -> sharedCards.take(4) + eveningOnlyCards + sharedCards.drop(4) + eveningClosingCards
+            DhikrPeriod.MORNING -> morningCards
+            DhikrPeriod.EVENING -> eveningCards
             DhikrPeriod.AFTER_PRAYER -> afterPrayerCards
         }
+    }
+
+    /** Card count for summary chrome. Cheap now that [cardsFor] returns a cached list. */
+    fun countFor(period: DhikrPeriod): Int = cardsFor(period).size
+
+    private val morningCards: List<DhikrCard> by lazy {
+        sharedCards.take(4) + morningOnlyCards + sharedCards.drop(4)
+    }
+
+    private val eveningCards: List<DhikrCard> by lazy {
+        sharedCards.take(4) + eveningOnlyCards + sharedCards.drop(4) + eveningClosingCards
     }
 
     /** Ayat Kursi and the three mu'awwidzot reused from [sharedCards] so the text stays identical. */

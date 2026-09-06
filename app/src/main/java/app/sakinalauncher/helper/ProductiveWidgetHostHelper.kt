@@ -58,6 +58,14 @@ class ProductiveWidgetHostHelper(
     private var lastContainerWidthPx: Int = 0
     private var storeReconciled = false
 
+    /**
+     * Fingerprint of the currently inflated flow: container width plus every card's
+     * id and resolved size. [inflateInto] is called from every panel render, and
+     * rebuilding meant tearing down live [AppWidgetHostView]s (each one re-inflates a
+     * RemoteViews tree from the provider process) to produce an identical result.
+     */
+    private var renderedSignature: String? = null
+
     fun startListening() {
         if (listening) return
         runCatching {
@@ -82,6 +90,7 @@ class ProductiveWidgetHostHelper(
         observedContainer = null
         flowLayout = null
         lastContainerWidthPx = 0
+        renderedSignature = null
     }
 
     fun allocateId(): Int = host.allocateAppWidgetId()
@@ -89,11 +98,17 @@ class ProductiveWidgetHostHelper(
     fun deleteId(appWidgetId: Int) {
         runCatching { host.deleteAppWidgetId(appWidgetId) }
         store.removeWidget(appWidgetId)
+        renderedSignature = null
     }
 
     fun installedProviders(): List<AppWidgetProviderInfo> {
+        // Load each label once, then sort the pairs. loadLabel() is a PackageManager
+        // call; inside the comparator it ran O(n log n) times instead of O(n).
+        val packageManager = appContext.packageManager
         return appWidgetManager.installedProviders.orEmpty()
-            .sortedBy { it.loadLabel(appContext.packageManager)?.toString().orEmpty() }
+            .map { it to it.loadLabel(packageManager)?.toString().orEmpty() }
+            .sortedBy { it.second }
+            .map { it.first }
     }
 
     fun createPickIntent(appWidgetId: Int): Intent {
@@ -150,23 +165,44 @@ class ProductiveWidgetHostHelper(
         storeReconciled = true
         val known = store.getWidgets().map { it.appWidgetId }.toMutableSet()
         val additions = mutableListOf<BoundWidget>()
-        for (info in installedProviders()) {
-            val provider = info.provider ?: continue
-            val ids = runCatching { appWidgetManager.getAppWidgetIds(provider) }.getOrNull() ?: continue
-            for (id in ids) {
+
+        // API 26+: the host tells us exactly which ids it owns. One call, no probing.
+        val ownedIds = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            runCatching { host.appWidgetIds }.getOrNull()
+        } else {
+            null
+        }
+
+        if (ownedIds != null) {
+            for (id in ownedIds) {
                 if (id == AppWidgetManager.INVALID_APPWIDGET_ID || id in known) continue
                 val boundInfo = appWidgetManager.getAppWidgetInfo(id) ?: continue
-                val ownsId = runCatching {
-                    val view = host.createView(appContext, id, boundInfo)
-                    (view.parent as? ViewGroup)?.removeView(view)
-                    true
-                }.getOrDefault(false)
-                if (!ownsId) continue
-                val flat = boundInfo.provider?.flattenToString() ?: provider.flattenToString()
+                val flat = boundInfo.provider?.flattenToString() ?: continue
                 additions.add(BoundWidget(id, flat, 0, 0))
                 known.add(id)
             }
+        } else {
+            // API 24-25 fallback: probe by creating a host view. Expensive, so it is
+            // confined to the two API levels that have no getAppWidgetIds().
+            for (info in installedProviders()) {
+                val provider = info.provider ?: continue
+                val ids = runCatching { appWidgetManager.getAppWidgetIds(provider) }.getOrNull() ?: continue
+                for (id in ids) {
+                    if (id == AppWidgetManager.INVALID_APPWIDGET_ID || id in known) continue
+                    val boundInfo = appWidgetManager.getAppWidgetInfo(id) ?: continue
+                    val ownsId = runCatching {
+                        val view = host.createView(appContext, id, boundInfo)
+                        (view.parent as? ViewGroup)?.removeView(view)
+                        true
+                    }.getOrDefault(false)
+                    if (!ownsId) continue
+                    val flat = boundInfo.provider?.flattenToString() ?: provider.flattenToString()
+                    additions.add(BoundWidget(id, flat, 0, 0))
+                    known.add(id)
+                }
+            }
         }
+
         if (additions.isNotEmpty()) {
             store.setWidgets(store.getWidgets() + additions)
         }
@@ -183,7 +219,6 @@ class ProductiveWidgetHostHelper(
      */
     fun inflateInto(container: ViewGroup, onRemove: (Int) -> Unit) {
         startListening()
-        clearEditMode()
 
         val density = appContext.resources.displayMetrics.density
         val gapPx = appContext.resources.getDimensionPixelSize(R.dimen.productive_widget_gap)
@@ -201,23 +236,14 @@ class ProductiveWidgetHostHelper(
             }
             return
         }
-        container.removeAllViews()
         val maxWidthDp = (containerWidthPx / density).roundToInt().coerceAtLeast(1)
 
-        observeContainerWidth(container, onRemove)
-        lastContainerWidthPx = containerWidthPx
-
-        val flow = WidgetFlowLayout(appContext).apply {
-            this.gapPx = gapPx
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-        flowLayout = flow
-
+        // Pass 1: resolve what the flow should contain. Pure lookups and math — no
+        // views are created, so an unchanged panel costs nothing but this pass.
         val kept = mutableListOf<BoundWidget>()
-        for (bound in store.getWidgets()) {
+        val plan = mutableListOf<PlannedCard>()
+        val stored = store.getWidgets()
+        for (bound in stored) {
             val info = appWidgetManager.getAppWidgetInfo(bound.appWidgetId)
             if (info == null) {
                 val pkg = bound.providerComponent()?.packageName
@@ -233,21 +259,55 @@ class ProductiveWidgetHostHelper(
                 continue
             }
             kept.add(bound)
-
             val (widthPx, heightPx) = resolveHostSizePx(
                 info = info,
                 bound = bound,
                 containerWidthPx = containerWidthPx,
                 density = density,
             )
-            val widthDp = (widthPx / density).roundToInt().coerceAtLeast(1)
-            val heightDp = (heightPx / density).roundToInt().coerceAtLeast(1)
+            plan.add(PlannedCard(bound, info, widthPx, heightPx))
+        }
 
+        if (kept.size != stored.size) {
+            store.setWidgets(kept)
+        }
+
+        // Nothing about the panel changed — keep the live host views. Rebuilding here
+        // is what made every note/todo/timer render re-inflate the whole widget tab.
+        val signature = buildSignature(containerWidthPx, plan)
+        val existingFlow = flowLayout
+        if (signature == renderedSignature &&
+            existingFlow != null &&
+            existingFlow.parent === container &&
+            existingFlow.childCount == plan.size
+        ) {
+            observeContainerWidth(container, onRemove)
+            lastContainerWidthPx = containerWidthPx
+            return
+        }
+
+        clearEditMode()
+        container.removeAllViews()
+        observeContainerWidth(container, onRemove)
+        lastContainerWidthPx = containerWidthPx
+
+        val flow = WidgetFlowLayout(appContext).apply {
+            this.gapPx = gapPx
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+            )
+        }
+        flowLayout = flow
+
+        for (planned in plan) {
+            val widthDp = (planned.widthPx / density).roundToInt().coerceAtLeast(1)
+            val heightDp = (planned.heightPx / density).roundToInt().coerceAtLeast(1)
             val card = createCard(
-                bound = bound,
-                info = info,
-                widthPx = widthPx,
-                heightPx = heightPx,
+                bound = planned.bound,
+                info = planned.info,
+                widthPx = planned.widthPx,
+                heightPx = planned.heightPx,
                 widthDp = widthDp,
                 heightDp = heightDp,
                 density = density,
@@ -255,13 +315,50 @@ class ProductiveWidgetHostHelper(
                 maxWidthDp = maxWidthDp,
                 onRemove = onRemove,
             )
-            flow.addView(card, WidgetFlowLayout.LayoutParams(widthPx, heightPx))
+            flow.addView(card, WidgetFlowLayout.LayoutParams(planned.widthPx, planned.heightPx))
         }
         container.addView(flow)
+        renderedSignature = signature
+    }
 
-        if (kept.size != store.getWidgets().size) {
-            store.setWidgets(kept)
+    private class PlannedCard(
+        val bound: BoundWidget,
+        val info: AppWidgetProviderInfo,
+        val widthPx: Int,
+        val heightPx: Int,
+    )
+
+    private fun buildSignature(containerWidthPx: Int, plan: List<PlannedCard>): String {
+        return buildString {
+            append(containerWidthPx)
+            for (card in plan) {
+                append('|').append(card.bound.appWidgetId)
+                append(':').append(card.widthPx)
+                append('x').append(card.heightPx)
+            }
         }
+    }
+
+    /**
+     * Re-derive the signature after a reorder or a committed resize, so the next render
+     * recognises the live flow as already-correct instead of rebuilding it. The live
+     * views and the store agree at this point; only the cached fingerprint is stale.
+     */
+    private fun syncSignatureToStore() {
+        val width = lastContainerWidthPx
+        val flow = flowLayout
+        if (width <= 0 || flow == null) {
+            renderedSignature = null
+            return
+        }
+        val density = appContext.resources.displayMetrics.density
+        val plan = mutableListOf<PlannedCard>()
+        for (bound in store.getWidgets()) {
+            val info = appWidgetManager.getAppWidgetInfo(bound.appWidgetId) ?: continue
+            val (w, h) = resolveHostSizePx(info, bound, width, density)
+            plan.add(PlannedCard(bound, info, w, h))
+        }
+        renderedSignature = if (plan.size == flow.childCount) buildSignature(width, plan) else null
     }
 
     private fun observeContainerWidth(container: ViewGroup, onRemove: (Int) -> Unit) {
@@ -297,6 +394,9 @@ class ProductiveWidgetHostHelper(
         store.setWidgets((0 until layout.childCount).mapNotNull {
             (layout.getChildAt(it).tag as? Int)?.let(current::get)
         })
+        // The live flow already reflects the new order; keep the fingerprint in step so
+        // the next render does not rebuild every host view just to reproduce it.
+        syncSignatureToStore()
     }
 
     private fun createCard(
@@ -320,18 +420,21 @@ class ProductiveWidgetHostHelper(
         val handleWidth = (52 * density).roundToInt()
         val handleHeight = (24 * density).roundToInt()
         val chromeColor = themedColor(R.attr.primaryColorInverseTrans80, Color.argb(190, 20, 20, 24))
+        val chromeInk = themedColor(R.attr.primaryColor, Color.WHITE)
+        val (resizeMinW, resizeMinH) = providerResizeMinSizePx(info)
+        val maxHeightPxValue = (MAX_HEIGHT_DP * density).roundToInt()
 
         val wrap = ResizableWidgetFrame(appContext).apply {
             tag = bound.appWidgetId
             clipChildren = true
             clipToPadding = true
             this.hostView = hostView
-            minWidthPx = providerResizeMinSizePx(info).first.coerceAtLeast((MIN_WIDTH_DP * density).roundToInt())
+            minWidthPx = resizeMinW.coerceAtLeast((MIN_WIDTH_DP * density).roundToInt())
                 .coerceAtMost(containerWidthPx)
             maxWidthPx = containerWidthPx
-            minHeightPx = providerResizeMinSizePx(info).second.coerceAtLeast((MIN_HEIGHT_DP * density).roundToInt())
-                .coerceAtMost((MAX_HEIGHT_DP * density).roundToInt())
-            maxHeightPx = (MAX_HEIGHT_DP * density).roundToInt()
+            minHeightPx = resizeMinH.coerceAtLeast((MIN_HEIGHT_DP * density).roundToInt())
+                .coerceAtMost(maxHeightPxValue)
+            maxHeightPx = maxHeightPxValue
             onEnterEdit = {
                 if (activeEditFrame !== this) {
                     activeEditFrame?.setEditMode(false)
@@ -349,6 +452,9 @@ class ProductiveWidgetHostHelper(
                 val hDp = WidgetSizeMath.commitHeightDp(hPx, density)
                 store.updateSize(bound.appWidgetId, wDp, hDp)
                 applyWidgetOptions(bound.appWidgetId, wDp, hDp, maxWidthDp)
+                // The card is already at the dragged size; refresh the fingerprint so
+                // the next render keeps it instead of rebuilding the whole flow.
+                syncSignatureToStore()
             }
             addView(
                 hostView,
@@ -390,7 +496,7 @@ class ProductiveWidgetHostHelper(
             contentDescription = description
             gravity = Gravity.CENTER
             textSize = 16f
-            setTextColor(themedColor(R.attr.primaryColor, Color.WHITE))
+            setTextColor(chromeInk)
             background = GradientDrawable().apply {
                 cornerRadius = 10 * density
                 setColor(chromeColor)
@@ -546,6 +652,8 @@ class ProductiveWidgetHostHelper(
      */
     private class WidgetFlowLayout(context: Context) : ViewGroup(context) {
         var gapPx: Int = 0
+        private val defaultHeightPx =
+            (DEFAULT_HEIGHT_DP * resources.displayMetrics.density).roundToInt()
 
         class LayoutParams(width: Int, height: Int) : ViewGroup.LayoutParams(width, height)
 
@@ -579,7 +687,7 @@ class ProductiveWidgetHostHelper(
                 }.coerceAtLeast(1)
                 val ch = when {
                     lp.height > 0 -> lp.height
-                    else -> (DEFAULT_HEIGHT_DP * resources.displayMetrics.density).roundToInt()
+                    else -> defaultHeightPx
                 }.coerceAtLeast(1)
                 child.measure(
                     MeasureSpec.makeMeasureSpec(cw, MeasureSpec.EXACTLY),
@@ -656,6 +764,12 @@ class ProductiveWidgetHostHelper(
         private var startRawY = 0f
         private var startW = 0
         private var startH = 0
+
+        /** Frame-coalesced resize state — see [applyLiveSize]. */
+        private var pendingWidthPx = 0
+        private var pendingHeightPx = 0
+        private var sizeFlushScheduled = false
+        private val sizeFlush = Runnable { flushPendingSize() }
 
         private val detector = GestureDetector(
             context,
@@ -740,6 +854,22 @@ class ProductiveWidgetHostHelper(
         private fun isOnEditChrome(ev: MotionEvent): Boolean = chromeForGesture(ev) != null
 
         private fun applyLiveSize(newW: Int, newH: Int) {
+            // Coalesce to one layout pass per frame. A 120Hz digitizer delivers up to 120
+            // ACTION_MOVEs per second, and each requestLayout() here re-measures the flow
+            // *and every AppWidgetHostView in it* — RemoteViews trees this app does not
+            // control. Multiple moves inside one frame now collapse into a single pass.
+            pendingWidthPx = newW
+            pendingHeightPx = newH
+            if (sizeFlushScheduled) return
+            sizeFlushScheduled = true
+            postOnAnimation(sizeFlush)
+        }
+
+        private fun flushPendingSize() {
+            sizeFlushScheduled = false
+            val newW = pendingWidthPx
+            val newH = pendingHeightPx
+            if (newW <= 0 || newH <= 0) return
             val lp = layoutParams ?: return
             if (lp.width != newW || lp.height != newH) {
                 lp.width = newW
@@ -747,6 +877,14 @@ class ProductiveWidgetHostHelper(
                 layoutParams = lp
                 (parent as? View)?.requestLayout()
                 onSizeLive?.invoke(newW, newH)
+            }
+        }
+
+        /** Applies any move that arrived after the last frame flush. */
+        private fun commitPendingSizeNow() {
+            if (sizeFlushScheduled) {
+                removeCallbacks(sizeFlush)
+                flushPendingSize()
             }
         }
 
@@ -784,6 +922,10 @@ class ProductiveWidgetHostHelper(
                     if (resizing) {
                         resizing = false
                         lockAncestors(false)
+                        // Land the last move before reading layoutParams — with the
+                        // per-frame coalescing the final ACTION_MOVE may still be pending,
+                        // and committing without it would drop up to one frame of drag.
+                        commitPendingSizeNow()
                         // Commit on UP **and** on CANCEL: a CANCEL here means an ancestor took
                         // over the gesture, not that the user abandoned the resize. Reverting
                         // on CANCEL is what made every resize snap back to its original size.
@@ -842,28 +984,30 @@ class ProductiveWidgetHostHelper(
     }
 
     private class ResizeHandleView(context: Context) : View(context) {
+        private val density = resources.displayMetrics.density
         private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.argb(220, 255, 255, 255)
-            strokeWidth = 3f * resources.displayMetrics.density
+            strokeWidth = 3f * density
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
         }
+        private val halfWidth = 12f * density
+        private val lineGap = 3f * density
 
         init {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = 12f * resources.displayMetrics.density
+                cornerRadius = 12f * density
                 setColor(Color.argb(180, 20, 20, 24))
             }
         }
 
         override fun onDraw(canvas: Canvas) {
             super.onDraw(canvas)
-            val d = resources.displayMetrics.density
+            val centerX = width / 2f
             val centerY = height / 2f
-            val halfWidth = 12f * d
-            canvas.drawLine(width / 2f - halfWidth, centerY - 3f * d, width / 2f + halfWidth, centerY - 3f * d, paint)
-            canvas.drawLine(width / 2f - halfWidth, centerY + 3f * d, width / 2f + halfWidth, centerY + 3f * d, paint)
+            canvas.drawLine(centerX - halfWidth, centerY - lineGap, centerX + halfWidth, centerY - lineGap, paint)
+            canvas.drawLine(centerX - halfWidth, centerY + lineGap, centerX + halfWidth, centerY + lineGap, paint)
         }
     }
 

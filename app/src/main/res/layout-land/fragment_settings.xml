@@ -19,7 +19,6 @@
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:fadingEdgeLength="24dp"
@@ -429,7 +428,6 @@
                         android:id="@+id/appsNumSelectLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
                         android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:visibility="gone"
@@ -532,8 +530,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         style="@style/TextSmall"
@@ -585,7 +582,6 @@
                         android:id="@+id/dateTimeSelectLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
                         android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
@@ -664,7 +660,6 @@
                         android:id="@+id/alignmentSelectLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
                         android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"
@@ -732,7 +727,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true"
                     android:clipChildren="false"
                     android:clipToPadding="false">
 
@@ -780,8 +774,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         style="@style/TextSmall"
@@ -806,8 +799,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         android:id="@+id/dailyWallpaperUrl"
@@ -832,8 +824,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         style="@style/TextSmall"
@@ -858,8 +849,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         style="@style/TextSmall"
@@ -960,8 +950,7 @@
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:animateLayoutChanges="true">
+                    android:layout_marginTop="12dp">
 
                     <TextView
                         style="@style/TextSmall"
@@ -1018,7 +1007,6 @@
                         android:id="@+id/textSizesLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
                         android:background="@drawable/bg_glass_card"
                         android:gravity="center"
                         android:orientation="horizontal"
@@ -1171,7 +1159,6 @@
                         android:id="@+id/swipeDownSelectLayout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:animateLayoutChanges="true"
                         android:background="@drawable/bg_glass_card"
                         android:orientation="horizontal"
                         android:paddingHorizontal="12dp"

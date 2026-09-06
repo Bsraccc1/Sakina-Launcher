@@ -34,6 +34,20 @@ val sakinaSmooth: PathInterpolator by lazy { PathInterpolator(0.2f, 0f, 0f, 1f) 
 private val INK_ANIM_KEY = R.id.glass_ink_animator
 
 /**
+ * Stateless, so one instance serves every ink animation. It used to be constructed inside
+ * the update listener — one allocation per frame per animating label, and four labels
+ * animate on every tab switch.
+ */
+private val inkEvaluator = ArgbEvaluator()
+
+/**
+ * Smallest halo change worth a [TextView.setShadowLayer] call. Each call drops the text's
+ * cached shadow render, so at 120Hz the 1.5px fade was re-rasterising the label ~24 times
+ * to walk a distance the eye reads in about ten steps.
+ */
+private const val HALO_STEP = 0.15f
+
+/**
  * Applies the correct foreground ink for a view that gains an active glass fill.
  *
  * The colour is *animated*, not snapped. The selection indicator slides for 200ms, so
@@ -63,10 +77,17 @@ fun TextView.applyGlassInk(
     // label mid-way between the two colours.
     (getTag(INK_ANIM_KEY) as? ValueAnimator)?.cancel()
 
+    var lastHaloRadius = -1f
     fun applyHalo(fraction: Float) {
         // Fade the legibility halo out as the fill arrives: a halo over a solid fill
         // reads as an emboss, but removing it instantly makes the label flicker.
         val radius = if (active) 1.5f * (1f - fraction) else 1.5f * fraction
+        // Quantised: setShadowLayer invalidates the text's shadow cache, so only move
+        // when the change is actually visible.
+        if (lastHaloRadius >= 0f && kotlin.math.abs(radius - lastHaloRadius) < HALO_STEP &&
+            radius > 0.01f && fraction < 1f
+        ) return
+        lastHaloRadius = radius
         if (radius <= 0.01f) setShadowLayer(0f, 0f, 0f, 0) else setShadowLayer(radius, 0f, 0f, haloColor)
     }
 
@@ -90,7 +111,7 @@ fun TextView.applyGlassInk(
         interpolator = sakinaSmooth
         addUpdateListener { anim ->
             val f = anim.animatedFraction
-            setTextColor(ArgbEvaluator().evaluate(f, startColor, targetColor) as Int)
+            setTextColor(inkEvaluator.evaluate(f, startColor, targetColor) as Int)
             alpha = startAlpha + (targetAlpha - startAlpha) * f
             applyHalo(f)
         }

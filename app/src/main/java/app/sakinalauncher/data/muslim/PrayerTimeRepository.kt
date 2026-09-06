@@ -44,7 +44,7 @@ class PrayerTimeRepository(
         store.cityQuery = city.label
         // Lay down a year of offline days for the new location before touching the
         // network, so the schedule survives even if this is the last time online.
-        warmOfflineYear()
+        warmOfflineSchedules()
         getOrFetchToday(forceRefresh = true)
     }
 
@@ -56,7 +56,7 @@ class PrayerTimeRepository(
         store.globalLongitude = location.longitude
         store.globalTimeZoneId = location.timeZoneId
         store.globalMethod = location.method
-        warmOfflineYear()
+        warmOfflineSchedules()
         getOrFetchToday(forceRefresh = true)
     }
 
@@ -85,8 +85,20 @@ class PrayerTimeRepository(
                 it.timeZoneId.startsWith("Asia/Makassar") ||
                 it.timeZoneId.startsWith("Asia/Jayapura") }
 
+        val keyBefore = store.activeCacheKey
+        val placeBefore = PrayerOfflineLocations.match(store.cityLabel.ifBlank { store.cityQuery })
+
         if (indonesianCity != null) {
             store.provider = PrayerProvider.KEMENAG
+            // The stored city id belongs to wherever the user was before, and
+            // activeCacheKey prefers the id over the label. Leaving a stale id in place
+            // makes the relocation check below permanently blind: the key never changes,
+            // so nothing re-warms, `getOrFetchToday` reads the old city's still-fresh
+            // cache, and a refetch asks Kemenag for the old city's id again. Compare
+            // matched places rather than raw labels — the geocoder says "Surabaya" where
+            // Kemenag says "KOTA SURABAYA", and treating that as a move would re-warm on
+            // every open.
+            if (placeBefore?.name != indonesianCity.name) store.cityId = ""
             store.cityLabel = label
             store.cityQuery = label
         } else {
@@ -97,16 +109,33 @@ class PrayerTimeRepository(
             store.globalLongitude = longitude
             store.globalTimeZoneId = timeZoneId
         }
-        warmOfflineYear()
-        getOrFetchToday(forceRefresh = true)
+
+        // Auto-detect runs on every Muslim Center open, and it usually detects the same
+        // place. Re-warming a year of schedules then meant 365 recomputations and a
+        // ~175KB preferences rewrite per open, only to reproduce what was already on
+        // disk — and forceRefresh bypassed the cache TTL on top of it. Do the expensive
+        // work only when the location genuinely moved.
+        val relocated = store.activeCacheKey != keyBefore
+        if (relocated) {
+            // Lay down a year of offline days for the new location before touching the
+            // network, so the schedule survives even if this is the last time online.
+            warmOfflineSchedules()
+        }
+        getOrFetchToday(forceRefresh = relocated)
     }
 
     /**
-     * Write a year of locally computed schedules to disk. Called after a location is
-     * chosen so the user is covered even if the launcher is never online again.
-     * Cheap: no network, pure arithmetic, and the store writes one batch.
+     * Write locally computed schedules to disk so the user is covered even if the
+     * launcher is never online again.
+     *
+     * Defaults to [WARM_DAYS], not a year. The year-ahead guarantee does not come from
+     * this cache — [scheduleFor] computes any date on demand, offline, forever — and the
+     * store only retains a two-week window anyway, so warming 365 days meant computing
+     * 365 schedules, writing ~175KB of JSON, and then immediately deleting 351 of the
+     * keys. What the cache is actually for is skipping the recomputation for the days
+     * the UI will ask about.
      */
-    suspend fun warmOfflineYear(days: Int = 365): Int = withContext(ioDispatcher) {
+    suspend fun warmOfflineSchedules(days: Int = WARM_DAYS): Int = withContext(ioDispatcher) {
         val schedules = scheduleForYear(days = days)
         if (schedules.isEmpty()) return@withContext 0
         store.saveSchedules(schedules.first().cacheKey, schedules)
@@ -168,9 +197,11 @@ class PrayerTimeRepository(
      * No network, no per-day API calls.
      */
     fun scheduleForYear(startMillis: Long = System.currentTimeMillis(), days: Int = 365): List<PrayerSchedule> {
-        val place = activePlace() ?: return emptyList()
-        val zone = TimeZone.getTimeZone(place.timeZoneId)
-        val cursor = Calendar.getInstance(zone).apply {
+        // Everything invariant across the year is resolved once. It used to be re-derived
+        // per day: place lookup (a 103-entry sort plus two Regex compilations), time zone,
+        // method, and two SimpleDateFormats — 365 times over, for one identical answer.
+        val context = scheduleContext() ?: return emptyList()
+        val cursor = Calendar.getInstance(context.zone).apply {
             timeInMillis = startMillis
             set(Calendar.HOUR_OF_DAY, 12)
             set(Calendar.MINUTE, 0)
@@ -179,7 +210,7 @@ class PrayerTimeRepository(
         }
         return buildList(days) {
             repeat(days) {
-                computedScheduleFor(cursor.timeInMillis)?.let { add(it) }
+                add(context.scheduleFor(cursor.timeInMillis))
                 cursor.add(Calendar.DAY_OF_MONTH, 1)
             }
         }
@@ -217,42 +248,71 @@ class PrayerTimeRepository(
         }
     }
 
-    private fun computedScheduleFor(dateMillis: Long): PrayerSchedule? {
+    private fun computedScheduleFor(dateMillis: Long): PrayerSchedule? =
+        scheduleContext()?.scheduleFor(dateMillis)
+
+    /**
+     * Everything a schedule needs that does not depend on the date: location, time zone,
+     * calculation method, formatters, and the label fields. Resolve once, reuse per day.
+     */
+    private fun scheduleContext(): ScheduleContext? {
         val place = activePlace() ?: return null
         val zone = runCatching { TimeZone.getTimeZone(place.timeZoneId) }.getOrDefault(TimeZone.getDefault())
-        val method = activeMethod()
-        val times = PrayerTimeCalculator.timesFor(
-            dateMillis = dateMillis,
-            latitude = place.latitude,
-            longitude = place.longitude,
-            timeZone = zone,
-            method = method,
-        )
-        val calendar = Calendar.getInstance(zone).apply { timeInMillis = dateMillis }
-        val ymdFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = zone }
-        val labelFormat = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.getDefault()).apply { timeZone = zone }
-        val cityLabel = when (store.provider) {
-            PrayerProvider.KEMENAG -> store.cityLabel.ifBlank { store.cityQuery }
-            PrayerProvider.GLOBAL -> store.globalLocationLabel
-        }
-        val province = when (store.provider) {
-            PrayerProvider.KEMENAG -> ""
-            PrayerProvider.GLOBAL -> store.globalCountry
-        }
-        return PrayerSchedule(
-            city = cityLabel,
-            province = province,
-            dateLabel = labelFormat.format(calendar.time),
-            // Computed schedules are always current for their date, so stamp them
-            // now: the UI's "is this today's data" check then passes offline too.
-            fetchedAtMillis = System.currentTimeMillis(),
-            times = times.toPrayerTimes(),
-            source = method.label,
+        return ScheduleContext(
+            place = place,
+            zone = zone,
+            method = activeMethod(),
             provider = store.provider,
-            timeZoneId = place.timeZoneId,
+            cityLabel = when (store.provider) {
+                PrayerProvider.KEMENAG -> store.cityLabel.ifBlank { store.cityQuery }
+                PrayerProvider.GLOBAL -> store.globalLocationLabel
+            },
+            province = when (store.provider) {
+                PrayerProvider.KEMENAG -> ""
+                PrayerProvider.GLOBAL -> store.globalCountry
+            },
             cacheKey = store.activeCacheKey,
-            dateYmd = ymdFormat.format(calendar.time),
         )
+    }
+
+    private class ScheduleContext(
+        val place: PrayerOfflineLocations.Place,
+        val zone: TimeZone,
+        val method: PrayerTimeCalculator.Method,
+        val provider: PrayerProvider,
+        val cityLabel: String,
+        val province: String,
+        val cacheKey: String,
+    ) {
+        private val calendar: Calendar = Calendar.getInstance(zone)
+        private val ymdFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { timeZone = zone }
+        private val labelFormat = SimpleDateFormat("EEEE, dd/MM/yyyy", Locale.getDefault()).apply { timeZone = zone }
+
+        fun scheduleFor(dateMillis: Long): PrayerSchedule {
+            val times = PrayerTimeCalculator.timesFor(
+                dateMillis = dateMillis,
+                latitude = place.latitude,
+                longitude = place.longitude,
+                timeZone = zone,
+                method = method,
+            )
+            calendar.timeInMillis = dateMillis
+            val date = calendar.time
+            return PrayerSchedule(
+                city = cityLabel,
+                province = province,
+                dateLabel = labelFormat.format(date),
+                // Computed schedules are always current for their date, so stamp them
+                // now: the UI's "is this today's data" check then passes offline too.
+                fetchedAtMillis = System.currentTimeMillis(),
+                times = times.toPrayerTimes(),
+                source = method.label,
+                provider = provider,
+                timeZoneId = place.timeZoneId,
+                cacheKey = cacheKey,
+                dateYmd = ymdFormat.format(date),
+            )
+        }
     }
 
     private suspend fun refreshMonthBatch(
@@ -602,6 +662,12 @@ class PrayerTimeRepository(
     companion object {
         private const val MAX_FETCH_ATTEMPTS = 2
         private const val BACKOFF_BASE_MS = 300L
+
+        /**
+         * Days pre-computed by [warmOfflineSchedules]. Matches the store's retention window —
+         * warming more than the store keeps is work thrown away.
+         */
+        private const val WARM_DAYS = 14
 
         val globalPresetLocations = listOf(
             GlobalPrayerLocation("Makkah", "Saudi Arabia", 21.4225, 39.8262, "Asia/Riyadh", 4),

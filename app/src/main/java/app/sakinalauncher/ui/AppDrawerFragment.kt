@@ -48,6 +48,9 @@ class AppDrawerFragment : Fragment() {
     private var currentPrivateSpaceLocked: Boolean = true
     private var currentPrivateSpaceAvailable: Boolean = false
 
+    /** Guards the coalesced rebuild — see [scheduleCombinedAppListUpdate]. */
+    private var combinedUpdatePending = false
+
     private val viewModel: MainViewModel by activityViewModels()
     private var _binding: FragmentAppDrawerBinding? = null
     private val binding get() = _binding!!
@@ -170,14 +173,12 @@ class AppDrawerFragment : Fragment() {
                 }
                 viewModel.getAppList()
             },
-            appHideListener = { appModel, position ->
+            appHideListener = { appModel ->
                 if (appModel is AppModel.PinnedShortcut) {
                     requireContext().showToast("Hiding pinned shortcuts is not supported")
                     return@AppDrawerAdapter
                 }
-                adapter.appFilteredList.removeAt(position)
-                adapter.notifyItemRemoved(position)
-                adapter.appsList.remove(appModel)
+                adapter.removeItem(appModel)
 
                 val newSet = mutableSetOf<String>()
                 newSet.addAll(prefs.hiddenApps)
@@ -246,28 +247,45 @@ class AppDrawerFragment : Fragment() {
         if (flag == Constants.FLAG_HIDDEN_APPS) {
             viewModel.hiddenApps.observe(viewLifecycleOwner) {
                 it?.let {
-                    adapter.setAppList(it.toMutableList())
+                    adapter.setAppList(it)
                 }
             }
         } else {
             viewModel.appList.observe(viewLifecycleOwner) {
                 currentAppList = it
-                updateCombinedAppList()
+                scheduleCombinedAppListUpdate()
             }
             if (flag == Constants.FLAG_LAUNCH_APP) {
                 viewModel.privateSpaceAvailable.observe(viewLifecycleOwner) {
                     currentPrivateSpaceAvailable = it
-                    updateCombinedAppList()
+                    scheduleCombinedAppListUpdate()
                 }
                 viewModel.privateSpaceLocked.observe(viewLifecycleOwner) {
                     currentPrivateSpaceLocked = it
-                    updateCombinedAppList()
+                    scheduleCombinedAppListUpdate()
                 }
                 viewModel.privateSpaceApps.observe(viewLifecycleOwner) {
                     currentPrivateSpaceApps = it
-                    updateCombinedAppList()
+                    scheduleCombinedAppListUpdate()
                 }
             }
+        }
+    }
+
+    /**
+     * Coalesce the four observers into one rebuild.
+     *
+     * `getAppList()` posts `appList` and then all three private-space LiveDatas, so a
+     * single drawer open fired `updateCombinedAppList()` up to four times — four list
+     * copies, four DiffUtil passes and four re-filters to arrive at one final list.
+     * Posting to the view collapses them into the next frame.
+     */
+    private fun scheduleCombinedAppListUpdate() {
+        if (combinedUpdatePending || _binding == null) return
+        combinedUpdatePending = true
+        binding.recyclerView.post {
+            combinedUpdatePending = false
+            if (_binding != null) updateCombinedAppList()
         }
     }
 

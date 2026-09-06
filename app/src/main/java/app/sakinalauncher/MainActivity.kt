@@ -11,8 +11,10 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.BitmapDrawable
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -31,6 +33,7 @@ import app.sakinalauncher.data.Constants
 import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.databinding.ActivityMainBinding
 import app.sakinalauncher.helper.getColorFromAttr
+import app.sakinalauncher.helper.getScreenDimensions
 import app.sakinalauncher.helper.hasBeenDays
 import app.sakinalauncher.helper.hasBeenHours
 import app.sakinalauncher.helper.hasBeenMinutes
@@ -46,9 +49,11 @@ import app.sakinalauncher.helper.resetLauncherViaFakeActivity
 import app.sakinalauncher.helper.shareApp
 import app.sakinalauncher.helper.showLauncherSelector
 import app.sakinalauncher.helper.showToast
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -58,6 +63,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var binding: ActivityMainBinding
     private var timerJob: Job? = null
+    private var wallpaperLoadJob: Job? = null
+
+    /** Cached default-launcher answer — see [isDefaultLauncherCached]. */
+    private var cachedIsDefault: Boolean? = null
+    private var cachedIsDefaultAt: Long = 0L
     private var isResumed = false
     private var profileReceiver: BroadcastReceiver? = null
 
@@ -327,6 +337,11 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        // Resolved once per pass. isSakinaDefault() is a synchronous PackageManager
+        // resolveActivity binder call, and the branches below asked it up to four times
+        // for an answer that cannot change mid-method.
+        val isDefault = isDefaultLauncherCached()
+
         when (prefs.userState) {
             Constants.UserState.START -> {
                 if (prefs.firstOpenTime.hasBeenMinutes(10))
@@ -336,33 +351,52 @@ class MainActivity : AppCompatActivity() {
             Constants.UserState.WALLPAPER -> {
                 if (prefs.wallpaperMsgShown || prefs.dailyWallpaper)
                     prefs.userState = Constants.UserState.REVIEW
-                else if (isSakinaDefault(this))
+                else if (isDefault)
                     viewModel.showDialog.postValue(Constants.Dialog.WALLPAPER)
             }
 
             Constants.UserState.REVIEW -> {
                 if (prefs.rateClicked)
                     prefs.userState = Constants.UserState.SHARE
-                else if (isSakinaDefault(this) && prefs.firstOpenTime.hasBeenHours(1))
+                else if (isDefault && prefs.firstOpenTime.hasBeenHours(1))
                     viewModel.showDialog.postValue(Constants.Dialog.REVIEW)
             }
 
             Constants.UserState.RATE -> {
                 if (prefs.rateClicked)
                     prefs.userState = Constants.UserState.SHARE
-                else if (isSakinaDefault(this)
+                else if (isDefault
                     && prefs.firstOpenTime.isDaySince() >= 7
                     && calendar.get(Calendar.HOUR_OF_DAY) >= 16
                 ) viewModel.showDialog.postValue(Constants.Dialog.RATE)
             }
 
             Constants.UserState.SHARE -> {
-                if (isSakinaDefault(this) && prefs.firstOpenTime.hasBeenDays(14)
+                if (isDefault && prefs.firstOpenTime.hasBeenDays(14)
                     && prefs.shareShownTime.isDaySince() >= 70
                     && calendar.get(Calendar.HOUR_OF_DAY) >= 16
                 ) viewModel.showDialog.postValue(Constants.Dialog.SHARE)
             }
         }
+    }
+
+    /**
+     * Whether Sakinah is the current default launcher, cached for [DEFAULT_LAUNCHER_TTL_MS].
+     *
+     * The underlying call is a `resolveActivity` binder round-trip. It is asked from
+     * [applySolidBackground] and from every [checkForMessages] branch, both of which run
+     * whenever the launcher comes back to the foreground — which for a launcher is every
+     * Home press. The answer only changes when the user reassigns the default, so a short
+     * TTL is enough to collapse the burst without going stale in practice.
+     */
+    private fun isDefaultLauncherCached(): Boolean {
+        val now = System.currentTimeMillis()
+        val cached = cachedIsDefault
+        if (cached != null && now - cachedIsDefaultAt < DEFAULT_LAUNCHER_TTL_MS) return cached
+        val resolved = isSakinaDefault(this)
+        cachedIsDefault = resolved
+        cachedIsDefaultAt = now
+        return resolved
     }
 
     @SuppressLint("SourceLockedOrientationActivity")
@@ -393,7 +427,7 @@ class MainActivity : AppCompatActivity() {
             }
             // Default launcher: the system composites the wallpaper behind our
             // translucent window, so we hide our manual layer and stay transparent.
-            isSakinaDefault(this) -> {
+            isDefaultLauncherCached() -> {
                 binding.wallpaperLayer.visibility = View.GONE
                 binding.wallpaperLayer.setImageDrawable(null)
                 binding.root.background = null
@@ -405,26 +439,23 @@ class MainActivity : AppCompatActivity() {
             else -> {
                 binding.root.background = null
                 binding.root.setBackgroundColor(Color.TRANSPARENT)
-                val wallpaper = loadUserWallpaper()
-                if (wallpaper != null) {
-                    binding.wallpaperLayer.setImageDrawable(wallpaper)
-                    binding.wallpaperLayer.visibility = View.VISIBLE
-                } else {
-                    binding.wallpaperLayer.setImageDrawable(null)
-                    binding.wallpaperLayer.visibility = View.GONE
-                }
+                loadUserWallpaperAsync()
             }
         }
     }
 
     /**
-     * Reads the user's current wallpaper. On API <= 32 this requires
-     * READ_EXTERNAL_STORAGE; if the permission is missing we request it once and
-     * return null for now (we re-apply once it's granted). Any failure falls back
-     * to a transparent layer.
+     * Reads the user's wallpaper off the main thread and paints it into
+     * [ActivityMainBinding.wallpaperLayer].
+     *
+     * This used to be a synchronous `WallpaperManager.getDrawable()` inside
+     * [applySolidBackground], which is called from `onCreate` — so a device whose
+     * wallpaper came from a large photo decoded a multi-megabyte bitmap on the launch
+     * critical path, sized to the *source image* rather than the screen, and then handed
+     * the oversized texture to a `centerCrop` ImageView. Decoding on IO with an
+     * explicit `inSampleSize` fixes both the stall and the footprint.
      */
-    @SuppressLint("MissingPermission") // All WallpaperManager reads are wrapped in try/catch and fall back to null.
-    private fun loadUserWallpaper(): Drawable? {
+    private fun loadUserWallpaperAsync() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2 &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
             != PackageManager.PERMISSION_GRANTED
@@ -433,29 +464,83 @@ class MainActivity : AppCompatActivity() {
                 wallpaperPermissionRequested = true
                 wallpaperPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
-            return null
+            clearWallpaperLayer()
+            return
         }
+
+        wallpaperLoadJob?.cancel()
+        // Screen size is read here, on the main thread: getScreenDimensions goes through
+        // WindowManager.defaultDisplay, which is a UI-thread API.
+        val (screenWidth, screenHeight) = getScreenDimensions(this)
+        wallpaperLoadJob = lifecycleScope.launch {
+            val bitmap = withContext(Dispatchers.IO) { decodeUserWallpaper(screenWidth, screenHeight) }
+            if (bitmap == null) {
+                clearWallpaperLayer()
+            } else {
+                binding.wallpaperLayer.setImageBitmap(bitmap)
+                binding.wallpaperLayer.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun clearWallpaperLayer() {
+        binding.wallpaperLayer.setImageDrawable(null)
+        binding.wallpaperLayer.visibility = View.GONE
+    }
+
+    /**
+     * Decodes the system wallpaper downsampled to the screen, or null when it cannot be
+     * read (no permission on API 33+, no wallpaper set, or a decode failure).
+     *
+     * `RGB_565` halves the memory: the wallpaper is drawn as an opaque full-screen
+     * backdrop, so its alpha channel carries nothing.
+     */
+    @SuppressLint("MissingPermission") // Every WallpaperManager read is wrapped and falls back to null.
+    private fun decodeUserWallpaper(screenWidth: Int, screenHeight: Int): Bitmap? {
         val wm = WallpaperManager.getInstance(this)
-        var result: Drawable? = try {
-            wm.drawable
-        } catch (_: Exception) {
-            null
-        }
-        if (result == null) {
-            result = try {
-                wm.peekDrawable()
-            } catch (_: Exception) {
-                null
+
+        // Preferred path: the raw file, which lets us size the decode ourselves.
+        val fromFile = runCatching {
+            wm.getWallpaperFile(WallpaperManager.FLAG_SYSTEM)?.use { descriptor ->
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFileDescriptor(descriptor.fileDescriptor, null, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return@use null
+                val options = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, screenWidth, screenHeight)
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                BitmapFactory.decodeFileDescriptor(descriptor.fileDescriptor, null, options)
             }
+        }.getOrNull()
+        if (fromFile != null) return fromFile
+
+        // Fallback for the device that has no user-set wallpaper: peekDrawable() passes
+        // returnDefault=false and returns null there, getDrawable() passes true and hands
+        // back the built-in one. Both wrap the bitmap in a BitmapDrawable, so the cast
+        // below holds for either.
+        //
+        // getFastDrawable() used to sit in this slot and could never work: it returns a
+        // FastBitmapDrawable, which extends Drawable directly rather than BitmapDrawable,
+        // so `as? BitmapDrawable` was always null and the whole fallback was dead.
+        val drawable = runCatching { wm.peekDrawable() }.getOrNull()
+            ?: runCatching { wm.drawable }.getOrNull()
+            ?: return null
+        return (drawable as? BitmapDrawable)?.bitmap
+    }
+
+    /** Largest power-of-two downscale that still covers the screen. */
+    private fun sampleSizeFor(
+        sourceWidth: Int,
+        sourceHeight: Int,
+        targetWidth: Int,
+        targetHeight: Int,
+    ): Int {
+        if (targetWidth <= 0 || targetHeight <= 0) return 1
+        var sample = 1
+        while (sourceWidth / (sample * 2) >= targetWidth && sourceHeight / (sample * 2) >= targetHeight) {
+            sample *= 2
         }
-        if (result == null) {
-            result = try {
-                wm.fastDrawable
-            } catch (_: Exception) {
-                null
-            }
-        }
-        return result
+        return sample
     }
 
     private fun openLauncherChooser(resetFailed: Boolean) {
@@ -504,9 +589,20 @@ class MainActivity : AppCompatActivity() {
             }
 
             Constants.REQUEST_CODE_LAUNCHER_SELECTOR -> {
-                if (resultCode == Activity.RESULT_OK)
+                if (resultCode == Activity.RESULT_OK) {
+                    // The default may have just changed; do not serve the stale answer.
+                    cachedIsDefault = null
                     resetLauncherViaFakeActivity()
+                }
             }
         }
+    }
+
+    private companion object {
+        /**
+         * How long the default-launcher answer stays valid. Short enough that the very
+         * next foreground pass after the user changes their default picks up the change.
+         */
+        const val DEFAULT_LAUNCHER_TTL_MS = 2_000L
     }
 }

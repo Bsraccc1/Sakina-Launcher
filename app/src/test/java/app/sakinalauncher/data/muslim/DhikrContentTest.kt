@@ -86,6 +86,22 @@ class DhikrContentTest {
         assertTrue(meanings.any { it.contains("Shubuh") })
     }
 
+    /**
+     * [DhikrContent.cardsFor] now caches its composed lists, so repeated calls must keep
+     * returning the same content — and [DhikrContent.countFor] must agree with them.
+     */
+    @Test
+    fun cachedCardsAreStableAcrossCalls() {
+        DhikrPeriod.entries.forEach { period ->
+            val first = DhikrContent.cardsFor(period)
+            val second = DhikrContent.cardsFor(period)
+
+            assertEquals(first.size, second.size)
+            assertEquals(first.map { it.titleId }, second.map { it.titleId })
+            assertEquals(first.size, DhikrContent.countFor(period))
+        }
+    }
+
     private companion object {
         const val AFTER_PRAYER_CARD_COUNT = 12
     }

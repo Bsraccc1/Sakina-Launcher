@@ -61,3 +61,21 @@ Single Activity (`MainActivity`) + Navigation Component fragments:
 ## Naming note
 
 Older docs or tests may still mention “Olauncher” or package `app.olauncher` in unit-test folders. **Production code is `app.sakinalauncher`.** Prefer Sakinah naming in new code and docs.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues on `Bsraccc1/Sakina-Launcher`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` glossary plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+### Local build note
+
+`gradlew` is not executable in this checkout and the system JDK is 25, which AGP 8.9.1 rejects. Run tests as:
+
+```bash
+JAVA_HOME=/home/bsracc/jdks/jdk-21.0.12.1+1 sh gradlew testDebugUnitTest
+```

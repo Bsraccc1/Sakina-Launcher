@@ -19,6 +19,8 @@ import app.sakinalauncher.R
 import app.sakinalauncher.data.AppModel
 import app.sakinalauncher.data.Constants
 import app.sakinalauncher.databinding.AdapterAppDrawerBinding
+import app.sakinalauncher.databinding.AdapterAppDrawerMenuBinding
+import app.sakinalauncher.databinding.AdapterAppDrawerRenameBinding
 import app.sakinalauncher.databinding.AdapterPrivateSpaceHeaderBinding
 import app.sakinalauncher.helper.hideKeyboard
 import app.sakinalauncher.helper.isSystemApp
@@ -31,7 +33,7 @@ class AppDrawerAdapter(
     private val appClickListener: (AppModel) -> Unit,
     private val appInfoListener: (AppModel) -> Unit,
     private val appDeleteListener: (AppModel) -> Unit,
-    private val appHideListener: (AppModel, Int) -> Unit,
+    private val appHideListener: (AppModel) -> Unit,
     private val appRenameListener: (AppModel, String) -> Unit,
     private val privateSpaceToggleListener: () -> Unit = {},
     private val privateSpaceSettingsListener: () -> Unit = {},
@@ -40,6 +42,10 @@ class AppDrawerAdapter(
     companion object {
         const val VIEW_TYPE_APP = 0
         const val VIEW_TYPE_PRIVATE_HEADER = 1
+
+        /** Compiled once. These were rebuilt per app label, per keystroke. */
+        private val DIACRITICS = Regex("\\p{InCombiningDiacriticalMarks}+")
+        private val SEPARATORS = Regex("[-_+,. ]")
 
         val DIFF_CALLBACK = object : DiffUtil.ItemCallback<AppModel>() {
             override fun areItemsTheSame(oldItem: AppModel, newItem: AppModel): Boolean = when {
@@ -64,8 +70,17 @@ class AppDrawerAdapter(
     private val appFilter = createAppFilter()
     private val myUserHandle = android.os.Process.myUserHandle()
 
-    var appsList: MutableList<AppModel> = mutableListOf()
-    var appFilteredList: MutableList<AppModel> = mutableListOf()
+    /**
+     * Accent/separator-stripped labels, computed once per label instead of once per
+     * keystroke. Filtering used to build two [Regex] objects and run [Normalizer] for
+     * every app on every character typed — on a 200-app device that was 400 regex
+     * compilations per keystroke, which is what made drawer search feel sticky.
+     * Written only from the [Filter] worker thread; concurrent for safety.
+     */
+    private val normalizedLabels = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    var appsList: List<AppModel> = emptyList()
+    var appFilteredList: List<AppModel> = emptyList()
 
     override fun getItemViewType(position: Int): Int {
         return when (appFilteredList.getOrNull(position)) {
@@ -132,21 +147,26 @@ class AppDrawerAdapter(
                 isBangSearch = charSearch?.startsWith("!") ?: false
                 autoLaunch = charSearch?.startsWith(" ")?.not() ?: true
 
-                val appFilteredList = (if (charSearch.isNullOrBlank()) appsList
-                else appsList.filter { app ->
-                    app !is AppModel.PrivateSpaceHeader && appLabelMatches(app.appLabel, charSearch)
-                } as MutableList<AppModel>)
+                // Always a fresh list, never the live `appsList` reference: submitList
+                // short-circuits on reference equality, so re-publishing the same list
+                // instance would silently skip the diff.
+                val filtered: List<AppModel> = if (charSearch.isNullOrBlank()) {
+                    ArrayList(appsList)
+                } else {
+                    appsList.filter { app ->
+                        app !is AppModel.PrivateSpaceHeader && appLabelMatches(app.appLabel, charSearch)
+                    }
+                }
 
                 val filterResults = FilterResults()
-                filterResults.values = appFilteredList
+                filterResults.values = filtered
                 return filterResults
             }
 
             @Suppress("UNCHECKED_CAST")
             override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
                 results?.values?.let {
-                    val items = it as MutableList<AppModel>
-                    appFilteredList = items
+                    appFilteredList = it as List<AppModel>
                     submitList(appFilteredList) {
                         autoLaunch()
                     }
@@ -170,28 +190,53 @@ class AppDrawerAdapter(
     }
 
     private fun appLabelMatches(appLabel: String, charSearch: CharSequence): Boolean {
-        return (appLabel.contains(charSearch.trim(), true) or
-                Normalizer.normalize(appLabel, Normalizer.Form.NFD)
-                    .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
-                    .replace(Regex("[-_+,. ]"), "")
-                    .contains(charSearch, true))
+        if (appLabel.contains(charSearch.trim(), true)) return true
+        val stripped = normalizedLabels.getOrPut(appLabel) {
+            DIACRITICS.replace(Normalizer.normalize(appLabel, Normalizer.Form.NFD), "")
+                .let { SEPARATORS.replace(it, "") }
+        }
+        return stripped.contains(charSearch, true)
     }
 
-    fun setAppList(appsList: MutableList<AppModel>) {
-        // Add empty app for bottom padding in recyclerview and assign to list
-        appsList.add(
+    /**
+     * Replace the backing list.
+     *
+     * The copy is load-bearing, not defensive hygiene: [ListAdapter.submitList] returns
+     * early when the new list is the *same reference* as the current one. Handing it the
+     * caller's list and then mutating that list in place (which the hide flow did) meant
+     * the next submit compared a list against itself and DiffUtil emitted nothing. The
+     * padding row is appended to our copy so the caller's list is left alone too.
+     */
+    fun setAppList(appsList: List<AppModel>) {
+        val next = ArrayList<AppModel>(appsList.size + 1)
+        next.addAll(appsList)
+        // Empty app for bottom padding in the recyclerview.
+        next.add(
             AppModel.App(
                 appLabel = "",
                 key = null,
                 appPackage = "",
                 activityClassName = "",
                 isNew = false,
-                user = android.os.Process.myUserHandle()
+                user = myUserHandle
             )
         )
-        this.appsList = appsList
-        this.appFilteredList = appsList
-        submitList(appsList)
+        this.appsList = next
+        this.appFilteredList = next
+        submitList(next)
+    }
+
+    /**
+     * Drop one row immediately, ahead of the reload that follows a hide.
+     *
+     * Goes through [submitList] with a fresh list rather than mutating in place and
+     * calling `notifyItemRemoved`: a ListAdapter owns its list, and mutating it behind
+     * its back desynchronises the adapter from the diff it is computing.
+     */
+    fun removeItem(appModel: AppModel) {
+        appsList = ArrayList(appsList).apply { remove(appModel) }
+        appFilteredList = ArrayList(appFilteredList).apply { remove(appModel) }
+        submitList(appFilteredList)
     }
 
     fun launchFirstInList() {
@@ -217,8 +262,27 @@ class AppDrawerAdapter(
 
     class ViewHolder(private val binding: AdapterAppDrawerBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        private var renameWatcher: TextWatcher? = null
+        /** Null until this row is long-pressed; see [bind]. */
+        private var menu: AdapterAppDrawerMenuBinding? = null
 
+        /** Null until rename is opened on this row; see [bind]. */
+        private var rename: AdapterAppDrawerRenameBinding? = null
+        private var renameWatcher: TextWatcher? = null
+        private var originalAppName = ""
+
+        private fun menu(): AdapterAppDrawerMenuBinding =
+            menu ?: AdapterAppDrawerMenuBinding.bind(binding.appHideStub.inflate()).also { menu = it }
+
+        private fun rename(): AdapterAppDrawerRenameBinding =
+            rename ?: AdapterAppDrawerRenameBinding.bind(binding.renameStub.inflate()).also { rename = it }
+
+        /**
+         * Per-bind work is deliberately minimal: label, gravity, profile dot, two
+         * listeners. The long-press menu and the rename row are behind ViewStubs and
+         * their listeners are wired on first use — binding them on every row allocated
+         * a TextWatcher, a focus listener, an editor-action listener and eight lambdas
+         * per row, which the drawer then had to collect mid-fling.
+         */
         fun bind(
             flag: Int,
             appLabelGravity: Int,
@@ -227,63 +291,99 @@ class AppDrawerAdapter(
             clickListener: (AppModel) -> Unit,
             appDeleteListener: (AppModel) -> Unit,
             appInfoListener: (AppModel) -> Unit,
-            appHideListener: (AppModel, Int) -> Unit,
+            appHideListener: (AppModel) -> Unit,
             appRenameListener: (AppModel, String) -> Unit,
         ) = with(binding) {
-            appHideLayout.visibility = View.GONE
-            renameLayout.visibility = View.GONE
+            menu?.root?.visibility = View.GONE
+            rename?.root?.visibility = View.GONE
             appTitle.visibility = View.VISIBLE
+            originalAppName = ""
+            renameWatcher?.let { watcher ->
+                rename?.etAppRename?.removeTextChangedListener(watcher)
+                renameWatcher = null
+            }
 
             // Show indicators in title based on app type and state
-            appTitle.text = buildString {
-                append(appModel.appLabel)
-                if (appModel.isNew) append(" ✦")
-            }
+            appTitle.text = if (appModel.isNew) "${appModel.appLabel} ✦" else appModel.appLabel
             appTitle.gravity = appLabelGravity
             otherProfileIndicator.isVisible = appModel.user != myUserHandle
 
             appTitle.setOnClickListener { clickListener(appModel) }
-            var originalAppName = ""
 
             appTitle.setOnLongClickListener {
                 if (appModel.appPackage.isNotEmpty()) {
-                    appDelete.alpha = when (
+                    val chrome = menu()
+                    wireHideChrome(
+                        chrome,
+                        appModel,
+                        appDeleteListener,
+                        appInfoListener,
+                        appHideListener,
+                        appRenameListener,
+                    )
+                    chrome.appDelete.alpha = when (
                         appModel is AppModel.PinnedShortcut || !root.context.isSystemApp(appModel.appPackage, appModel.user)
                     ) {
                         true -> 1.0f
                         false -> 0.5f
                     }
-                    appHide.text = if (flag == Constants.FLAG_HIDDEN_APPS)
+                    chrome.appHide.text = if (flag == Constants.FLAG_HIDDEN_APPS)
                         root.context.getString(R.string.adapter_show)
                     else
                         root.context.getString(R.string.adapter_hide)
                     appTitle.visibility = View.INVISIBLE
-                    appHide.alpha = when (appModel is AppModel.PinnedShortcut) {
+                    chrome.appHide.alpha = when (appModel is AppModel.PinnedShortcut) {
                         true -> 0.5f
                         false -> 1.0f
                     }
-                    appHideLayout.visibility = View.VISIBLE
+                    chrome.root.visibility = View.VISIBLE
                     // Only allow renaming non hidden apps
-                    appRename.isVisible = flag != Constants.FLAG_HIDDEN_APPS
+                    chrome.appRename.isVisible = flag != Constants.FLAG_HIDDEN_APPS
                 }
                 true
             }
+        }
 
-            // Configure rename behavior
-            appRename.setOnClickListener {
+        /** Wired on first long-press of this row — see [bind]. */
+        private fun wireHideChrome(
+            chrome: AdapterAppDrawerMenuBinding,
+            appModel: AppModel,
+            appDeleteListener: (AppModel) -> Unit,
+            appInfoListener: (AppModel) -> Unit,
+            appHideListener: (AppModel) -> Unit,
+            appRenameListener: (AppModel, String) -> Unit,
+        ) {
+            chrome.appRename.setOnClickListener {
                 if (appModel.appPackage.isNotEmpty()) {
-                    originalAppName = getAppName(etAppRename.context, appModel.appPackage, appModel.user)
-                    etAppRename.hint = originalAppName
-                    etAppRename.setText(appModel.appLabel)
-                    etAppRename.setSelectAllOnFocus(true)
-                    renameLayout.visibility = View.VISIBLE
-                    appHideLayout.visibility = View.GONE
-                    etAppRename.showKeyboard()
-                    etAppRename.imeOptions = EditorInfo.IME_ACTION_DONE
+                    val editor = rename()
+                    wireRenameChrome(editor, appModel, appRenameListener)
+                    originalAppName = getAppName(editor.etAppRename.context, appModel.appPackage, appModel.user)
+                    editor.etAppRename.hint = originalAppName
+                    editor.etAppRename.setText(appModel.appLabel)
+                    editor.etAppRename.setSelectAllOnFocus(true)
+                    editor.root.visibility = View.VISIBLE
+                    chrome.root.visibility = View.GONE
+                    editor.etAppRename.showKeyboard()
+                    editor.etAppRename.imeOptions = EditorInfo.IME_ACTION_DONE
                 }
             }
+            chrome.appInfo.setOnClickListener { appInfoListener(appModel) }
+            chrome.appDelete.setOnClickListener { appDeleteListener(appModel) }
+            chrome.appMenuClose.setOnClickListener {
+                chrome.root.visibility = View.GONE
+                binding.appTitle.visibility = View.VISIBLE
+            }
+            chrome.appHide.setOnClickListener { appHideListener(appModel) }
+        }
+
+        /** Wired when the rename row is first opened on this row — see [bind]. */
+        private fun wireRenameChrome(
+            editor: AdapterAppDrawerRenameBinding,
+            appModel: AppModel,
+            appRenameListener: (AppModel, String) -> Unit,
+        ) = with(editor) {
             etAppRename.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
-                appTitle.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
+                binding.appTitle.visibility = if (hasFocus) View.INVISIBLE else View.VISIBLE
             }
             renameWatcher?.let { etAppRename.removeTextChangedListener(it) }
             renameWatcher = object : TextWatcher {
@@ -309,7 +409,7 @@ class AppDrawerAdapter(
                     val renameLabel = etAppRename.text.toString().trim()
                     if (renameLabel.isNotBlank() && appModel.appPackage.isNotBlank()) {
                         appRenameListener(appModel, renameLabel)
-                        renameLayout.visibility = View.GONE
+                        root.visibility = View.GONE
                     }
                     true
                 }
@@ -320,7 +420,7 @@ class AppDrawerAdapter(
                 val renameLabel = etAppRename.text.toString().trim()
                 if (renameLabel.isNotBlank() && appModel.appPackage.isNotBlank()) {
                     appRenameListener(appModel, renameLabel)
-                    renameLayout.visibility = View.GONE
+                    root.visibility = View.GONE
                 } else {
                     val fallbackName = originalAppName.ifBlank {
                         getAppName(etAppRename.context, appModel.appPackage, appModel.user)
@@ -329,20 +429,13 @@ class AppDrawerAdapter(
                         appModel,
                         fallbackName
                     )
-                    renameLayout.visibility = View.GONE
+                    root.visibility = View.GONE
                 }
             }
-            appInfo.setOnClickListener { appInfoListener(appModel) }
-            appDelete.setOnClickListener { appDeleteListener(appModel) }
-            appMenuClose.setOnClickListener {
-                appHideLayout.visibility = View.GONE
-                appTitle.visibility = View.VISIBLE
-            }
             appRenameClose.setOnClickListener {
-                renameLayout.visibility = View.GONE
-                appTitle.visibility = View.VISIBLE
+                root.visibility = View.GONE
+                binding.appTitle.visibility = View.VISIBLE
             }
-            appHide.setOnClickListener { appHideListener(appModel, bindingAdapterPosition) }
         }
 
         private fun getAppName(context: Context, appPackage: String, user: UserHandle): String {

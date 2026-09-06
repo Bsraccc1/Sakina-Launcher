@@ -152,24 +152,37 @@ object PrayerOfflineLocations {
     fun match(label: String?): Place? {
         val needle = normalize(label ?: return null)
         if (needle.isBlank()) return null
-        return places
-            .sortedByDescending { it.name.length }
-            .firstOrNull { place ->
-                val name = place.name
-                needle.contains(name) || name.contains(needle)
-            }
+        return placesByNameLengthDesc.firstOrNull { place ->
+            val name = place.name
+            needle.contains(name) || name.contains(needle)
+        }
     }
 
     /** [match] with the national reference point as a last resort. */
     fun matchOrJakarta(label: String?): Place = match(label) ?: JAKARTA
 
+    /**
+     * [places] is immutable, so the ordering is too. Sorting inside [match] allocated a
+     * fresh 103-element list and re-ran the whole sort on every call — and [match] is on
+     * the per-day path when a year of offline schedules is computed.
+     */
+    private val placesByNameLengthDesc: List<Place> by lazy {
+        places.sortedByDescending { it.name.length }
+    }
+
+    /** Compiled once; these were rebuilt on every [normalize] call. */
+    private val NON_LETTERS = Regex("[^A-Z ]")
+    private val WHITESPACE_RUN = Regex("\\s+")
+    private val LABEL_PREFIXES =
+        listOf("KOTA ADM.", "KOTA ADMINISTRASI", "KABUPATEN", "KAB.", "KOTA", "CITY")
+
     private fun normalize(value: String): String {
         var text = value.uppercase(Locale.US)
-        listOf("KOTA ADM.", "KOTA ADMINISTRASI", "KABUPATEN", "KAB.", "KOTA", "CITY").forEach {
+        LABEL_PREFIXES.forEach {
             text = text.replace(it, " ")
         }
-        return text.replace('-', ' ').replace(Regex("[^A-Z ]"), " ")
-            .replace(Regex("\\s+"), " ")
+        return text.replace('-', ' ').replace(NON_LETTERS, " ")
+            .replace(WHITESPACE_RUN, " ")
             .trim()
     }
 }

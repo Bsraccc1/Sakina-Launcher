@@ -1,8 +1,6 @@
 package app.sakinalauncher.listener
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
@@ -17,16 +15,25 @@ Source: https://www.tutorialspoint.com/how-to-handle-swipe-gestures-in-kotlin
 */
 
 internal open class OnSwipeTouchListener(c: Context?) : OnTouchListener {
-    private val handler = Handler(Looper.getMainLooper())
     private var longPressOn = false
     private var pendingLongPress: Runnable? = null
+
+    /**
+     * The view currently being touched. The long-press callback is posted to it rather
+     * than to a `Handler(mainLooper)`: a raw Handler message keeps the Runnable — and
+     * through it the view, its Context and the fragment — reachable for the full delay
+     * even after the view is detached, and long-pressing Home navigates away, which
+     * detaches it. View.postDelayed is cancelled automatically on detach.
+     */
+    private var touchedView: View? = null
 
     private val gestureDetector: GestureDetector
 
     override fun onTouch(view: View, motionEvent: MotionEvent): Boolean {
+        touchedView = view
         if (motionEvent.action == MotionEvent.ACTION_UP || motionEvent.action == MotionEvent.ACTION_CANCEL) {
             longPressOn = false
-            pendingLongPress?.let { handler.removeCallbacks(it) }
+            pendingLongPress?.let { view.removeCallbacks(it) }
             pendingLongPress = null
         }
         return gestureDetector.onTouchEvent(motionEvent)
@@ -51,13 +58,20 @@ internal open class OnSwipeTouchListener(c: Context?) : OnTouchListener {
         }
 
         override fun onLongPress(e: MotionEvent) {
+            val view = touchedView
             longPressOn = true
-            pendingLongPress?.let { handler.removeCallbacks(it) }
-            pendingLongPress = Runnable {
+            pendingLongPress?.let { view?.removeCallbacks(it) }
+            val runnable = Runnable {
                 if (longPressOn) onLongClick()
                 pendingLongPress = null
             }
-            handler.postDelayed(pendingLongPress!!, Constants.LONG_PRESS_DELAY_MS)
+            pendingLongPress = runnable
+            if (view != null) {
+                view.postDelayed(runnable, Constants.LONG_PRESS_DELAY_MS)
+            } else {
+                // No view to hang the callback on; fire immediately rather than leak one.
+                runnable.run()
+            }
             super.onLongPress(e)
         }
 

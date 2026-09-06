@@ -130,11 +130,6 @@ class PrayerTimeRepositoryTest {
         override var globalLongitude: Double = 39.8262
         override var globalTimeZoneId: String = "Asia/Riyadh"
         override var globalMethod: Int = 3
-        override val activeCacheKey: String
-            get() = when (provider) {
-                PrayerProvider.KEMENAG -> "${provider.id}:${cityId.ifBlank { cityQuery }}"
-                PrayerProvider.GLOBAL -> "${provider.id}:$globalLatitude:$globalLongitude:$globalMethod:$globalTimeZoneId"
-            }
         val savedCacheKeys = mutableListOf<String>()
 
         override fun getCachedSchedule(): PrayerSchedule? = schedules.values.lastOrNull()
@@ -156,12 +151,8 @@ class PrayerTimeRepositoryTest {
             return schedules["$cacheKey:$dateYmd"]
         }
 
-        override fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
-            return schedules["$cacheKey:$dateYmd"]
-        }
-
         override fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean {
-            val schedule = getStaleCachedScheduleForDate(cacheKey, dateYmd) ?: return false
+            val schedule = getCachedScheduleForDate(cacheKey, dateYmd) ?: return false
             return System.currentTimeMillis() - schedule.fetchedAtMillis <= ttlMillis
         }
     }

@@ -4,10 +4,6 @@ import android.content.Context
 import androidx.core.content.edit
 import org.json.JSONArray
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import java.util.TimeZone
 
 interface PrayerScheduleStore {
     var provider: PrayerProvider
@@ -21,19 +17,46 @@ interface PrayerScheduleStore {
     var globalLongitude: Double
     var globalTimeZoneId: String
     var globalMethod: Int
+
+    /**
+     * Identity of the location a stored schedule belongs to.
+     *
+     * Derived here rather than left to implementors: the rule was re-implemented in the
+     * real store and in three test doubles, and one double disagreed with production
+     * (it omitted `globalMethod` and `globalTimeZoneId`), so a test could pass against a
+     * key shape that never occurs on a device.
+     *
+     * Load-bearing caveat for callers: for [PrayerProvider.KEMENAG] the resolved
+     * [cityId] takes precedence over [cityQuery], so once an id is on disk this key does
+     * **not** change when the city label does. Do not use "the key changed" as a proxy
+     * for "the user moved" — compare the resolved [PrayerOfflineLocations.Place] instead.
+     * That confusion served one city's prayer times under another city's name.
+     */
     val activeCacheKey: String
+        get() = when (provider) {
+            PrayerProvider.KEMENAG -> "${provider.id}:${cityId.ifBlank { cityQuery }}"
+            PrayerProvider.GLOBAL ->
+                "${provider.id}:$globalLatitude:$globalLongitude:$globalMethod:$globalTimeZoneId"
+        }
 
     fun getCachedSchedule(): PrayerSchedule?
     fun getStaleCachedSchedule(): PrayerSchedule?
     fun saveSchedule(schedule: PrayerSchedule)
     fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>)
     fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule?
-    fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule?
     fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean
 }
 
 class PrayerTimeStore(context: Context) : PrayerScheduleStore {
     private val prefs = context.getSharedPreferences(PREFS_FILENAME, Context.MODE_PRIVATE)
+
+    /**
+     * Formatter and decoded-schedule caches. Extracted so their concurrency contract is
+     * pinned by [PrayerScheduleCacheTest]: this store is shared between the main thread
+     * and `Dispatchers.IO`, and both caches replaced per-call construction that was
+     * thread-confined by accident.
+     */
+    private val cache = PrayerScheduleCache(MAX_CACHED_DATES)
 
     override var provider: PrayerProvider
         get() = PrayerProvider.fromId(prefs.getString(KEY_PROVIDER, PrayerProvider.KEMENAG.id))
@@ -93,12 +116,6 @@ class PrayerTimeStore(context: Context) : PrayerScheduleStore {
         get() = prefs.getInt(KEY_GLOBAL_METHOD, DEFAULT_GLOBAL_METHOD)
         set(value) = prefs.edit { putInt(KEY_GLOBAL_METHOD, value) }
 
-    override val activeCacheKey: String
-        get() = when (provider) {
-            PrayerProvider.KEMENAG -> "${provider.id}:${cityId.ifBlank { cityQuery }}"
-            PrayerProvider.GLOBAL -> "${provider.id}:$globalLatitude:$globalLongitude:$globalMethod:$globalTimeZoneId"
-        }
-
     override fun getCachedSchedule(): PrayerSchedule? {
         val today = todayYmd(currentTimeZoneId())
         return getCachedScheduleForDate(activeCacheKey, today)
@@ -107,7 +124,7 @@ class PrayerTimeStore(context: Context) : PrayerScheduleStore {
 
     override fun getStaleCachedSchedule(): PrayerSchedule? {
         val today = todayYmd(currentTimeZoneId())
-        return getStaleCachedScheduleForDate(activeCacheKey, today)
+        return getCachedScheduleForDate(activeCacheKey, today)
             ?.takeIf { it.provider == provider }
     }
 
@@ -118,28 +135,38 @@ class PrayerTimeStore(context: Context) : PrayerScheduleStore {
     override fun saveSchedules(cacheKey: String, schedules: List<PrayerSchedule>) {
         if (schedules.isEmpty()) return
         purgeOtherCacheKeys(cacheKey)
+        val stored = HashMap<String, PrayerSchedule>(schedules.size)
         prefs.edit {
             schedules.forEach { schedule ->
                 val ymd = schedule.dateYmd.ifBlank { dateYmdFor(schedule) }
                 if (ymd.isNotBlank()) {
-                    putString(scheduleKey(cacheKey, ymd), encodeSchedule(schedule.copy(dateYmd = ymd)))
+                    val entry = schedule.copy(dateYmd = ymd)
+                    val key = scheduleKey(cacheKey, ymd)
+                    putString(key, encodeSchedule(entry))
+                    stored[key] = entry
                 }
             }
         }
+        // Keep the decode cache in step, or the next read serves the old copy.
+        cache.putAll(stored)
         prefs.edit { putString(KEY_ACTIVE_CACHE_KEY, cacheKey) }
         enforceDateCap(cacheKey)
     }
 
     override fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
-        return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
+        return readSchedule(scheduleKey(cacheKey, dateYmd))
     }
 
-    override fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? {
-        return decodeSchedule(prefs.getString(scheduleKey(cacheKey, dateYmd), null))
+    /** Memoized decode — a cache read used to re-parse a ~450 byte JSON document. */
+    private fun readSchedule(key: String): PrayerSchedule? {
+        cache.get(key)?.let { return it }
+        val decoded = decodeSchedule(prefs.getString(key, null)) ?: return null
+        cache.put(key, decoded)
+        return decoded
     }
 
     override fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean {
-        val schedule = getStaleCachedScheduleForDate(cacheKey, dateYmd) ?: return false
+        val schedule = getCachedScheduleForDate(cacheKey, dateYmd) ?: return false
         return System.currentTimeMillis() - schedule.fetchedAtMillis <= ttlMillis
     }
 
@@ -150,39 +177,64 @@ class PrayerTimeStore(context: Context) : PrayerScheduleStore {
     private fun currentTimeZoneId(): String {
         return when (provider) {
             PrayerProvider.GLOBAL -> globalTimeZoneId
-            PrayerProvider.KEMENAG -> getStaleCachedScheduleForDate(activeCacheKey, todayYmd("Asia/Jakarta"))
+            PrayerProvider.KEMENAG -> getCachedScheduleForDate(activeCacheKey, todayYmd("Asia/Jakarta"))
                 ?.timeZoneId ?: "Asia/Jakarta"
         }
     }
 
     private fun todayYmd(timeZoneId: String): String {
-        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        format.timeZone = runCatching { TimeZone.getTimeZone(timeZoneId) }.getOrDefault(TimeZone.getDefault())
-        return format.format(Calendar.getInstance().time)
+        return cache.formatYmd(timeZoneId, System.currentTimeMillis())
     }
 
     private fun dateYmdFor(schedule: PrayerSchedule): String {
-        val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-        format.timeZone = runCatching { TimeZone.getTimeZone(schedule.timeZoneId) }
-            .getOrDefault(TimeZone.getDefault())
-        return format.format(Calendar.getInstance().apply { timeInMillis = schedule.fetchedAtMillis }.time)
+        return cache.formatYmd(schedule.timeZoneId, schedule.fetchedAtMillis)
     }
 
     private fun purgeOtherCacheKeys(cacheKey: String) {
         val previous = prefs.getString(KEY_ACTIVE_CACHE_KEY, null)
         if (previous == null || previous == cacheKey) return
         val stalePrefix = "$KEY_SCHEDULE_PREFIX$previous:"
-        prefs.edit {
-            prefs.all.keys.filter { it.startsWith(stalePrefix) }.forEach { remove(it) }
-        }
+        val stale = prefs.all.keys.filter { it.startsWith(stalePrefix) }
+        prefs.edit { stale.forEach { remove(it) } }
+        cache.removeAll(stale)
     }
 
+    /**
+     * Trim the cache to [MAX_CACHED_DATES] entries, keeping the ones that will actually
+     * be read.
+     *
+     * Keys sort chronologically, so the previous `subList(0, size - cap)` dropped the
+     * *earliest* dates — after a year-ahead warm that meant keeping only the twelve
+     * months out and deleting **today**. Every read then missed, `isCacheFreshForDate`
+     * always returned false, and the TTL protected nothing: each open refetched.
+     *
+     * Today and the near future are what the UI asks for, so past dates go first and
+     * only then the far end of the future.
+     */
     private fun enforceDateCap(cacheKey: String) {
         val prefix = "$KEY_SCHEDULE_PREFIX$cacheKey:"
         val keys = prefs.all.keys.filter { it.startsWith(prefix) }.sorted()
         if (keys.size <= MAX_CACHED_DATES) return
-        val toRemove = keys.subList(0, keys.size - MAX_CACHED_DATES)
+
+        val today = todayYmd(currentTimeZoneId())
+        val past = keys.filter { it.removePrefix(prefix) < today }
+        val todayOnward = keys.filter { it.removePrefix(prefix) >= today }
+
+        val toRemove = mutableListOf<String>()
+        // Past days are never read back; drop them all before touching the future.
+        toRemove += past
+        if (todayOnward.size > MAX_CACHED_DATES) {
+            toRemove += todayOnward.subList(MAX_CACHED_DATES, todayOnward.size)
+        } else {
+            // Room left over — keep the most recent past days to fill the window.
+            val spare = MAX_CACHED_DATES - todayOnward.size
+            if (spare > 0 && past.isNotEmpty()) {
+                toRemove -= past.takeLast(spare.coerceAtMost(past.size)).toSet()
+            }
+        }
+        if (toRemove.isEmpty()) return
         prefs.edit { toRemove.forEach { remove(it) } }
+        cache.removeAll(toRemove)
     }
 
     private fun encodeSchedule(schedule: PrayerSchedule): String {

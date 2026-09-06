@@ -32,6 +32,7 @@ import app.sakinalauncher.data.NotePanelMode
 import app.sakinalauncher.data.Prefs
 import app.sakinalauncher.databinding.FragmentHomeBinding
 import app.sakinalauncher.helper.appUsagePermissionGranted
+import app.sakinalauncher.helper.FontHelper
 import app.sakinalauncher.helper.dpToPx
 import app.sakinalauncher.helper.expandNotificationDrawer
 import app.sakinalauncher.helper.getChangedAppTheme
@@ -54,6 +55,18 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     private lateinit var prefs: Prefs
     private lateinit var viewModel: MainViewModel
 
+    /**
+     * Hoisted out of [populateDateTime]: that runs on every onResume, and constructing a
+     * SimpleDateFormat parses the pattern and builds a DateFormatSymbols set for the
+     * locale each time. The Date is reused too — only its millis change.
+     */
+    private val dateFormat by lazy { SimpleDateFormat("EEE, d MMM", Locale.getDefault()) }
+    private val reusableDate = Date()
+    private var batteryManager: BatteryManager? = null
+
+    /** Font family last applied to this view tree — see [onResume]. */
+    private var appliedFontFamily: Int? = null
+
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
 
@@ -65,6 +78,7 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         prefs = Prefs(requireContext())
+        batteryManager = requireContext().getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
         // Legibility treatment for text drawn straight on the wallpaper. Pointless when
         // the user has chosen a solid background — there is no wallpaper to fight.
         val wantWash = !prefs.solidBackground
@@ -83,7 +97,14 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
     override fun onResume() {
         super.onResume()
         populateHomeScreen(false)
-        app.sakinalauncher.helper.FontHelper.applyFont(view, prefs)
+        // Only re-walk the tree when the family actually changed. applyFont recurses the
+        // whole home layout and touches every TextView; on every resume that was pure
+        // waste, since the font can only change from Settings.
+        val family = prefs.fontFamily
+        if (family != appliedFontFamily) {
+            appliedFontFamily = family
+            FontHelper.applyFont(view, prefs)
+        }
         viewModel.isSakinaDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
@@ -262,12 +283,11 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
         binding.clock.isVisible = Constants.DateTime.isTimeVisible(prefs.dateTimeVisibility)
         binding.date.isVisible = Constants.DateTime.isDateVisible(prefs.dateTimeVisibility)
 
-        val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
-        var dateText = dateFormat.format(Date())
+        reusableDate.time = System.currentTimeMillis()
+        var dateText = dateFormat.format(reusableDate)
 
         if (!prefs.showStatusBar) {
-            val battery = (requireContext().getSystemService(Context.BATTERY_SERVICE) as BatteryManager)
-                .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+            val battery = batteryManager?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) ?: 0
             if (battery > 0)
                 dateText = getString(R.string.day_battery, dateText, battery)
         }
@@ -770,6 +790,8 @@ class HomeFragment : Fragment(), View.OnClickListener, View.OnLongClickListener 
 
     override fun onDestroyView() {
         super.onDestroyView()
+        batteryManager = null
+        appliedFontFamily = null
         _binding = null
     }
 }

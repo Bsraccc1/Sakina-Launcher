@@ -1,8 +1,6 @@
 package app.sakinalauncher.listener
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
@@ -12,7 +10,6 @@ import app.sakinalauncher.data.Constants
 import kotlin.math.abs
 
 internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListener {
-    private val handler = Handler(Looper.getMainLooper())
     private var longPressOn = false
     private var pendingLongPress: Runnable? = null
     private val gestureDetector: GestureDetector
@@ -24,7 +21,7 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
             MotionEvent.ACTION_CANCEL -> {
                 view.isPressed = false
                 longPressOn = false
-                pendingLongPress?.let { handler.removeCallbacks(it) }
+                pendingLongPress?.let { view.removeCallbacks(it) }
                 pendingLongPress = null
             }
         }
@@ -51,12 +48,16 @@ internal open class ViewSwipeTouchListener(c: Context?, v: View) : OnTouchListen
 
         override fun onLongPress(e: MotionEvent) {
             longPressOn = true
-            pendingLongPress?.let { handler.removeCallbacks(it) }
-            pendingLongPress = Runnable {
+            pendingLongPress?.let { view.removeCallbacks(it) }
+            // Posted to the view, not a Handler(mainLooper): the callback closes over the
+            // view, so a raw Handler message kept it (and its fragment) alive for the
+            // whole delay after detach. View.postDelayed is cancelled on detach.
+            val runnable = Runnable {
                 if (longPressOn) onLongClick(view)
                 pendingLongPress = null
             }
-            handler.postDelayed(pendingLongPress!!, Constants.LONG_PRESS_DELAY_MS)
+            pendingLongPress = runnable
+            view.postDelayed(runnable, Constants.LONG_PRESS_DELAY_MS)
             super.onLongPress(e)
         }
 

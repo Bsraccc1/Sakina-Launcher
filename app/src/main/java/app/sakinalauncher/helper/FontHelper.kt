@@ -23,9 +23,21 @@ object FontHelper {
 
     const val ARABIC_TAG = "arabic"
 
+    /**
+     * Base typefaces by font family, and styled variants by (family, style).
+     *
+     * [applyFont] runs on every HomeFragment resume and walks the whole tree, so without
+     * this every return to home re-ran [ResourcesCompat.getFont] plus a
+     * [Typeface.create] per TextView. Typefaces are immutable and process-wide, so
+     * caching them here is safe for the app's lifetime.
+     */
+    private val baseCache = HashMap<Int, Typeface>(4)
+    private val styledCache = HashMap<Long, Typeface>(8)
+
     /** Returns the base [Typeface] for the currently selected font family, or null for system. */
     fun typefaceFor(context: Context, fontFamily: Int): Typeface? {
-        return when (fontFamily) {
+        baseCache[fontFamily]?.let { return it }
+        val resolved = when (fontFamily) {
             Constants.FontFamily.POPPINS ->
                 runCatching { ResourcesCompat.getFont(context, R.font.poppins_regular) }.getOrNull()
                     ?: Typeface.SANS_SERIF
@@ -36,6 +48,8 @@ object FontHelper {
             Constants.FontFamily.MONOSPACE -> Typeface.MONOSPACE
             else -> Typeface.SANS_SERIF
         }
+        if (resolved != null) baseCache[fontFamily] = resolved
+        return resolved
     }
 
     /** Human readable label for a font family option. */
@@ -53,24 +67,30 @@ object FontHelper {
     /** Applies the font stored in prefs to every non-Arabic [TextView] under [root]. */
     fun applyFont(root: View?, prefs: Prefs) {
         root ?: return
-        val base = typefaceFor(root.context, prefs.fontFamily) ?: return
-        apply(root, base)
+        val family = prefs.fontFamily
+        val base = typefaceFor(root.context, family) ?: return
+        apply(root, family, base)
     }
 
-    private fun apply(view: View, base: Typeface) {
+    private fun apply(view: View, family: Int, base: Typeface) {
         when (view) {
             is ViewGroup -> {
                 for (i in 0 until view.childCount) {
-                    apply(view.getChildAt(i), base)
+                    apply(view.getChildAt(i), family, base)
                 }
             }
 
             is TextView -> {
                 if (isArabic(view)) return
                 val style = view.typeface?.style ?: Typeface.NORMAL
-                view.typeface = Typeface.create(base, style)
+                view.typeface = styled(family, base, style)
             }
         }
+    }
+
+    private fun styled(family: Int, base: Typeface, style: Int): Typeface {
+        val key = family.toLong() shl 32 or (style.toLong() and 0xFFFFFFFFL)
+        return styledCache.getOrPut(key) { Typeface.create(base, style) }
     }
 
     private fun isArabic(view: TextView): Boolean {

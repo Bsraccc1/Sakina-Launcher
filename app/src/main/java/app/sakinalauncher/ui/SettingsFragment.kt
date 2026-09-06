@@ -609,9 +609,12 @@ class SettingsFragment : Fragment(), View.OnClickListener, View.OnLongClickListe
         val tags = arrayOf("en", "in")
         val labels = listOf(getString(R.string.language_english), getString(R.string.language_indonesian))
         requireContext().showAppListDialog(getString(R.string.language), labels) { which ->
+            // setApplicationLocales restarts the activity on API 33+, and the restart can
+            // land before this lambda finishes. Touching `binding` afterwards then hit a
+            // destroyed view (NPE in populateLanguage); the recreated fragment repopulates
+            // the row in onViewCreated anyway.
             AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tags[which]))
-            populateLanguage()
-            requireActivity().recreate()
+            if (isAdded) requireActivity().recreate()
         }
     }
 

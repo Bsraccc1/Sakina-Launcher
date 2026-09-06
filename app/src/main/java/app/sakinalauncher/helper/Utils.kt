@@ -76,32 +76,50 @@ suspend fun getAppsList(
         val appList: MutableList<AppModel> = mutableListOf()
 
         try {
-            if (!Prefs(context).hiddenAppsUpdated) upgradeHiddenApps(Prefs(context))
-            val hiddenApps = Prefs(context).hiddenApps
+            // The caller already handed us a Prefs; three more were being constructed here.
+            if (!prefs.hiddenAppsUpdated) upgradeHiddenApps(prefs)
+            val hiddenApps = prefs.hiddenApps
 
             val userManager = context.getSystemService(Context.USER_SERVICE) as UserManager
             val launcherApps =
                 context.getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
             val collator = Collator.getInstance()
+            val myUser = android.os.Process.myUserHandle()
+            val installTimes = installTimesForCurrentUser(context)
+            val newAppCutoff = System.currentTimeMillis() - Constants.ONE_HOUR_IN_MILLIS
 
             for (profile in userManager.userProfiles) {
                 if (isPrivateSpaceProfile(context, profile)) continue
                 for (app in launcherApps.getActivityList(null, profile)) {
-                    val appLabelShown = prefs.getAppRenameLabel(app.applicationInfo.packageName)
+                    val packageName = app.applicationInfo.packageName
+                    val appLabelShown = prefs.getAppRenameLabel(packageName)
                         .ifBlank { app.label.toString() }
+                    // LauncherActivityInfo.getFirstInstallTime() is an uncached
+                    // getPackageInfo() call per app — 250 extra binder round-trips on a
+                    // full drawer load, for a decorative "new app" marker. One bulk query
+                    // covers the current user; other profiles still ask directly.
+                    val installedAt = if (profile == myUser) {
+                        installTimes[packageName] ?: app.firstInstallTime
+                    } else {
+                        app.firstInstallTime
+                    }
                     val appModel = AppModel.App(
                         appLabel = appLabelShown,
-                        key = collator.getCollationKey(app.label.toString()),
-                        appPackage = app.applicationInfo.packageName,
+                        // Key over the *shown* label: it is what the list sorts by, and a
+                        // CollationKey compare is a byte-array memcmp instead of a full
+                        // Collator pass. Building it here is O(n); the sort below was
+                        // paying Collator.compare O(n log n) times on top of it.
+                        key = collator.getCollationKey(appLabelShown),
+                        appPackage = packageName,
                         activityClassName = app.componentName.className,
-                        isNew = (System.currentTimeMillis() - app.firstInstallTime) < Constants.ONE_HOUR_IN_MILLIS,
+                        isNew = installedAt > newAppCutoff,
                         user = profile
                     )
 
                     // if the current app is not OLauncher
-                    if (app.applicationInfo.packageName != BuildConfig.APPLICATION_ID) {
+                    if (packageName != BuildConfig.APPLICATION_ID) {
                         // is this a hidden app?
-                        if (hiddenApps.contains(app.applicationInfo.packageName + "|" + profile.toString())) {
+                        if (hiddenApps.contains(packageName + "|" + profile.toString())) {
                             if (includeHiddenApps) {
                                 appList.add(appModel)
                             }
@@ -125,12 +143,37 @@ suspend fun getAppsList(
                 appList.addAll(pinned)
             }
 
-            appList.sortWith(compareBy(collator) { it.appLabel })
+            // Sort on the pre-built CollationKeys (AppModel.compareTo). Same ordering as
+            // compareBy(collator) { it.appLabel } because the keys are built from that
+            // exact label, but each comparison is a byte-array compare rather than a
+            // fresh Collator pass over two strings.
+            appList.sort()
         } catch (e: Exception) {
             e.printStackTrace()
         }
         appList
     }
+}
+
+/**
+ * Install timestamps for every package visible to the current user, in one
+ * `getInstalledPackages` call.
+ *
+ * Asked per app via `LauncherActivityInfo.getFirstInstallTime()` this is a separate
+ * `getPackageInfo` binder round-trip each time, which on a 250-app device dominated the
+ * cost of building the app list. Returns an empty map on failure; callers fall back to
+ * the per-app accessor.
+ */
+private fun installTimesForCurrentUser(context: Context): Map<String, Long> {
+    return runCatching {
+        val packageManager = context.packageManager
+        val packages = packageManager.getInstalledPackages(0)
+        val times = HashMap<String, Long>(packages.size)
+        for (info in packages) {
+            times[info.packageName] = info.firstInstallTime
+        }
+        times
+    }.getOrDefault(emptyMap())
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -241,7 +284,8 @@ suspend fun getPrivateSpaceApps(
                 appList.add(
                     AppModel.App(
                         appLabel = appLabelShown,
-                        key = collator.getCollationKey(app.label.toString()),
+                        // Key over the shown label so the sort below can compare keys.
+                        key = collator.getCollationKey(appLabelShown),
                         appPackage = app.applicationInfo.packageName,
                         activityClassName = app.componentName.className,
                         isNew = false,
@@ -249,7 +293,7 @@ suspend fun getPrivateSpaceApps(
                     )
                 )
             }
-            appList.sortWith(compareBy(collator) { it.appLabel })
+            appList.sort()
         } catch (e: Exception) {
             e.printStackTrace()
         }

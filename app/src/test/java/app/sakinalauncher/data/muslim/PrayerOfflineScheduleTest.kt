@@ -64,11 +64,26 @@ class PrayerOfflineScheduleTest {
         val store = MemoryStore(cityQuery = "jakarta", cityLabel = "KOTA JAKARTA")
         val repository = repository(store)
 
-        val written = repository.warmOfflineYear(days = 365)
+        val written = repository.warmOfflineSchedules(days = 365)
 
         assertEquals(365, written)
         // Distinct calendar days, all stored, none duplicated.
         assertEquals(365, store.storedDates().size)
+    }
+
+    /**
+     * The default warm is a short window, not a year: the year-ahead guarantee comes
+     * from on-demand computation, and the store only retains two weeks.
+     */
+    @Test
+    fun defaultWarmStaysWithinTheStoresRetentionWindow() = runBlocking {
+        val store = MemoryStore(cityQuery = "jakarta", cityLabel = "KOTA JAKARTA")
+        val repository = repository(store)
+
+        val written = repository.warmOfflineSchedules()
+
+        assertEquals(14, written)
+        assertEquals(14, store.storedDates().size)
     }
 
     @Test
@@ -215,11 +230,6 @@ class PrayerOfflineScheduleTest {
         override var globalLongitude: Double = 0.0
         override var globalTimeZoneId: String = ""
         override var globalMethod: Int = 3
-        override val activeCacheKey: String
-            get() = when (provider) {
-                PrayerProvider.KEMENAG -> "${provider.id}:${cityId.ifBlank { cityQuery }}"
-                PrayerProvider.GLOBAL -> "${provider.id}:$globalLatitude:$globalLongitude"
-            }
 
         fun storedDates(): Set<String> = schedules.values.map { it.dateYmd }.toSet()
 
@@ -234,8 +244,6 @@ class PrayerOfflineScheduleTest {
         }
 
         override fun getCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? = null
-
-        override fun getStaleCachedScheduleForDate(cacheKey: String, dateYmd: String): PrayerSchedule? = null
 
         override fun isCacheFreshForDate(cacheKey: String, dateYmd: String, ttlMillis: Long): Boolean = false
     }

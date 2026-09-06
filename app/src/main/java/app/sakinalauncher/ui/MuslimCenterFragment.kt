@@ -10,7 +10,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import app.sakinalauncher.MainViewModel
@@ -276,17 +278,22 @@ class MuslimCenterFragment : Fragment() {
     private fun startPrayerTicker() {
         prayerTickerJob?.cancel()
         prayerTickerJob = viewLifecycleOwner.lifecycleScope.launch {
-            while (isActive) {
-                delay(60_000L)
-                val schedule = currentSchedule ?: continue
-                if (schedule.isFetchedToday()) {
-                    renderSchedule(schedule)
-                } else {
-                    val cachedToday = repository.loadCachedToday()
-                    if (cachedToday != null) {
-                        renderSchedule(cachedToday, getString(R.string.cached_schedule))
+            // repeatOnLifecycle(STARTED), not a bare launch: lifecycleScope only cancels
+            // at DESTROY, so with the screen off or another app on top this kept waking
+            // every 60s to re-render invisible views — and could reach the network.
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (isActive) {
+                    delay(60_000L)
+                    val schedule = currentSchedule ?: continue
+                    if (schedule.isFetchedToday()) {
+                        renderSchedule(schedule)
                     } else {
-                        refreshPrayerTimes()
+                        val cachedToday = repository.loadCachedToday()
+                        if (cachedToday != null) {
+                            renderSchedule(cachedToday, getString(R.string.cached_schedule))
+                        } else {
+                            refreshPrayerTimes()
+                        }
                     }
                 }
             }
@@ -296,15 +303,15 @@ class MuslimCenterFragment : Fragment() {
     private fun renderDhikrSummary() {
         binding.morningDhikr.text = getString(
             R.string.dzikir_morning_summary,
-            DhikrContent.cardsFor(DhikrPeriod.MORNING).size
+            DhikrContent.countFor(DhikrPeriod.MORNING)
         )
         binding.eveningDhikr.text = getString(
             R.string.dzikir_evening_summary,
-            DhikrContent.cardsFor(DhikrPeriod.EVENING).size
+            DhikrContent.countFor(DhikrPeriod.EVENING)
         )
         binding.afterPrayerDhikr.text = getString(
             R.string.dzikir_after_prayer_summary,
-            DhikrContent.cardsFor(DhikrPeriod.AFTER_PRAYER).size
+            DhikrContent.countFor(DhikrPeriod.AFTER_PRAYER)
         )
     }
 
